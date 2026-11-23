@@ -271,11 +271,15 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
    cd MSP2-PretOutil
    ```
 
-2. Créer le fichier `.env.local` (non versionné) avec le secret de l'application :
+2. Créer le fichier `.env.local` (non versionné) avec le secret de l'application et les mots de passe des bases, générés au hasard :
 
    ```bash
-   echo "APP_SECRET=$(openssl rand -hex 16)" > .env.local
+   for v in APP_SECRET POSTGRES_PASSWORD POSTGRES_APP_PASSWORD MONGO_INITDB_ROOT_PASSWORD MONGODB_APP_PASSWORD; do
+     echo "$v=$(openssl rand -hex 16)"
+   done > .env.local
    ```
+
+   Docker Compose refuse de démarrer sans ce fichier. Les mots de passe ne doivent contenir que des lettres et des chiffres : ils entrent dans des URL de connexion.
 
 3. Construire les images et démarrer les conteneurs :
 
@@ -284,7 +288,7 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
    docker compose up -d --wait
    ```
 
-   Au premier démarrage, le conteneur `php` installe les dépendances Composer et attend que PostgreSQL soit prêt. `--wait` attend aussi que MongoDB réponde.
+   Au premier démarrage, le conteneur `php` installe les dépendances Composer, attend que PostgreSQL soit prêt et applique les migrations. `--wait` attend aussi que MongoDB réponde. À la création des volumes, les scripts d'initialisation créent les comptes applicatifs (voir [Comptes des bases de données](#comptes-des-bases-de-données)).
 
 4. Compiler les styles Tailwind (le binaire Tailwind est téléchargé au premier lancement dans `var/tailwind/`) :
 
@@ -300,8 +304,10 @@ Créer le schéma avec les migrations, puis charger le jeu d'essai (environnemen
 
 ```bash
 docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
-docker compose exec php bin/console doctrine:fixtures:load --no-interaction
+docker compose exec php bin/console doctrine:fixtures:load --no-interaction --em=proprietaire
 ```
+
+`--em=proprietaire` est obligatoire : le chargement vide les tables, ce que le compte de l'application n'a pas le droit de faire.
 
 Le schéma se crée uniquement par les migrations : ne pas utiliser `doctrine:schema:create` ni `doctrine:schema:update` (voir [mpd.md, section 10](docs/conception/mpd.md#10-base-créée-par-les-migrations-doctrine-j3)). Le chargement des fixtures vide d'abord les tables.
 
@@ -340,6 +346,43 @@ Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
 docker compose exec php bin/console cache:pool:clear cache.rate_limiter
 ```
 
+### Comptes des bases de données
+
+L'application ne se connecte jamais avec le propriétaire du schéma ni avec le compte root de MongoDB (droits minimaux).
+
+| Base | Compte | Droits | Utilisé par |
+|---|---|---|---|
+| PostgreSQL | `pretoutil` (propriétaire) | Tous | Migrations et fixtures (connexion Doctrine `proprietaire`) |
+| PostgreSQL | `pretoutil_app` | `SELECT`, `INSERT`, `UPDATE` sur les 4 tables ; `DELETE` sur `objet` seulement | Application (connexion Doctrine `default`) |
+| MongoDB | `pretoutil` (root) | Tous | Administration (`mongosh`) |
+| MongoDB | `pretoutil_app` | Rôle `auditAppendOnly` : `find` et `insert` sur `audit_log` seulement | Application (Doctrine ODM) |
+
+Création, à la première création des volumes uniquement :
+
+- PostgreSQL : `docker/postgres/initdb/01-role-applicatif.sh` crée le rôle `pretoutil_app` avec son mot de passe ; la migration `Version20261123140000` lui donne ses droits (repris de `mpd.sql`).
+- MongoDB : `docs/conception/audit_log.mongodb.js` crée la collection `audit_log` (validateur, index) et le rôle `auditAppendOnly`, puis `docker/mongodb/initdb/02-utilisateur-app.js` crée l'utilisateur `pretoutil_app`.
+
+Les mots de passe sont lus dans `.env.local`, que Docker Compose transmet aux conteneurs (`env_file`). Symfony construit `DATABASE_URL`, `DATABASE_OWNER_URL` et `MONGODB_URI` dans `.env` à partir de ces variables.
+
+Pour appliquer ces comptes à des volumes créés avant J3-C1, recréer les bases (données de développement uniquement) :
+
+```bash
+docker compose down -v
+docker compose up -d --wait
+docker compose exec php bin/console doctrine:fixtures:load --no-interaction --em=proprietaire
+docker compose exec php bin/console tailwind:build
+```
+
+Vérifier les droits :
+
+```bash
+docker compose exec php bin/console dbal:run-sql "SELECT current_user"
+docker compose exec php bin/console dbal:run-sql "DELETE FROM reservation"
+docker compose exec php bin/console app:mongodb:check
+```
+
+La première commande affiche `pretoutil_app`, la deuxième échoue avec `permission denied for table reservation`, la troisième lit `audit_log` et constate qu'une écriture ailleurs est refusée.
+
 ### Après un `git pull`
 
 Le dossier du projet, `vendor/` compris, est monté dans le conteneur `php`. Celui-ci n'installe les dépendances que si `vendor/` est vide : il ne le met pas à jour quand `composer.lock` change. Sans mise à jour, le conteneur s'arrête au démarrage avec une erreur `Class "..." not found`.
@@ -363,7 +406,7 @@ docker compose exec php php -m | grep mongodb
 docker compose exec php bin/console app:mongodb:check
 ```
 
-`app:mongodb:check` écrit un document dans la collection `connexion_test`, le relit puis le supprime.
+`app:mongodb:check` lit la collection `audit_log` avec le compte applicatif, puis vérifie qu'une écriture dans une autre collection est refusée.
 
 ### Styles (Tailwind CSS)
 
@@ -387,10 +430,10 @@ Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `te
 
 | Fichier | Versionné | Contenu |
 |---|---|---|
-| `.env` | Oui | Valeurs par défaut de développement : `APP_ENV`, `DATABASE_URL`, `MONGODB_URI`, `MONGODB_DB`, `POSTGRES_*` et `MONGODB_*` (lues aussi par Docker Compose) |
-| `.env.local` | Non | Secrets et surcharges locales (`APP_SECRET`, etc.) |
+| `.env` | Oui | Valeurs non secrètes : `APP_ENV`, noms des bases et des comptes (`POSTGRES_*`, `MONGODB_*`, lus aussi par Docker Compose), modèles de `DATABASE_URL`, `DATABASE_OWNER_URL` et `MONGODB_URI` sans mot de passe |
+| `.env.local` | Non | Secrets : `APP_SECRET`, `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`, `MONGO_INITDB_ROOT_PASSWORD`, `MONGODB_APP_PASSWORD` |
 
-Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `POSTGRES_*` (service `database`) et `MONGODB_URI` à partir des variables `MONGODB_*` (service `mongodb`).
+Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux trois conteneurs (`env_file`).
 
 ### Commandes utiles
 
@@ -405,7 +448,8 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | Débloquer les comptes après 5 échecs | `docker compose exec php bin/console cache:pool:clear cache.rate_limiter` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
-| Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
+| Ouvrir un shell MongoDB (root) | `docker compose exec mongodb sh -c 'mongosh -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil'` |
+| Recharger le jeu d'essai | `docker compose exec php bin/console doctrine:fixtures:load -n --em=proprietaire` |
 | Tout supprimer, bases comprises | `docker compose down -v` |
 
 ## 16. Journal des décisions
@@ -477,3 +521,8 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | `AuditLogger::journaliser()` appelé dès J3, sans écriture jusqu'à J6 | Les services métier n'auront pas à être modifiés quand le journal MongoDB sera branché |
 | 2026-11-23 | Jetons CSRF stockés en session, fichier `csrf.yaml` de la recette `symfony/form` supprimé | Les jetons sans état de la recette demandent un contrôleur JavaScript (Stimulus) absent du projet ; la session est plus simple à expliquer |
 | 2026-11-23 | Thème de formulaire commun `templates/form/theme.html.twig` | Champs, aides et erreurs aux couleurs de la maquette pour tous les formulaires (E2, puis E4 et E7) |
+| 2026-11-23 | Deux connexions Doctrine : `default` (`pretoutil_app`) pour l'application, `proprietaire` pour les migrations et les fixtures | Droits minimaux pour le code applicatif ; les migrations restent automatiques au démarrage du conteneur |
+| 2026-11-23 | Rôle `pretoutil_app` créé par un script d'initialisation Docker, droits posés par une migration | Le mot de passe reste hors du dépôt ; les `GRANT` sont versionnés avec le schéma qu'ils protègent |
+| 2026-11-23 | `audit_log.mongodb.js` monté tel quel comme script d'initialisation MongoDB | Une seule source pour le validateur, les index et le rôle `auditAppendOnly` |
+| 2026-11-23 | Mots de passe dans `.env.local`, transmis aux conteneurs par `env_file` | Docker Compose ne lit pas `.env.local` pour ses variables ; aucun mot de passe dans `.env` ni `compose.yaml` |
+| 2026-11-23 | `app:mongodb:check` vérifie un refus d'écriture au lieu d'écrire un document de test | Le compte applicatif ne peut écrire que dans `audit_log`, en ajout seul : la commande démontre les droits minimaux |
