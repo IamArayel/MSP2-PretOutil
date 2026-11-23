@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+    <div class="mx-auto mt-6 max-w-md rounded-lg border border-line bg-surface p-6">
+        <h1 class="text-3xl font-bold">Connexion</h1>
+        <p class="mt-1 text-sm text-ink-muted">Accédez à votre espace pour réserver du matériel.</p>
+
+        {% if erreur %}
+            <div class="mt-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
+                {{ erreur }}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{{ path('app_connexion') }}" class="mt-4 space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium">Email</label>
+                <input type="email" id="email" name="email" value="{{ dernier_email }}"
+                       autocomplete="email" required autofocus
+                       placeholder="camille.martin@exemple.fr"
+                       class="mt-1.5 block w-full rounded-md border border-line px-3 py-2 text-sm placeholder:text-slate-400">
+            </div>
+
+            <div>
+                <label for="mot_de_passe" class="block text-sm font-medium">Mot de passe</label>
+                <input type="password" id="mot_de_passe" name="mot_de_passe"
+                       autocomplete="current-password" required
+                       class="mt-1.5 block w-full rounded-md border border-line px-3 py-2 text-sm">
+            </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <button type="submit" class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                Se connecter
+            </button>
+        </form>
+
+        {# Lien vers E2 Inscription, branché avec J3-B2 #}
+        <p class="mt-4 text-sm text-ink-muted">
+            Pas encore de compte ? <a href="#" class="font-semibold text-primary hover:underline">Créer un compte</a>
+        </p>
+    </div>
+{% endblock %}
