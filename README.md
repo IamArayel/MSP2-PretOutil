@@ -232,7 +232,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | Jour | Conception et développement | Dossier | Statut |
 |---|---|---|---|
 | J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ✅ |
-| J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques | 🟡 |
+| J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques ([notes J1-J2](docs/dossier/notes-j1-j2.md)) | ✅ |
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ⬜ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | ⬜ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | ⬜ |
@@ -294,6 +294,19 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
 
 5. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
 
+### Après un `git pull`
+
+Le dossier du projet, `vendor/` compris, est monté dans le conteneur `php`. Celui-ci n'installe les dépendances que si `vendor/` est vide : il ne le met pas à jour quand `composer.lock` change. Sans mise à jour, le conteneur s'arrête au démarrage avec une erreur `Class "..." not found`.
+
+Si le pull modifie `composer.lock`, installer les nouvelles dépendances sans démarrer l'application, puis relancer :
+
+```bash
+docker compose run --rm --no-deps php composer install
+docker compose up -d --wait
+```
+
+Si le pull ajoute une migration, l'appliquer ensuite avec `doctrine:migrations:migrate` (voir les commandes utiles).
+
 ### Vérifier l'installation
 
 ```bash
@@ -342,6 +355,7 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | Console Symfony | `docker compose exec php bin/console <commande>` |
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
 | Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
+| Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
@@ -393,3 +407,5 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Schéma d'architecture unique : cinq couches logicielles dans le conteneur `php`, une base par conteneur | Montre sur une seule page le découpage logique, la répartition physique et la sécurité de chaque couche |
 | 2026-11-23 | Seul le conteneur `php` exposé hors développement ; bases joignables par le réseau Docker uniquement | Réduit la surface d'attaque : aucune base accessible depuis l'extérieur |
 | 2026-11-23 | Scripts de conception alignés sur PostgreSQL 16, jeu d'essai rejoué (21/21) | Même version que l'environnement Docker : ce qui est testé est ce qui tourne |
+| 2026-11-23 | Installation vérifiée depuis un clone neuf, sous un autre nom de projet Docker | Prouve que la section Installation suffit ; les volumes de développement existants ne sont pas touchés |
+| 2026-11-23 | Notes pour le dossier tenues par étape dans `docs/dossier/` | Preuves, visuels et réponses aux questions du jury prêts pour la rédaction de J9-J10 |
