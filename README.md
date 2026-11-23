@@ -233,7 +233,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 |---|---|---|---|
 | J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ✅ |
 | J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques ([notes J1-J2](docs/dossier/notes-j1-j2.md)) | ✅ |
-| J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ⬜ |
+| J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | 🟡 |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | ⬜ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | ⬜ |
 | J6 | Sortie, retour, annulation, mes réservations. Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
@@ -409,3 +409,5 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Scripts de conception alignés sur PostgreSQL 16, jeu d'essai rejoué (21/21) | Même version que l'environnement Docker : ce qui est testé est ce qui tourne |
 | 2026-11-23 | Installation vérifiée depuis un clone neuf, sous un autre nom de projet Docker | Prouve que la section Installation suffit ; les volumes de développement existants ne sont pas touchés |
 | 2026-11-23 | Notes pour le dossier tenues par étape dans `docs/dossier/` | Preuves, visuels et réponses aux questions du jury prêts pour la rédaction de J9-J10 |
+| 2026-11-23 | J3 en 8 tickets GitHub (#17 à #24) : modèle de données et sauvegarde pour Anthony, sécurité et comptes de base de données pour Chloé, relecture croisée ensemble | Chacun prolonge ce qu'il a conçu ou installé à J2 ; la relecture croisée prépare l'entretien individuel |
+| 2026-11-23 | `symfony/security-bundle` installé avec l'entité `Utilisateur` (J3-A1), pare-feu configuré dans J3-B1 | L'entité a besoin de `UserInterface` ; Chloé peut commencer la sécurité dès que `Utilisateur` est poussée |
