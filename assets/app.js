@@ -1,0 +1,5 @@
+/*
+ * Point d'entrée JavaScript, chargé par la fonction Twig importmap() dans base.html.twig.
+ * Il importe la feuille de styles Tailwind, compilée par "bin/console tailwind:build".
+ */
+import './styles/app.css';
