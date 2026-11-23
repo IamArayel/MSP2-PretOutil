@@ -63,7 +63,7 @@ Le schéma décrit l'architecture cible. Le code de J2 n'en contient encore qu'u
 
 | Écart | Situation actuelle | À faire |
 |---|---|---|
-| Composant Security | Pas encore installé | J3 : `symfony/security-bundle`, pare-feu, hiérarchie des rôles |
-| Utilisateur PostgreSQL | L'application se connecte avec le propriétaire de la base (`app`) | Créer `pretoutil_app` ; l'application l'utilise, les migrations gardent le propriétaire |
-| Utilisateur MongoDB | L'application se connecte avec le compte root | Créer un utilisateur dédié avec le rôle `auditAppendOnly` |
+| Composant Security | ✅ Résolu à J3-B1 : pare-feu `form_login`, `role_hierarchy`, `login_throttling`, `UtilisateurChecker` | |
+| Utilisateur PostgreSQL | ✅ Résolu à J3-C1 : l'application se connecte avec `pretoutil_app` (connexion `default`), les migrations et fixtures avec le propriétaire (connexion `proprietaire`) | |
+| Utilisateur MongoDB | ✅ Résolu à J3-C1 : l'application se connecte avec `pretoutil_app` (rôle `auditAppendOnly`) ; le compte root ne sert qu'à l'administration | |
 | Variables Mercure | Présentes dans `compose.yaml` (modèle `dunglas/symfony-docker`) | Non utilisées : pas de temps réel dans le MVP |
