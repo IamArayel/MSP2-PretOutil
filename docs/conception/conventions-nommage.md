@@ -65,4 +65,4 @@ Ces noms s'appliquent au script de référence [mpd.sql](mpd.sql) et aux contrai
 | Contrôleur | `<Domaine>Controller` | `ReservationController` |
 | Voter | `<Entité>Voter` | `ReservationVoter` |
 
-Le passage de `camelCase` (PHP) à `snake_case` (base) est assuré par la stratégie de nommage Doctrine `underscore_number_aware`, configurée par défaut par Symfony : `dateDebut` devient `date_debut` sans annotation.
+Le passage de `camelCase` (PHP) à `snake_case` (base) est assuré par la stratégie de nommage Doctrine `underscore`, configurée dans `config/packages/doctrine.yaml` : `dateDebut` devient `date_debut` sans annotation. Les identifiants du projet ne contiennent pas de chiffres, ce qui évite les différences de traitement des chiffres entre stratégies.
