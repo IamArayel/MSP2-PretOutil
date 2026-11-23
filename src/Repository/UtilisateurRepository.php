@@ -20,4 +20,10 @@ class UtilisateurRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Utilisateur::class);
     }
+
+    /** Recherche insensible à la casse : les emails sont stockés en minuscules. */
+    public function emailExiste(string $email): bool
+    {
+        return null !== $this->findOneBy(['email' => mb_strtolower(trim($email))]);
+    }
 }

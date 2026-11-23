@@ -25,8 +25,7 @@
                 <span class="text-ink-muted">{{ app.user.prenom }} {{ app.user.nom }}</span>
                 <a href="{{ logout_path() }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Déconnexion</a>
             {% else %}
-                {# Lien vers E2 Inscription, branché avec J3-B2 #}
-                <a href="#" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Créer un compte</a>
+                <a href="{{ path('app_inscription') }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Créer un compte</a>
                 <a href="{{ path('app_connexion') }}" class="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Se connecter</a>
             {% endif %}
         </div>
