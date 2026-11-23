@@ -3,4 +3,7 @@ doctrine_migrations:
         # namespace is arbitrary but should be different from App\Migrations
         # as migrations classes should NOT be autoloaded
         'DoctrineMigrations': '%kernel.project_dir%/migrations'
+    # Les migrations créent et modifient le schéma : elles s'exécutent avec le propriétaire
+    # (connexion "proprietaire"), jamais avec le rôle applicatif pretoutil_app.
+    em: proprietaire
     enable_profiler: false
