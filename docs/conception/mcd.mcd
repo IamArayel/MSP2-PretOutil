@@ -1,0 +1,18 @@
+%% Prêt'Outil : modèle conceptuel de données (Merise)
+%% Source Mocodo, voir docs/conception/mcd.md pour les règles et les choix.
+%% Générer les images (depuis docs/conception/) :
+%%   mocodo --input mcd.mcd && rm -f mcd_geo.json && rsvg-convert -z 1.6 mcd.svg -o mcd.png
+
+CATEGORIE: id_categorie, libelle
+APPARTENIR, 0N CATEGORIE, 11 OBJET
+OBJET: id_objet, nom, description, caracteristiques, etat, actif, cree_le
+
+VALIDER LA SORTIE, 0N [gestionnaire] UTILISATEUR, 01 RESERVATION
+:
+CONCERNER, 0N OBJET, 11 RESERVATION
+
+UTILISATEUR: id_utilisateur, email, mot_de_passe, nom, prenom, telephone, roles, actif, cree_le, derniere_activite_le
+EFFECTUER, 0N [adhérent] UTILISATEUR, 11 RESERVATION
+RESERVATION: id_reservation, date_debut, date_fin, statut, cree_le, sortie_le, retour_le, etat_retour
+
+ENREGISTRER LE RETOUR, 0N [gestionnaire] UTILISATEUR, 01 RESERVATION
