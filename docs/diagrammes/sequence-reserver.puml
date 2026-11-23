@@ -1,0 +1,128 @@
+@startuml sequence-reserver
+' Prêt'Outil : diagramme de séquence « Réserver un objet » (US4, ticket #7)
+' Régénérer : plantuml -tsvg docs/diagrammes/sequence-reserver.puml
+'             puis rsvg-convert -b white -z 1.5 docs/diagrammes/sequence-reserver.svg -o docs/diagrammes/sequence-reserver.png
+title Prêt'Outil : réserver un objet (US4, RG1 à RG5, RG8)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequence {
+  ParticipantBorderColor #0F766E
+  ParticipantBackgroundColor #F0FDFA
+  ActorBorderColor #0F766E
+  ActorBackgroundColor #F0FDFA
+  DatabaseBorderColor #0F766E
+  DatabaseBackgroundColor #F0FDFA
+  LifeLineBorderColor #94A3B8
+  GroupBorderColor #64748B
+  GroupBackgroundColor #F1F5F9
+}
+skinparam note {
+  BackgroundColor #FFFBEB
+  BorderColor #D97706
+}
+autonumber
+
+actor "Adhérent" as A
+box "Présentation" #FFFFFF
+  participant "ReservationController" as C
+  participant "Validator" as V
+end box
+box "Métier" #FFFFFF
+  participant "ReservationService" as S
+  participant "AuditLogger" as L
+end box
+box "Accès aux données" #FFFFFF
+  participant "ReservationRepository" as R
+  database "PostgreSQL" as PG
+  database "MongoDB" as M
+end box
+
+A -> C : POST /objets/{id}/reserver\n(date_debut, date_fin, jeton CSRF)
+activate C
+note right of C
+  ~#[IsGranted('ROLE_USER')] : visiteur redirigé vers E1
+  Objet chargé par ~#[MapEntity] : 404 si inconnu
+end note
+
+C -> V : validate(demande)
+activate V
+V --> C : violations\n(jeton CSRF, dates obligatoires, RG1)
+deactivate V
+
+alt formulaire invalide
+  C --> A : 422, formulaire E4 avec les erreurs
+else formulaire valide
+  C -> S : reserver(adherent, objet, debut, fin)
+  activate S
+
+  S -> PG : BEGIN
+  S -> S : vérifier RG1 (début ≥ aujourd'hui, fin ≥ début),\nRG3 (14 jours max), RG5 (objet actif, pas hors service)
+
+  S -> R : verrouillerAdherent(adherent)
+  activate R
+  R -> PG : SELECT id FROM utilisateur\nWHERE id = :id FOR UPDATE
+  deactivate R
+  note right of R
+    Sérialise les demandes d'un même adhérent :
+    deux onglets ne peuvent pas dépasser le quota.
+  end note
+
+  S -> R : compterActives(adherent)
+  activate R
+  R -> PG : SELECT COUNT(*) FROM reservation WHERE utilisateur_id = :id\nAND statut IN ('confirmee', 'en_cours')
+  PG --> R : n
+  R --> S : n
+  deactivate R
+
+  break n ≥ 3 : quota atteint (RG4)
+    S -> PG : ROLLBACK
+    S --> C : QuotaAtteintException
+    C --> A : 422, E4 : « 3 réservations actives maximum »
+  end
+
+  S -> R : existeChevauchement(objet, debut, fin)
+  activate R
+  R -> PG : SELECT 1 FROM reservation WHERE objet_id = :objet\nAND statut IN ('confirmee', 'en_cours')\nAND daterange(date_debut, date_fin, '[]') && daterange(:debut, :fin, '[]')
+  PG --> R : résultat
+  R --> S : vrai / faux
+  deactivate R
+
+  break période déjà réservée (RG2)
+    S -> PG : ROLLBACK
+    S --> C : PeriodeIndisponibleException
+    C --> A : 422, E4 : « Objet déjà réservé sur cette période »
+  end
+
+  S -> R : enregistrer(reservation)
+  activate R
+  R -> PG : INSERT INTO reservation (statut = 'confirmee', ...)
+  deactivate R
+
+  break réservation concurrente insérée entre-temps : SQLSTATE 23P01 (ex_reservation_chevauchement)
+    S -> PG : ROLLBACK
+    S --> C : PeriodeIndisponibleException
+    C --> A : 422, E4 : « Objet déjà réservé sur cette période »
+  end
+
+  S -> PG : COMMIT
+
+  S -> L : journaliser(RESERVATION_CREEE, adherent, reservation,\n{ objet, date_debut, date_fin })
+  activate L
+  L -> M : insertOne(audit_log)
+  note right of L
+    Après le COMMIT : on ne journalise
+    que ce qui a réellement eu lieu (RG8).
+    Échec MongoDB : erreur tracée dans les logs,
+    la réservation reste valide.
+  end note
+  deactivate L
+
+  S --> C : reservation
+  deactivate S
+  C --> A : 303 vers E5 « Mes réservations »\n+ message « Réservation confirmée »
+end
+deactivate C
+
+@enduml

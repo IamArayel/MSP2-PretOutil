@@ -194,7 +194,7 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 - [x] Cahier des charges
 - [x] Maquettes et schéma d'enchaînement des écrans
 - [x] Diagramme de cas d'utilisation
-- [ ] Diagramme de séquence « Réserver un objet »
+- [x] Diagramme de séquence « Réserver un objet »
 - [ ] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
 - [ ] Procédure de sauvegarde et de restauration de la BDD
 - [ ] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
@@ -214,6 +214,7 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 | Collection MongoDB `audit_log` | [docs/conception/audit_log.mongodb.js](docs/conception/audit_log.mongodb.js), [audit_log_tests.mongodb.js](docs/conception/audit_log_tests.mongodb.js) | |
 | Dictionnaire de données (et RGPD) | [docs/conception/dictionnaire-donnees.md](docs/conception/dictionnaire-donnees.md) | |
 | Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
+| Diagramme de séquence « Réserver un objet » | [PlantUML](docs/diagrammes/sequence-reserver.puml), [note](docs/diagrammes/sequence-reserver.md) | [SVG](docs/diagrammes/sequence-reserver.svg), [PNG](docs/diagrammes/sequence-reserver.png) |
 
 Régénérer le diagramme de cas d'utilisation après modification :
 
@@ -383,3 +384,6 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Identifiants en français sans accent ; termes du framework en anglais | Vocabulaire métier lisible par tous, sans les pièges des accents dans les requêtes et les outils |
 | 2026-11-23 | Contraintes nommées `pk_`, `fk_`, `uq_`, `ck_`, `ex_`, `idx_` dans les scripts ; noms Doctrine automatiques conservés | Messages d'erreur lisibles et rattachables à une règle ; pas de lutte contre les conventions de Doctrine |
 | 2026-11-23 | Suppression d'un compte par anonymisation, aucune adresse IP stockée | RGPD : minimisation des données, historique des prêts conservé sans donnée personnelle |
+| 2026-11-23 | Réservation : refus signalés par des exceptions métier, fragments `break` dans le diagramme de séquence | Le contrôleur traduit le refus en message sans connaître la règle ; un refus termine le scénario |
+| 2026-11-23 | RG4 vérifiée sous verrou `SELECT ... FOR UPDATE` sur l'adhérent | Deux demandes simultanées du même adhérent ne peuvent pas dépasser le quota de 3 |
+| 2026-11-23 | Journalisation d'une réservation après le `COMMIT`, sans bloquer si MongoDB est indisponible | On ne journalise que ce qui a eu lieu ; le journal ne doit pas empêcher le service rendu |
