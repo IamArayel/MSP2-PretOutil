@@ -317,6 +317,28 @@ Comptes de test, tous avec le mot de passe `PretOutil-Test-2026` (développement
 
 Le jeu d'essai contient aussi 6 catégories et 24 objets (dont un abîmé, un hors service et un retiré du catalogue). Les dates des réservations sont calculées à partir du jour du chargement.
 
+### Authentification
+
+La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compte de test. La configuration est dans `config/packages/security.yaml`.
+
+| Mécanisme | Mise en œuvre |
+|---|---|
+| Utilisateurs | Chargés depuis la table `utilisateur` par leur email ; mots de passe hachés (hasher `auto`) |
+| Rôles | `role_hierarchy` : `ROLE_ADMIN` > `ROLE_MANAGER` > `ROLE_USER` |
+| Accès | `access_control` : `/mes-reservations` (adhérent), `/gestion` (gestionnaire), `/admin` (administrateur) ; un visiteur est redirigé vers E1, un rôle insuffisant reçoit un 403 |
+| Échecs | Message générique « Email ou mot de passe incorrect. », que l'email existe ou non |
+| Blocage (US2) | `login_throttling` : 5 échecs par email et adresse IP, blocage de 15 minutes |
+| Compte désactivé (RG9) | `App\Security\UtilisateurChecker`, appliqué après la vérification du mot de passe |
+| CSRF | Jeton sur le formulaire de connexion et sur le lien de déconnexion |
+
+Les pages `/mes-reservations`, `/gestion` et `/admin` sont provisoires : elles seront remplacées par les écrans E5, E6 et E8.
+
+Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
+
+```bash
+docker compose exec php bin/console cache:pool:clear cache.rate_limiter
+```
+
 ### Après un `git pull`
 
 Le dossier du projet, `vendor/` compris, est monté dans le conteneur `php`. Celui-ci n'installe les dépendances que si `vendor/` est vide : il ne le met pas à jour quand `composer.lock` change. Sans mise à jour, le conteneur s'arrête au démarrage avec une erreur `Class "..." not found`.
@@ -379,6 +401,7 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
 | Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
 | Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
+| Débloquer les comptes après 5 échecs | `docker compose exec php bin/console cache:pool:clear cache.rate_limiter` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
@@ -442,3 +465,8 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Écouteur Doctrine `IndexChevauchementListener` qui déclare l'index de la contrainte `EXCLUDE` | Sans lui, chaque génération de migration proposait de supprimer la contrainte RG2 ; schéma créé uniquement par les migrations |
 | 2026-11-23 | Fixtures découpées par entité, dates des réservations relatives au jour du chargement | Une classe par entité reste lisible ; les écrans montrent toujours des réservations à venir, en cours et en retard |
 | 2026-11-23 | Comptes de test sur le domaine réservé `.test`, mot de passe commun documenté dans le README | Aucun risque d'écrire à une vraie adresse ; mot de passe réservé au développement, chaque compte illustre un cas (quota, désactivé, rôles) |
+| 2026-11-23 | Authentification par `form_login` et fournisseur d'entité sur `Utilisateur.email` | Mécanisme natif de Symfony : hachage, session, CSRF et `login_throttling` sans code d'authentification maison |
+| 2026-11-23 | `UtilisateurChecker` en `checkPostAuth` plutôt qu'en `checkPreAuth` | Le message « compte désactivé » n'apparaît qu'avec le bon mot de passe : on ne révèle pas l'existence d'un compte à partir du seul email |
+| 2026-11-23 | `login_throttling` : 5 essais par email et adresse IP sur 15 minutes | US2 ; le 6e essai est bloqué même avec le bon mot de passe |
+| 2026-11-23 | Lien de déconnexion protégé par un jeton CSRF | Un site tiers ne peut pas déconnecter un utilisateur à son insu |
+| 2026-11-23 | Pages provisoires `/mes-reservations`, `/gestion` et `/admin` (`EspaceController`) | Tester l'`access_control` des trois rôles dès J3, avant les écrans E5, E6 et E8 |
