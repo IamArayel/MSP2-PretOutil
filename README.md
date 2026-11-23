@@ -197,7 +197,7 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 - [x] Maquettes et schéma d'enchaînement des écrans
 - [x] Diagramme de cas d'utilisation
 - [x] Diagramme de séquence « Réserver un objet »
-- [ ] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
+- [x] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
 - [ ] Procédure de sauvegarde et de restauration de la BDD
 - [ ] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
 - [ ] Veille sécurité (OWASP Top 10, injections SQL et NoSQL)
@@ -293,6 +293,29 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
    ```
 
 5. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
+
+### Base de données et jeu d'essai
+
+Créer le schéma avec les migrations, puis charger le jeu d'essai (environnement de développement uniquement) :
+
+```bash
+docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec php bin/console doctrine:fixtures:load --no-interaction
+```
+
+Le schéma se crée uniquement par les migrations : ne pas utiliser `doctrine:schema:create` ni `doctrine:schema:update` (voir [mpd.md, section 10](docs/conception/mpd.md#10-base-créée-par-les-migrations-doctrine-j3)). Le chargement des fixtures vide d'abord les tables.
+
+Comptes de test, tous avec le mot de passe `PretOutil-Test-2026` (développement uniquement, jamais en production) :
+
+| Email | Rôle | Particularité |
+|---|---|---|
+| `adherent@pretoutil.test` | Adhérent | Réservations dans chaque statut |
+| `adherent.quota@pretoutil.test` | Adhérent | 3 réservations actives : une 4e doit être refusée (RG4) |
+| `gestionnaire@pretoutil.test` | Gestionnaire | Une sortie à valider aujourd'hui |
+| `admin@pretoutil.test` | Administrateur | Un retour en retard |
+| `desactive@pretoutil.test` | Adhérent | Compte désactivé : connexion refusée (RG9) |
+
+Le jeu d'essai contient aussi 6 catégories et 24 objets (dont un abîmé, un hors service et un retiré du catalogue). Les dates des réservations sont calculées à partir du jour du chargement.
 
 ### Après un `git pull`
 
@@ -411,3 +434,11 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Notes pour le dossier tenues par étape dans `docs/dossier/` | Preuves, visuels et réponses aux questions du jury prêts pour la rédaction de J9-J10 |
 | 2026-11-23 | J3 en 8 tickets GitHub (#17 à #24) : modèle de données et sauvegarde pour Anthony, sécurité et comptes de base de données pour Chloé, relecture croisée ensemble | Chacun prolonge ce qu'il a conçu ou installé à J2 ; la relecture croisée prépare l'entretien individuel |
 | 2026-11-23 | `symfony/security-bundle` installé avec l'entité `Utilisateur` (J3-A1), pare-feu configuré dans J3-B1 | L'entité a besoin de `UserInterface` ; Chloé peut commencer la sécurité dès que `Utilisateur` est poussée |
+| 2026-11-23 | Entités Doctrine sans relations inverses (`ManyToOne` seulement) | Aucun écran n'en a besoin dans le MVP ; évite des chargements de collections inutiles |
+| 2026-11-23 | Sortie et retour enregistrés par `Reservation::enregistrerSortie()` et `enregistrerRetour()`, sans setters séparés | Les champs liés sont toujours renseignés ensemble, comme l'exigent `ck_reservation_sortie` et `ck_reservation_retour` ; les règles restent dans le service |
+| 2026-11-23 | Enums PHP `StatutReservation` et `EtatObjet` mappés sur des colonnes `VARCHAR(20)` | Valeurs identiques à la base ; `StatutReservation::estActive()` définit une seule fois ce qu'est une réservation active (RG2, RG4) |
+| 2026-11-23 | Index Doctrine `IDX_...` sur `reservation.utilisateur_id` conservé à côté de `idx_reservation_utilisateur_statut` | Doctrine indexe chaque clé étrangère ; le supprimer créerait un écart à chaque génération de migration, pour un gain négligeable |
+| 2026-11-23 | Contraintes `CHECK` et `EXCLUDE` dans une migration écrite à la main, séparée de la migration générée | La migration générée reste régénérable ; les contraintes métier sont relisibles en un seul endroit |
+| 2026-11-23 | Écouteur Doctrine `IndexChevauchementListener` qui déclare l'index de la contrainte `EXCLUDE` | Sans lui, chaque génération de migration proposait de supprimer la contrainte RG2 ; schéma créé uniquement par les migrations |
+| 2026-11-23 | Fixtures découpées par entité, dates des réservations relatives au jour du chargement | Une classe par entité reste lisible ; les écrans montrent toujours des réservations à venir, en cours et en retard |
+| 2026-11-23 | Comptes de test sur le domaine réservé `.test`, mot de passe commun documenté dans le README | Aucun risque d'écrire à une vraie adresse ; mot de passe réservé au développement, chaque compte illustre un cas (quota, désactivé, rôles) |

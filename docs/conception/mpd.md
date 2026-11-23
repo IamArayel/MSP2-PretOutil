@@ -178,6 +178,49 @@ docker stop pretoutil-test-pg pretoutil-test-mongo
 ## 9. Points de vigilance pour J3 (Doctrine)
 
 1. **Migrations** : Doctrine génère les tables, clés et index, mais pas les `CHECK`, ni l'extension `btree_gist`, ni la contrainte `EXCLUDE`. Ils sont recopiés depuis `mpd.sql` dans une migration écrite à la main.
-2. **Index de la contrainte `EXCLUDE`** : Doctrine pourrait le voir comme un index inconnu et proposer de le supprimer au prochain `make:migration`. À vérifier dès la première migration et à exclure du diff si besoin.
+2. **Index de la contrainte `EXCLUDE`** : Doctrine pourrait le voir comme un index inconnu et proposer de le supprimer au prochain `make:migration`. À vérifier dès la première migration et à exclure du diff si besoin. **Confirmé et traité, voir section 10.**
 3. **Fixtures** : ne pas forcer les `id` (voir l'écart du cas 17).
 4. **Noms des contraintes** : Doctrine nomme ses clés et index avec des empreintes (`IDX_...`, `FK_...`). Les noms lisibles de `mpd.sql` servent au dossier ; on ne cherchera pas à les imposer à Doctrine.
+
+## 10. Base créée par les migrations Doctrine (J3)
+
+Ticket : [#18 J3-A2 Migrations avec contraintes CHECK et EXCLUDE](https://github.com/IamArayel/MSP2-PretOutil/issues/18)
+
+Le schéma de l'application est créé par deux migrations, dans `migrations/` :
+
+| Migration | Contenu | Origine |
+|---|---|---|
+| `Version20261123095227` | Tables, clés primaires et étrangères, index | Générée par `doctrine:migrations:diff` à partir des entités |
+| `Version20261123095233` | Extension `btree_gist`, 9 contraintes `CHECK`, contrainte `EXCLUDE` | Écrite à la main, recopiée de `mpd.sql` |
+
+### Index de la contrainte `EXCLUDE` (point de vigilance 2)
+
+Confirmé à la première migration : Doctrine lit l'index qui porte `ex_reservation_chevauchement` comme un index ordinaire et proposait de le supprimer puis de le recréer, ce qui aurait supprimé la contrainte. L'écouteur `App\Doctrine\IndexChevauchementListener` déclare cet index dans le schéma attendu par Doctrine. Depuis, `doctrine:migrations:diff` ne détecte aucun changement et `doctrine:schema:validate` est vert.
+
+Conséquence : le schéma se crée uniquement par les migrations. `doctrine:schema:create` et `doctrine:schema:update` ne doivent pas être utilisés, car ils créeraient un index ordinaire à la place de la contrainte.
+
+Doctrine ne lit pas les contraintes `CHECK` : elles ne provoquent aucun écart.
+
+### Comparaison avec `mpd.sql`
+
+Comparaison automatique des catalogues PostgreSQL d'une base créée par `mpd.sql` et de la base migrée :
+
+| Élément | Résultat |
+|---|---|
+| Colonnes (nom, type, longueur, obligatoire, défaut) | Identiques ; Doctrine écrit `DEFAULT NULL` explicitement sur les colonnes facultatives, sans effet |
+| Contraintes `CHECK` et `EXCLUDE` | Identiques, mêmes noms |
+| Clés primaires, étrangères, unicité, index | Mêmes colonnes, noms générés par Doctrine (`utilisateur_pkey`, `FK_...`, `UNIQ_...`, `IDX_...`), comme prévu au point de vigilance 4 ; unicité portée par un index unique au lieu d'une contrainte `UNIQUE`, même effet |
+| Index supplémentaire | `IDX_...` sur `reservation.utilisateur_id`, redondant avec `idx_reservation_utilisateur_statut` : conservé, Doctrine indexe chaque clé étrangère |
+| Commentaires `COMMENT ON` | Absents : la documentation des colonnes est dans le dictionnaire de données |
+| Rôle `pretoutil_app` et droits | Hors migrations : ticket [#22](https://github.com/IamArayel/MSP2-PretOutil/issues/22) |
+
+Les migrations ont aussi été testées dans les deux sens : retour à une base vide (`migrate first`), puis application complète.
+
+### Jeu d'essai sur la base migrée : 19 cas, 19 conformes
+
+Le script `mpd_tests.sql` a été rejoué sur la base migrée, avec deux adaptations faites à l'exécution, sans modifier le fichier :
+
+- les cas 20 et 21 (droits de `pretoutil_app`) sont retirés, le rôle étant créé au ticket #22 ;
+- pour les cas 17 à 19, le nom attendu est celui que Doctrine a donné à la contrainte (`UNIQ_1D1C63B3E7927C74`, `FK_46CD4C38BCF5E72D`, `FK_42C84955F520CF5A`).
+
+Les 19 cas donnent le même comportement que sur la base de référence : mêmes acceptations, mêmes refus.

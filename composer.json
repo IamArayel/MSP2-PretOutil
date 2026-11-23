@@ -19,11 +19,13 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "7.4.*",
         "symfony/runtime": "7.4.*",
+        "symfony/security-bundle": "7.4.*",
         "symfony/twig-bundle": "7.4.*",
         "symfony/yaml": "7.4.*",
         "symfonycasts/tailwind-bundle": "^1.0"
     },
     "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "^4.3"
     },
     "config": {
         "allow-plugins": {
