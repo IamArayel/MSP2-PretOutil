@@ -1,0 +1,71 @@
+@startuml mpd
+title Prêt'Outil : modèle physique de données (PostgreSQL 17)
+hide circle
+skinparam class {
+  BackgroundColor #F8FAFC
+  BorderColor #0F766E
+  HeaderBackgroundColor #F0FDFA
+}
+
+entity "utilisateur" as utilisateur {
+  * id : INTEGER <<PK, identity>>
+  --
+  * email : VARCHAR(180) <<UQ>>
+  * mot_de_passe : VARCHAR(255)
+  * nom : VARCHAR(100)
+  * prenom : VARCHAR(100)
+  telephone : VARCHAR(20)
+  * roles : JSON
+  * actif : BOOLEAN = true
+  * cree_le : TIMESTAMP(0)
+  derniere_activite_le : TIMESTAMP(0)
+}
+
+entity "categorie" as categorie {
+  * id : INTEGER <<PK, identity>>
+  --
+  * libelle : VARCHAR(50) <<UQ>>
+}
+
+entity "objet" as objet {
+  * id : INTEGER <<PK, identity>>
+  --
+  * categorie_id : INTEGER <<FK>>
+  * nom : VARCHAR(120)
+  * description : TEXT
+  caracteristiques : TEXT
+  * etat : VARCHAR(20) = 'bon'
+  * actif : BOOLEAN = true
+  * cree_le : TIMESTAMP(0)
+}
+
+entity "reservation" as reservation {
+  * id : INTEGER <<PK, identity>>
+  --
+  * utilisateur_id : INTEGER <<FK>>
+  * objet_id : INTEGER <<FK>>
+  * date_debut : DATE
+  * date_fin : DATE
+  * statut : VARCHAR(20) = 'confirmee'
+  * cree_le : TIMESTAMP(0)
+  sortie_le : TIMESTAMP(0)
+  sortie_par_id : INTEGER <<FK>>
+  retour_le : TIMESTAMP(0)
+  retour_par_id : INTEGER <<FK>>
+  etat_retour : VARCHAR(20)
+  ..
+  EXCLUDE (objet_id =, daterange &&)
+  WHERE statut actif (RG2)
+}
+
+categorie ||--o{ objet : categorie_id
+objet ||--o{ reservation : objet_id
+utilisateur ||-right-o{ reservation : utilisateur_id\n(adhérent)
+utilisateur |o-right-o{ reservation : sortie_par_id\n(gestionnaire)
+utilisateur |o-right-o{ reservation : retour_par_id\n(gestionnaire)
+
+legend right
+  * = NOT NULL · PK clé primaire · FK clé étrangère · UQ unique
+  Toutes les clés étrangères : ON DELETE RESTRICT
+endlegend
+@enduml
