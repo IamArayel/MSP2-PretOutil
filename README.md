@@ -4,6 +4,8 @@ Prêt'Outil : prêt de matériel en association.
 
 Projet réalisé pour la mise en situation professionnelle du CCP 2 « Concevoir et développer une application sécurisée organisée en couches » du titre professionnel **Concepteur Développeur d'Applications** (CDA, niveau 6, référentiel d'évaluation TP-01281 V04 du 24/05/2023).
 
+**Équipe** : projet réalisé en binôme par Anthony Dégeilh et Chloé Baïsse.
+
 ---
 
 ## Sommaire
@@ -187,13 +189,30 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 ## 12. Livrables
 
 - [ ] Code source versionné, avec ce README
-- [ ] Maquettes et schéma d'enchaînement des écrans
-- [ ] Diagramme de cas d'utilisation et diagramme de séquence « Réserver un objet »
+- [x] Cahier des charges
+- [x] Maquettes et schéma d'enchaînement des écrans
+- [x] Diagramme de cas d'utilisation
+- [ ] Diagramme de séquence « Réserver un objet »
 - [ ] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
 - [ ] Procédure de sauvegarde et de restauration de la BDD
 - [ ] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
 - [ ] Veille sécurité (OWASP Top 10, injections SQL et NoSQL)
 - [ ] Dossier de projet (30 à 40 pages) et diaporama
+
+### Maquettes et diagrammes
+
+| Livrable | Source éditable | Export |
+|---|---|---|
+| Cahier des charges | [docs/cahier-des-charges.md](docs/cahier-des-charges.md) | |
+| Diagramme de cas d'utilisation | [docs/diagrammes/cas-utilisation.puml](docs/diagrammes/cas-utilisation.puml) (PlantUML) | [SVG](docs/diagrammes/cas-utilisation.svg), [PNG](docs/diagrammes/cas-utilisation.png) |
+| Maquettes (E1, E3, E4, E5, E6, E9) et composants | [Figma : Prêt'Outil - Maquettes](https://www.figma.com/design/eyw5N9ZI2sKFkVAalYHFlc) | [docs/maquettes/](docs/maquettes/) |
+| Enchaînement des écrans | [FigJam](https://www.figma.com/board/4JSeLbE6WlRh5la3TAbomW), [Mermaid](docs/diagrammes/enchainement-ecrans.md) | [SVG](docs/diagrammes/enchainement-ecrans.svg) |
+
+Régénérer le diagramme de cas d'utilisation après modification :
+
+```bash
+plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
+```
 
 ## 13. Planning
 
@@ -201,7 +220,7 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 
 | Jour | Conception et développement | Dossier | Statut |
 |---|---|---|---|
-| J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ⬜ |
+| J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ✅ |
 | J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques | ⬜ |
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ⬜ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | ⬜ |
@@ -235,3 +254,9 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 | 2026-11-23 | Objectif O2 retiré, O5 reformulé (couverture des RG et du contrôle d'accès) | Pas de temps pour un test utilisateur ; objectif de couverture plus mesurable dans le délai |
 | 2026-11-23 | Stack : Symfony 7, Twig, Tailwind (AssetMapper), PostgreSQL, MongoDB (Doctrine ODM), Docker | Rendu serveur plus rapide à produire ; `EXCLUDE` PostgreSQL pour RG2 ; ODM proche de l'ORM |
 | 2026-11-23 | Rendu côté serveur (Twig) plutôt qu'une API + SPA | Gain de temps, l'épreuve évalue la conception et l'accès aux données, pas le front |
+| 2026-11-23 | Cahier des charges séparé du README (`docs/cahier-des-charges.md`) | Le README reste la vue d'ensemble et l'historique ; le cahier des charges est le document de référence pour le dossier, avec inventaire des écrans et critères de recette |
+| 2026-11-23 | Hiérarchie des rôles : Admin > Gestionnaire > Adhérent > Visiteur | Un gestionnaire peut aussi emprunter ; simplifie `access_control` avec `role_hierarchy` |
+| 2026-11-23 | 6 écrans maquettés sur 9 (E1, E3, E4, E5, E6, E9) ; E2, E7, E8 non maquettés | Ils réutilisent les mêmes composants (formulaire, tableau) ; gain de temps sur J1 |
+| 2026-11-23 | Maquettes construites avec des composants Figma (Bouton, Badge, Champ, Navbar, CarteObjet) et la palette Tailwind en variables | Correspondance directe avec les composants Twig et les classes Tailwind à J4-J8 |
+| 2026-11-23 | Diagramme de cas d'utilisation en PlantUML, enchaînement des écrans en Mermaid | Sources textuelles versionnées dans Git, régénérables |
+| 2026-11-23 | Projet réalisé en binôme (Anthony Dégeilh, Chloé Baïsse) | Organisation de la formation |

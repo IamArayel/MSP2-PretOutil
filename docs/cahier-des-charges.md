@@ -3,6 +3,7 @@
 | Version | Date | Auteur | Objet |
 |---|---|---|---|
 | 1.0 | 2026-11-23 | Anthony Dégeilh | Version initiale (J1) |
+| 1.1 | 2026-11-23 | Anthony Dégeilh, Chloé Baïsse | Projet réalisé en binôme |
 
 ---
 
@@ -148,7 +149,7 @@ Les écrans E1, E3, E4, E5, E6 et E9 sont maquettés dans Figma. E2, E7 et E8 re
 |---|---|
 | Technique | Symfony 7, Twig, Tailwind CSS, PostgreSQL, MongoDB, Docker |
 | Délai | 10 jours ouvrés plus 2 jours de marge |
-| Ressources | Un développeur |
+| Ressources | Un binôme de développeurs : Anthony Dégeilh et Chloé Baïsse |
 | Réglementaire | RGPD |
 | Épreuve | Couvrir les 4 compétences du CCP 2 ; dossier de 30 à 40 pages ; présentation de 30 min |
 
