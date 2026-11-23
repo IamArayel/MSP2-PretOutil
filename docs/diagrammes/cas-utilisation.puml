@@ -1,0 +1,67 @@
+@startuml cas-utilisation
+title Prêt'Outil : diagramme de cas d'utilisation (MVP)
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #0F766E
+}
+
+actor "Visiteur" as Visiteur
+actor "Adhérent" as Adherent
+actor "Gestionnaire" as Gestionnaire
+actor "Administrateur" as Admin
+
+Adherent -|> Visiteur
+Gestionnaire -|> Adherent
+Admin -|> Gestionnaire
+
+rectangle "Prêt'Outil" {
+  package "Compte et catalogue" {
+    usecase "Créer un compte (US1)" as UC1
+    usecase "Se connecter (US2)" as UC2
+    usecase "Consulter le catalogue (US3)" as UC3
+    usecase "Filtrer par catégorie\net disponibilité" as UC3b
+  }
+  package "Réservations" {
+    usecase "Réserver un objet (US4)" as UC4
+    usecase "Vérifier la disponibilité\n(RG1 à RG5)" as UCdispo
+    usecase "Consulter mes réservations (US5)" as UC5
+    usecase "Annuler une réservation (US5)" as UC5b
+  }
+  package "Gestion du matériel" {
+    usecase "Gérer le catalogue (US6)" as UC6
+    usecase "Valider une sortie (US7)" as UC7
+    usecase "Enregistrer un retour (US8)" as UC8
+  }
+  package "Administration" {
+    usecase "Gérer les comptes (US9)" as UC9
+    usecase "Consulter le journal d'audit (US10)" as UC10
+  }
+  usecase "Journaliser l'action (RG8)" as UCaudit
+}
+
+Visiteur --> UC1
+Visiteur --> UC2
+Visiteur --> UC3
+UC3 <.. UC3b : <<extend>>
+
+Adherent --> UC4
+Adherent --> UC5
+UC5 <.. UC5b : <<extend>>
+UC4 ..> UCdispo : <<include>>
+
+Gestionnaire --> UC6
+Gestionnaire --> UC7
+Gestionnaire --> UC8
+
+Admin --> UC9
+Admin --> UC10
+
+UC4 ..> UCaudit : <<include>>
+UC5b ..> UCaudit : <<include>>
+UC7 ..> UCaudit : <<include>>
+UC8 ..> UCaudit : <<include>>
+UC9 ..> UCaudit : <<include>>
+@enduml
