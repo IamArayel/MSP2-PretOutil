@@ -294,6 +294,19 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
 
 5. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
 
+### Après un `git pull`
+
+Le dossier du projet, `vendor/` compris, est monté dans le conteneur `php`. Celui-ci n'installe les dépendances que si `vendor/` est vide : il ne le met pas à jour quand `composer.lock` change. Sans mise à jour, le conteneur s'arrête au démarrage avec une erreur `Class "..." not found`.
+
+Si le pull modifie `composer.lock`, installer les nouvelles dépendances sans démarrer l'application, puis relancer :
+
+```bash
+docker compose run --rm --no-deps php composer install
+docker compose up -d --wait
+```
+
+Si le pull ajoute une migration, l'appliquer ensuite avec `doctrine:migrations:migrate` (voir les commandes utiles).
+
 ### Vérifier l'installation
 
 ```bash
@@ -342,6 +355,7 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | Console Symfony | `docker compose exec php bin/console <commande>` |
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
 | Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
+| Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
