@@ -243,13 +243,13 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 
 ## 14. Points de vigilance
 
-1. **Extension PHP `mongodb`** : à installer dans le Dockerfile (`pecl`) dès J2 pour ne pas bloquer J6.
+1. **Extension PHP `mongodb`** : installée dans le Dockerfile à J2 (`install-php-extensions mongodb`) ✅
 2. **Contrainte `EXCLUDE`** : non gérée nativement par Doctrine, elle est écrite en SQL dans une migration (avec l'extension `btree_gist`).
 3. **Dossier au fil de l'eau** : captures, extraits de code et choix notés chaque soir.
 
 ## 15. Installation
 
-L'environnement repose sur le modèle [`dunglas/symfony-docker`](https://github.com/dunglas/symfony-docker) : Symfony 7.4 LTS servi par FrankenPHP (PHP 8.5) et PostgreSQL 16, le tout dans Docker Compose.
+L'environnement repose sur le modèle [`dunglas/symfony-docker`](https://github.com/dunglas/symfony-docker) : Symfony 7.4 LTS servi par FrankenPHP (PHP 8.5), PostgreSQL 16 pour les données métier et MongoDB 8.0 pour le journal d'audit, le tout dans Docker Compose.
 
 ### Prérequis
 
@@ -280,7 +280,7 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
    docker compose up -d --wait
    ```
 
-   Au premier démarrage, le conteneur `php` installe les dépendances Composer et attend que PostgreSQL soit prêt.
+   Au premier démarrage, le conteneur `php` installe les dépendances Composer et attend que PostgreSQL soit prêt. `--wait` attend aussi que MongoDB réponde.
 
 4. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
 
@@ -290,16 +290,20 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
 docker compose ps
 docker compose exec php bin/console dbal:run-sql "SELECT 1"
 docker compose exec php bin/console doctrine:migrations:status
+docker compose exec php php -m | grep mongodb
+docker compose exec php bin/console app:mongodb:check
 ```
+
+`app:mongodb:check` écrit un document dans la collection `connexion_test`, le relit puis le supprime.
 
 ### Variables d'environnement
 
 | Fichier | Versionné | Contenu |
 |---|---|---|
-| `.env` | Oui | Valeurs par défaut de développement : `APP_ENV`, `DATABASE_URL`, `POSTGRES_*` (lues aussi par Docker Compose) |
+| `.env` | Oui | Valeurs par défaut de développement : `APP_ENV`, `DATABASE_URL`, `MONGODB_URI`, `MONGODB_DB`, `POSTGRES_*` et `MONGODB_*` (lues aussi par Docker Compose) |
 | `.env.local` | Non | Secrets et surcharges locales (`APP_SECRET`, etc.) |
 
-Dans Docker, `DATABASE_URL` est construite par `compose.yaml` à partir des variables `POSTGRES_*` et pointe vers le service `database`.
+Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `POSTGRES_*` (service `database`) et `MONGODB_URI` à partir des variables `MONGODB_*` (service `mongodb`).
 
 ### Commandes utiles
 
@@ -311,7 +315,8 @@ Dans Docker, `DATABASE_URL` est construite par `compose.yaml` à partir des vari
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
-| Tout supprimer, BDD comprise | `docker compose down -v` |
+| Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
+| Tout supprimer, bases comprises | `docker compose down -v` |
 
 ## 16. Journal des décisions
 
@@ -331,6 +336,8 @@ Dans Docker, `DATABASE_URL` est construite par `compose.yaml` à partir des vari
 | 2026-11-23 | Projet réalisé en binôme (Anthony Dégeilh, Chloé Baïsse) | Organisation de la formation |
 | 2026-11-23 | Environnement basé sur `dunglas/symfony-docker` (FrankenPHP), Symfony 7.4 LTS, PostgreSQL 16 | Modèle maintenu par la communauté Symfony, HTTPS local prêt à l'emploi ; version LTS maintenue jusqu'en 2028 |
 | 2026-11-23 | `.gitignore` Visual Studio remplacé par un `.gitignore` Symfony ; `.env.dev` non versionné, `APP_SECRET` dans `.env.local` | L'ancien fichier ignorait `.env` et `bin/console` ; aucun secret dans le dépôt |
+| 2026-11-23 | MongoDB conservé pour le journal d'audit, après avoir envisagé PostgreSQL seul | Couvre la partie NoSQL de la compétence « composants d'accès aux données SQL et NoSQL » ; `details` de forme libre selon l'action |
+| 2026-11-23 | MongoDB 8.0 et `doctrine/mongodb-odm-bundle` 5.6 ; commande `app:mongodb:check` pour tester la connexion | Versions compatibles avec Symfony 7.4 et PHP 8.5 ; test reproductible sans document métier avant J6 |
 | 2026-11-23 | Suivi des tâches sur un tableau Trello partagé | Outil collaboratif adapté au travail en binôme et à une méthode agile légère (critère « outils collaboratifs choisis en fonction de la méthode de développement ») |
 | 2026-11-23 | Tâches de J2 en tickets GitHub (#1 à #9) dans un GitHub Project, une branche et une PR par bloc | Tickets fermés automatiquement par les PR (`Closes #n`) : le suivi reste lié au code |
 | 2026-11-23 | MCD en Merise avec Mocodo (source texte `docs/conception/mcd.mcd`) | Versionné dans Git, régénérable, et génère aussi le MLD et le SQL pour le MPD |
