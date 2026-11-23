@@ -1,0 +1,21 @@
+{#
+    Barre de navigation, d'après la maquette Figma (écran E3).
+    Version visiteur : la variante connectée (nom de l'adhérent, "Mes réservations",
+    "Déconnexion") sera ajoutée avec symfony/security-bundle à J3, car app.user
+    n'est pas disponible sans lui.
+    Les liens "#" seront remplacés par path() quand les routes existeront.
+#}
+<header class="border-b border-line bg-surface">
+    <nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
+        <a href="{{ path('app_accueil') }}" class="text-xl font-bold text-primary">Prêt'Outil</a>
+
+        <ul class="flex items-center gap-8 text-sm text-ink-muted">
+            <li><a href="#" class="hover:text-primary">Catalogue</a></li>
+        </ul>
+
+        <div class="ml-auto flex items-center gap-3 text-sm">
+            <a href="#" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Connexion</a>
+            <a href="#" class="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Créer un compte</a>
+        </div>
+    </nav>
+</header>
