@@ -58,14 +58,20 @@ services:
 
 ###> doctrine/doctrine-bundle ###
   database:
+    # Port fixe pour pgAdmin, accessible depuis cette machine uniquement (127.0.0.1).
+    # 5433 et non 5432, souvent pris par un PostgreSQL installé localement (avec pgAdmin).
+    # Port déjà pris : POSTGRES_PORT=5434 docker compose up -d
     ports:
-      - "5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
 ###< doctrine/doctrine-bundle ###
 
 ###> doctrine/mongodb-odm-bundle ###
   mongodb:
+    # Port fixe pour MongoDB Compass, accessible depuis cette machine uniquement.
+    # 27018 et non 27017, souvent pris par un MongoDB installé localement.
+    # Port déjà pris : MONGODB_PORT=27019 docker compose up -d
     ports:
-      - "27017"
+      - "127.0.0.1:${MONGODB_PORT:-27018}:27017"
 ###< doctrine/mongodb-odm-bundle ###
 
 volumes:
