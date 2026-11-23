@@ -233,8 +233,8 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 |---|---|---|---|
 | J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ✅ |
 | J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques ([notes J1-J2](docs/dossier/notes-j1-j2.md)) | ✅ |
-| J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | 🟡 |
-| J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | ⬜ |
+| J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
+| J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | 🟡 |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | ⬜ |
 | J6 | Sortie, retour, annulation, mes réservations. Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
@@ -558,3 +558,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-23 | Sauvegarde par `pg_dump` au format custom et `mongodump` en archive compressée, avec empreintes SHA-256 | Formats natifs restaurables par les outils standard ; une sauvegarde altérée est détectée avant de remplacer les données |
 | 2026-11-23 | Rôles et utilisateurs applicatifs exclus des sauvegardes | Ils sont recréés par les scripts d'initialisation de `docker/` ; aucune empreinte de mot de passe dans les fichiers de sauvegarde |
 | 2026-11-23 | Sauvegardes hors dépôt, fichiers en lecture pour le seul utilisateur, conservation 30 jours | Elles contiennent des données personnelles (RGPD) |
+| 2026-11-23 | J4 en 5 tickets GitHub (#33 à #37) : catalogue (requêtes et écrans E3, E4) pour Anthony, Voters et gestion du catalogue (E7) pour Chloé, relecture croisée ensemble | Chacun prolonge son domaine de J3 (données, sécurité) ; la relecture croisée prépare l'entretien individuel |
+| 2026-11-23 | Voters faits avant l'écran E7 et testés unitairement | E7 s'appuie sur `ObjetVoter` pour autoriser la suppression ; critère O5 « contrôle d'accès testé » |
