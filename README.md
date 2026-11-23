@@ -378,6 +378,22 @@ docker compose exec php bin/console app:mongodb:check
 
 La première commande affiche `pretoutil_app`, la deuxième échoue avec `permission denied for table reservation`, la troisième lit `audit_log` et constate qu'une écriture ailleurs est refusée.
 
+### Se connecter aux bases depuis la machine (pgAdmin, MongoDB Compass)
+
+Les ports sont fixes et accessibles depuis cette machine uniquement (`127.0.0.1`, voir `compose.override.yaml`). Ils évitent 5432 et 27017, souvent déjà pris par un PostgreSQL ou un MongoDB installé localement : avec ces ports, l'outil risquerait de se connecter au mauvais serveur.
+
+| | PostgreSQL (pgAdmin) | MongoDB (Compass) |
+|---|---|---|
+| Hôte | `localhost` | `localhost` |
+| Port | `5433` | `27018` |
+| Base | `pretoutil` | `pretoutil` |
+| Compte d'administration | `pretoutil`, mot de passe `POSTGRES_PASSWORD` | `pretoutil`, mot de passe `MONGO_INITDB_ROOT_PASSWORD`, base d'authentification `admin` |
+| Compte de l'application | `pretoutil_app`, mot de passe `POSTGRES_APP_PASSWORD` | `pretoutil_app`, mot de passe `MONGODB_APP_PASSWORD`, base d'authentification `pretoutil` |
+
+Les mots de passe sont dans `.env.local`. Le compte de l'application permet de vérifier ses droits réels (un `DELETE` sur `reservation` est refusé).
+
+Port déjà pris sur la machine : choisir un autre port au démarrage, par exemple `POSTGRES_PORT=5434 MONGODB_PORT=27019 docker compose up -d`.
+
 ### Sauvegarde et restauration
 
 Deux scripts, lancés depuis la machine hôte avec les conteneurs démarrés. Ils lisent les identifiants dans les conteneurs (variables de `.env.local`) : aucun mot de passe n'est à saisir ni stocké dans les scripts.
@@ -560,3 +576,4 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-23 | Sauvegardes hors dépôt, fichiers en lecture pour le seul utilisateur, conservation 30 jours | Elles contiennent des données personnelles (RGPD) |
 | 2026-11-23 | J4 en 5 tickets GitHub (#33 à #37) : catalogue (requêtes et écrans E3, E4) pour Anthony, Voters et gestion du catalogue (E7) pour Chloé, relecture croisée ensemble | Chacun prolonge son domaine de J3 (données, sécurité) ; la relecture croisée prépare l'entretien individuel |
 | 2026-11-23 | Voters faits avant l'écran E7 et testés unitairement | E7 s'appuie sur `ObjetVoter` pour autoriser la suppression ; critère O5 « contrôle d'accès testé » |
+| 2026-11-23 | Ports fixes 5433 (PostgreSQL) et 27018 (MongoDB), limités à `127.0.0.1` | Connexion stable depuis pgAdmin et Compass ; 5432 et 27017 sont souvent pris par des serveurs installés localement ; bases non exposées au réseau local |
