@@ -1,31 +1,58 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    # Hasher "auto" : Symfony choisit l'algorithme le plus sûr disponible (bcrypt ou Argon2id)
+    # et réhache le mot de passe à la connexion si l'algorithme recommandé change.
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    # Les utilisateurs sont chargés depuis la table utilisateur, par leur email (stocké en minuscules).
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\Utilisateur
+                property: email
+
+    # Un gestionnaire peut aussi emprunter, un administrateur a tous les droits.
+    role_hierarchy:
+        ROLE_MANAGER: ROLE_USER
+        ROLE_ADMIN: ROLE_MANAGER
 
     firewalls:
         dev:
-            # Ensure dev tools and static assets are always allowed
+            # Outils de développement et fichiers statiques, sans authentification
             pattern: ^/(_profiler(/|$)|(_wdt|assets|build)/)
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
+            # Refuse les comptes désactivés (RG9)
+            user_checker: App\Security\UtilisateurChecker
 
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
+            form_login:
+                login_path: app_connexion
+                check_path: app_connexion
+                username_parameter: email
+                password_parameter: mot_de_passe
+                default_target_path: app_accueil
+                enable_csrf: true
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            logout:
+                path: app_deconnexion
+                target: app_accueil
+                # Le lien de déconnexion porte un jeton CSRF (logout_path() l'ajoute)
+                enable_csrf: true
 
-    # Note: Only the *first* matching rule is applied
+            # US2 : blocage temporaire après 5 échecs, par couple email + adresse IP
+            # (et 25 échecs par adresse IP, toutes adresses email confondues).
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
+
+    # Seule la première règle qui correspond est appliquée.
+    # Un visiteur non connecté est redirigé vers la page de connexion (E1).
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/gestion, roles: ROLE_MANAGER }
+        - { path: ^/mes-reservations, roles: ROLE_USER }
 
 when@test:
     security:

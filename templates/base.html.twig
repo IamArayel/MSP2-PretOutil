@@ -28,6 +28,12 @@
         {{ include('_partials/navbar.html.twig') }}
 
         <main id="contenu" class="mx-auto max-w-7xl px-4 py-10 sm:px-8">
+            {% for message in app.flashes('succes') %}
+                <div class="mx-auto mb-6 max-w-md rounded-md border border-green-200 bg-statut-disponible-bg px-4 py-3 text-sm text-statut-disponible" role="status">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
             {% block body %}{% endblock %}
         </main>
     </body>
