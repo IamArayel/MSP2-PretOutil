@@ -198,7 +198,7 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 - [x] Diagramme de cas d'utilisation
 - [x] Diagramme de séquence « Réserver un objet »
 - [x] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
-- [ ] Procédure de sauvegarde et de restauration de la BDD
+- [x] Procédure de sauvegarde et de restauration de la BDD
 - [ ] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
 - [ ] Veille sécurité (OWASP Top 10, injections SQL et NoSQL)
 - [ ] Dossier de projet (30 à 40 pages) et diaporama
@@ -383,6 +383,38 @@ docker compose exec php bin/console app:mongodb:check
 
 La première commande affiche `pretoutil_app`, la deuxième échoue avec `permission denied for table reservation`, la troisième lit `audit_log` et constate qu'une écriture ailleurs est refusée.
 
+### Sauvegarde et restauration
+
+Deux scripts, lancés depuis la machine hôte avec les conteneurs démarrés. Ils lisent les identifiants dans les conteneurs (variables de `.env.local`) : aucun mot de passe n'est à saisir ni stocké dans les scripts.
+
+```bash
+scripts/sauvegarde.sh
+scripts/restauration.sh sauvegardes/<AAAAMMJJ-HHMMSS>
+```
+
+| Fichier de la sauvegarde | Contenu | Outil |
+|---|---|---|
+| `postgresql.dump` | Schéma, données, contraintes et droits de `pretoutil_app` | `pg_dump --format=custom` |
+| `mongodb.archive.gz` | Collection `audit_log` avec son validateur et ses index (dont le TTL) | `mongodump --archive --gzip` |
+| `SHA256SUMS` | Empreintes des deux fichiers | `shasum -a 256` |
+
+- **Sauvegarde** : dans `sauvegardes/<date UTC>/` (non versionné), fichiers lisibles par le seul utilisateur courant. Si une étape échoue, le dossier incomplet est supprimé.
+- **Restauration** : vérifie les empreintes, demande confirmation (`--oui` pour l'éviter dans un script), puis remplace les données. PostgreSQL est restauré dans une seule transaction : en cas d'erreur, la base reste dans son état précédent.
+- **Rôles et utilisateurs applicatifs** : non sauvegardés, ils sont recréés par les scripts de `docker/` à la création des volumes. Les sauvegardes ne contiennent donc aucune empreinte de mot de passe des comptes de base de données.
+- **Restaurer sur des volumes neufs** : `docker compose down -v`, `docker compose up -d --wait`, puis `scripts/restauration.sh`.
+
+Règles d'exploitation :
+
+| Règle | Valeur |
+|---|---|
+| Fréquence | Une fois par jour, et avant chaque migration ou mise en production |
+| Conservation | 30 jours glissants ; au-delà, les sauvegardes sont supprimées |
+| Emplacement | Copie hors du serveur de l'application (autre machine ou stockage externe) |
+| Protection (RGPD) | Les sauvegardes contiennent des données personnelles : stockage chiffré, accès réservé aux administrateurs |
+| Contrôle | Une restauration d'essai sur des volumes neufs au moins une fois par mois |
+
+Test du 2026-11-23, sur une pile Docker isolée : sauvegarde du jeu d'essai et de 3 documents `audit_log`, suppression des volumes, recréation, restauration. L'état après restauration est identique à l'état avant : nombre de lignes, empreinte MD5 des tables `utilisateur` et `reservation`, contraintes, index, droits de `pretoutil_app`, documents, validateur et index TTL d'`audit_log`. L'application lit les données restaurées avec le compte `pretoutil_app`. Cas d'erreur vérifiés : sauvegarde altérée (empreinte refusée), fichier manquant, confirmation refusée, restauration sur une base déjà remplie, base arrêtée pendant la sauvegarde.
+
 ### Après un `git pull`
 
 Le dossier du projet, `vendor/` compris, est monté dans le conteneur `php`. Celui-ci n'installe les dépendances que si `vendor/` est vide : il ne le met pas à jour quand `composer.lock` change. Sans mise à jour, le conteneur s'arrête au démarrage avec une erreur `Class "..." not found`.
@@ -450,6 +482,8 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB (root) | `docker compose exec mongodb sh -c 'mongosh -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil'` |
 | Recharger le jeu d'essai | `docker compose exec php bin/console doctrine:fixtures:load -n --em=proprietaire` |
+| Sauvegarder les bases | `scripts/sauvegarde.sh` |
+| Restaurer une sauvegarde | `scripts/restauration.sh sauvegardes/<AAAAMMJJ-HHMMSS>` |
 | Tout supprimer, bases comprises | `docker compose down -v` |
 
 ## 16. Journal des décisions
@@ -526,3 +560,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-23 | `audit_log.mongodb.js` monté tel quel comme script d'initialisation MongoDB | Une seule source pour le validateur, les index et le rôle `auditAppendOnly` |
 | 2026-11-23 | Mots de passe dans `.env.local`, transmis aux conteneurs par `env_file` | Docker Compose ne lit pas `.env.local` pour ses variables ; aucun mot de passe dans `.env` ni `compose.yaml` |
 | 2026-11-23 | `app:mongodb:check` vérifie un refus d'écriture au lieu d'écrire un document de test | Le compte applicatif ne peut écrire que dans `audit_log`, en ajout seul : la commande démontre les droits minimaux |
+| 2026-11-23 | Sauvegarde par `pg_dump` au format custom et `mongodump` en archive compressée, avec empreintes SHA-256 | Formats natifs restaurables par les outils standard ; une sauvegarde altérée est détectée avant de remplacer les données |
+| 2026-11-23 | Rôles et utilisateurs applicatifs exclus des sauvegardes | Ils sont recréés par les scripts d'initialisation de `docker/` ; aucune empreinte de mot de passe dans les fichiers de sauvegarde |
+| 2026-11-23 | Sauvegardes hors dépôt, fichiers en lecture pour le seul utilisateur, conservation 30 jours | Elles contiennent des données personnelles (RGPD) |
