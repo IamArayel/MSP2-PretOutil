@@ -282,7 +282,13 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
 
    Au premier démarrage, le conteneur `php` installe les dépendances Composer et attend que PostgreSQL soit prêt. `--wait` attend aussi que MongoDB réponde.
 
-4. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
+4. Compiler les styles Tailwind (le binaire Tailwind est téléchargé au premier lancement dans `var/tailwind/`) :
+
+   ```bash
+   docker compose exec php bin/console tailwind:build
+   ```
+
+5. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
 
 ### Vérifier l'installation
 
@@ -295,6 +301,24 @@ docker compose exec php bin/console app:mongodb:check
 ```
 
 `app:mongodb:check` écrit un document dans la collection `connexion_test`, le relit puis le supprime.
+
+### Styles (Tailwind CSS)
+
+Tailwind CSS 4 est intégré via `symfonycasts/tailwind-bundle` et AssetMapper : pas de Node ni de npm.
+
+| Fichier | Rôle |
+|---|---|
+| `assets/styles/app.css` | Source : import de Tailwind et charte de la maquette dans le bloc `@theme` (couleur principale teal-700, neutres slate, couleurs des statuts) |
+| `var/tailwind/app.built.css` | CSS compilé, non versionné, servi à la place de `app.css` |
+| `templates/base.html.twig` | Gabarit commun, avec la barre de navigation (`templates/_partials/navbar.html.twig`) |
+
+Pendant le développement, lancer la compilation en continu dans un terminal dédié :
+
+```bash
+docker compose exec php bin/console tailwind:build --watch
+```
+
+Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `text-primary`, `border-line`, `text-ink-muted`, `bg-statut-disponible-bg`, etc.
 
 ### Variables d'environnement
 
@@ -313,6 +337,7 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | Suivre les logs | `docker compose logs -f php` |
 | Console Symfony | `docker compose exec php bin/console <commande>` |
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
+| Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB | `docker compose exec mongodb mongosh -u pretoutil -p '!ChangeMe!' pretoutil --authenticationDatabase admin` |
@@ -338,6 +363,8 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | `.gitignore` Visual Studio remplacé par un `.gitignore` Symfony ; `.env.dev` non versionné, `APP_SECRET` dans `.env.local` | L'ancien fichier ignorait `.env` et `bin/console` ; aucun secret dans le dépôt |
 | 2026-11-23 | MongoDB conservé pour le journal d'audit, après avoir envisagé PostgreSQL seul | Couvre la partie NoSQL de la compétence « composants d'accès aux données SQL et NoSQL » ; `details` de forme libre selon l'action |
 | 2026-11-23 | MongoDB 8.0 et `doctrine/mongodb-odm-bundle` 5.6 ; commande `app:mongodb:check` pour tester la connexion | Versions compatibles avec Symfony 7.4 et PHP 8.5 ; test reproductible sans document métier avant J6 |
+| 2026-11-23 | Tailwind CSS 4 via `symfonycasts/tailwind-bundle` 1.0, charte dans le bloc `@theme` de `app.css` | Pas de Node ; noms sémantiques (`primary`, `line`, `statut-*`) pour changer la charte à un seul endroit |
+| 2026-11-23 | Police Inter déclarée sans être téléchargée (repli sur la police système) | Éco-conception et RGPD : aucune requête vers un service de polices externe |
 | 2026-11-23 | Suivi des tâches sur un tableau Trello partagé | Outil collaboratif adapté au travail en binôme et à une méthode agile légère (critère « outils collaboratifs choisis en fonction de la méthode de développement ») |
 | 2026-11-23 | Tâches de J2 en tickets GitHub (#1 à #9) dans un GitHub Project, une branche et une PR par bloc | Tickets fermés automatiquement par les PR (`Closes #n`) : le suivi reste lié au code |
 | 2026-11-23 | MCD en Merise avec Mocodo (source texte `docs/conception/mcd.mcd`) | Versionné dans Git, régénérable, et génère aussi le MLD et le SQL pour le MPD |
