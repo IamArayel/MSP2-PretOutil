@@ -10,6 +10,8 @@ services:
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
       DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-16}&charset=${POSTGRES_CHARSET:-utf8}
+      MONGODB_URI: mongodb://${MONGODB_USER:-app}:${MONGODB_PASSWORD:-!ChangeMe!}@mongodb:27017
+      MONGODB_DB: ${MONGODB_DB:-app}
       # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
       MERCURE_URL: ${CADDY_MERCURE_URL:-http://php/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
@@ -55,6 +57,23 @@ services:
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
 
+###> doctrine/mongodb-odm-bundle ###
+  mongodb:
+    image: mongo:${MONGODB_VERSION:-8.0}
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGODB_DB:-app}
+      # You should definitely change the password in production
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-app}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-!ChangeMe!}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - mongodb_data:/data/db:rw
+###< doctrine/mongodb-odm-bundle ###
+
 volumes:
   caddy_data:
   caddy_config:
@@ -64,3 +83,7 @@ volumes:
 ###> doctrine/doctrine-bundle ###
   database_data:
 ###< doctrine/doctrine-bundle ###
+
+###> doctrine/mongodb-odm-bundle ###
+  mongodb_data:
+###< doctrine/mongodb-odm-bundle ###
