@@ -319,7 +319,7 @@ Le jeu d'essai contient aussi 6 catégories et 24 objets (dont un abîmé, un ho
 
 ### Authentification
 
-La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compte de test. La configuration est dans `config/packages/security.yaml`.
+La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compte de test, ou avec un compte créé sur <https://localhost/inscription> (écran E2). La configuration est dans `config/packages/security.yaml`.
 
 | Mécanisme | Mise en œuvre |
 |---|---|
@@ -329,7 +329,8 @@ La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compt
 | Échecs | Message générique « Email ou mot de passe incorrect. », que l'email existe ou non |
 | Blocage (US2) | `login_throttling` : 5 échecs par email et adresse IP, blocage de 15 minutes |
 | Compte désactivé (RG9) | `App\Security\UtilisateurChecker`, appliqué après la vérification du mot de passe |
-| CSRF | Jeton sur le formulaire de connexion et sur le lien de déconnexion |
+| CSRF | Jeton sur les formulaires de connexion et d'inscription et sur le lien de déconnexion |
+| Inscription (US1) | DTO `InscriptionDto` validé (email valide et unique, mot de passe de 12 caractères minimum), compte créé par `InscriptionService` : email en minuscules, mot de passe haché, `ROLE_USER`, compte actif |
 
 Les pages `/mes-reservations`, `/gestion` et `/admin` sont provisoires : elles seront remplacées par les écrans E5, E6 et E8.
 
@@ -470,3 +471,9 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | `login_throttling` : 5 essais par email et adresse IP sur 15 minutes | US2 ; le 6e essai est bloqué même avec le bon mot de passe |
 | 2026-11-23 | Lien de déconnexion protégé par un jeton CSRF | Un site tiers ne peut pas déconnecter un utilisateur à son insu |
 | 2026-11-23 | Pages provisoires `/mes-reservations`, `/gestion` et `/admin` (`EspaceController`) | Tester l'`access_control` des trois rôles dès J3, avant les écrans E5, E6 et E8 |
+| 2026-11-23 | Inscription : formulaire Symfony sur un DTO (`InscriptionDto`), création dans `InscriptionService` | L'entité n'est jamais dans un état invalide ; aucune logique métier dans le contrôleur |
+| 2026-11-23 | Contrainte `EmailDisponible` sur le DTO, et contrainte d'unicité en base interceptée par le service | `UniqueEntity` ne s'applique qu'aux entités ; la base reste la garantie finale si deux inscriptions arrivent en même temps |
+| 2026-11-23 | Rôles d'un nouvel adhérent stockés vides (`[]`) | `getRoles()` ajoute toujours `ROLE_USER` ; même convention que les fixtures |
+| 2026-11-23 | `AuditLogger::journaliser()` appelé dès J3, sans écriture jusqu'à J6 | Les services métier n'auront pas à être modifiés quand le journal MongoDB sera branché |
+| 2026-11-23 | Jetons CSRF stockés en session, fichier `csrf.yaml` de la recette `symfony/form` supprimé | Les jetons sans état de la recette demandent un contrôleur JavaScript (Stimulus) absent du projet ; la session est plus simple à expliquer |
+| 2026-11-23 | Thème de formulaire commun `templates/form/theme.html.twig` | Champs, aides et erreurs aux couleurs de la maquette pour tous les formulaires (E2, puis E4 et E7) |
