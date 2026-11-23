@@ -212,6 +212,8 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 | MCD (Merise) | [docs/conception/mcd.mcd](docs/conception/mcd.mcd) (Mocodo), [note de conception](docs/conception/mcd.md) | [SVG](docs/conception/mcd.svg), [PNG](docs/conception/mcd.png) |
 | MLD / MPD PostgreSQL et jeu d'essai | [docs/conception/mpd.sql](docs/conception/mpd.sql), [mpd_tests.sql](docs/conception/mpd_tests.sql), [note de conception](docs/conception/mpd.md) | [SVG](docs/conception/mpd.svg), [PNG](docs/conception/mpd.png) |
 | Collection MongoDB `audit_log` | [docs/conception/audit_log.mongodb.js](docs/conception/audit_log.mongodb.js), [audit_log_tests.mongodb.js](docs/conception/audit_log_tests.mongodb.js) | |
+| Dictionnaire de données (et RGPD) | [docs/conception/dictionnaire-donnees.md](docs/conception/dictionnaire-donnees.md) | |
+| Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
 
 Régénérer le diagramme de cas d'utilisation après modification :
 
@@ -280,3 +282,6 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 | 2026-11-23 | Validateur `$jsonSchema` strict sur `audit_log`, rôle MongoDB en lecture et insertion seules | Journal fiable et non modifiable par l'application |
 | 2026-11-23 | Index TTL d'un an sur `audit_log` | RGPD : durée de conservation des journaux appliquée automatiquement |
 | 2026-11-23 | Fixtures sans `id` explicite | Écart du jeu d'essai : des `id` forcés désynchronisent les séquences d'identité |
+| 2026-11-23 | Identifiants en français sans accent ; termes du framework en anglais | Vocabulaire métier lisible par tous, sans les pièges des accents dans les requêtes et les outils |
+| 2026-11-23 | Contraintes nommées `pk_`, `fk_`, `uq_`, `ck_`, `ex_`, `idx_` dans les scripts ; noms Doctrine automatiques conservés | Messages d'erreur lisibles et rattachables à une règle ; pas de lutte contre les conventions de Doctrine |
+| 2026-11-23 | Suppression d'un compte par anonymisation, aucune adresse IP stockée | RGPD : minimisation des données, historique des prêts conservé sans donnée personnelle |
