@@ -290,13 +290,9 @@ PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les 
 
    Au premier démarrage, le conteneur `php` installe les dépendances Composer, attend que PostgreSQL soit prêt et applique les migrations. `--wait` attend aussi que MongoDB réponde. À la création des volumes, les scripts d'initialisation créent les comptes applicatifs (voir [Comptes des bases de données](#comptes-des-bases-de-données)).
 
-4. Compiler les styles Tailwind (le binaire Tailwind est téléchargé au premier lancement dans `var/tailwind/`) :
+   En développement, le service `tailwind` compile les styles en continu (voir [Styles (Tailwind CSS)](#styles-tailwind-css)). Au premier lancement, il télécharge le binaire Tailwind, ce qui retarde la fin de `--wait`.
 
-   ```bash
-   docker compose exec php bin/console tailwind:build
-   ```
-
-5. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
+4. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
 
 ### Base de données et jeu d'essai
 
@@ -370,7 +366,6 @@ Pour appliquer ces comptes à des volumes créés avant J3-C1, recréer les base
 docker compose down -v
 docker compose up -d --wait
 docker compose exec php bin/console doctrine:fixtures:load --no-interaction --em=proprietaire
-docker compose exec php bin/console tailwind:build
 ```
 
 Vérifier les droits :
@@ -450,10 +445,10 @@ Tailwind CSS 4 est intégré via `symfonycasts/tailwind-bundle` et AssetMapper :
 | `var/tailwind/app.built.css` | CSS compilé, non versionné, servi à la place de `app.css` |
 | `templates/base.html.twig` | Gabarit commun, avec la barre de navigation (`templates/_partials/navbar.html.twig`) |
 
-Pendant le développement, lancer la compilation en continu dans un terminal dédié :
+En développement, le service `tailwind` de `compose.override.yaml` lance `tailwind:build --watch` : le CSS est recompilé à chaque modification de `assets/` ou `templates/`. Le résultat est stocké dans le volume `tailwind_build`, partagé avec le conteneur `php` (son `var/` n'est pas lié à la machine hôte). Pour suivre la compilation :
 
 ```bash
-docker compose exec php bin/console tailwind:build --watch
+docker compose logs -f tailwind
 ```
 
 Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `text-primary`, `border-line`, `text-ink-muted`, `bg-statut-disponible-bg`, etc.

@@ -12,6 +12,8 @@ services:
       - ./frankenphp/conf.d/20-app.dev.ini:/usr/local/etc/php/app.conf.d/20-app.dev.ini:ro
       # Keep var/ off the bind-mount for faster I/O on Mac/Windows; comment to inspect from the host.
       - /app/var
+      # CSS compilé par le service tailwind, partagé avec ce conteneur
+      - tailwind_build:/app/var/tailwind
       # If you develop on Mac or Windows you can remove the vendor/ directory
       #  from the bind-mount for better performance by enabling the next line:
       #- /app/vendor
@@ -25,6 +27,31 @@ services:
     extra_hosts:
       # Ensure that host.docker.internal is correctly defined on Linux
       - host.docker.internal:host-gateway
+    tty: true
+
+  # Compile assets/styles/app.css en continu dans var/tailwind/app.built.css.
+  # L'entrypoint est remplacé pour ne pas relancer composer install ni les migrations.
+  tailwind:
+    image: ${IMAGES_PREFIX:-}app-php-dev
+    depends_on:
+      - php
+    entrypoint: ["php", "bin/console"]
+    command: ["tailwind:build", "--watch"]
+    volumes:
+      - ./:/app
+      - /app/var
+      - tailwind_build:/app/var/tailwind
+    environment:
+      APP_ENV: "${APP_ENV:-dev}"
+    # Remplace le healthcheck de l'image, qui interroge FrankenPHP (absent ici)
+    healthcheck:
+      test: ["CMD", "test", "-s", "var/tailwind/app.built.css"]
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 120s
+    # Tailwind arrête le mode watch quand l'entrée standard se ferme
+    stdin_open: true
     tty: true
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
@@ -40,3 +67,6 @@ services:
     ports:
       - "27017"
 ###< doctrine/mongodb-odm-bundle ###
+
+volumes:
+  tailwind_build:
