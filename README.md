@@ -244,7 +244,69 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 
 ## 15. Installation
 
-> Section à compléter à J2, une fois l'environnement Docker en place.
+L'environnement repose sur le modèle [`dunglas/symfony-docker`](https://github.com/dunglas/symfony-docker) : Symfony 7.4 LTS servi par FrankenPHP (PHP 8.5) et PostgreSQL 16, le tout dans Docker Compose.
+
+### Prérequis
+
+- Docker avec Docker Compose v2 (Docker Desktop ou OrbStack)
+- Ports 80 et 443 libres sur la machine
+
+PHP et Composer n'ont pas besoin d'être installés sur la machine : toutes les commandes passent par le conteneur `php`.
+
+### Premier lancement
+
+1. Cloner le dépôt :
+
+   ```bash
+   git clone https://github.com/IamArayel/MSP2-PretOutil.git
+   cd MSP2-PretOutil
+   ```
+
+2. Créer le fichier `.env.local` (non versionné) avec le secret de l'application :
+
+   ```bash
+   echo "APP_SECRET=$(openssl rand -hex 16)" > .env.local
+   ```
+
+3. Construire les images et démarrer les conteneurs :
+
+   ```bash
+   docker compose build --pull
+   docker compose up -d --wait
+   ```
+
+   Au premier démarrage, le conteneur `php` installe les dépendances Composer et attend que PostgreSQL soit prêt.
+
+4. Ouvrir <https://localhost> et accepter le certificat TLS auto-signé.
+
+### Vérifier l'installation
+
+```bash
+docker compose ps
+docker compose exec php bin/console dbal:run-sql "SELECT 1"
+docker compose exec php bin/console doctrine:migrations:status
+```
+
+### Variables d'environnement
+
+| Fichier | Versionné | Contenu |
+|---|---|---|
+| `.env` | Oui | Valeurs par défaut de développement : `APP_ENV`, `DATABASE_URL`, `POSTGRES_*` (lues aussi par Docker Compose) |
+| `.env.local` | Non | Secrets et surcharges locales (`APP_SECRET`, etc.) |
+
+Dans Docker, `DATABASE_URL` est construite par `compose.yaml` à partir des variables `POSTGRES_*` et pointe vers le service `database`.
+
+### Commandes utiles
+
+| Action | Commande |
+|---|---|
+| Arrêter les conteneurs | `docker compose down` |
+| Suivre les logs | `docker compose logs -f php` |
+| Console Symfony | `docker compose exec php bin/console <commande>` |
+| Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
+| Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
+| Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
+| Tout supprimer, BDD comprise | `docker compose down -v` |
 
 ## 16. Journal des décisions
 
@@ -262,4 +324,6 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 | 2026-11-23 | Maquettes construites avec des composants Figma (Bouton, Badge, Champ, Navbar, CarteObjet) et la palette Tailwind en variables | Correspondance directe avec les composants Twig et les classes Tailwind à J4-J8 |
 | 2026-11-23 | Diagramme de cas d'utilisation en PlantUML, enchaînement des écrans en Mermaid | Sources textuelles versionnées dans Git, régénérables |
 | 2026-11-23 | Projet réalisé en binôme (Anthony Dégeilh, Chloé Baïsse) | Organisation de la formation |
+| 2026-11-23 | Environnement basé sur `dunglas/symfony-docker` (FrankenPHP), Symfony 7.4 LTS, PostgreSQL 16 | Modèle maintenu par la communauté Symfony, HTTPS local prêt à l'emploi ; version LTS maintenue jusqu'en 2028 |
+| 2026-11-23 | `.gitignore` Visual Studio remplacé par un `.gitignore` Symfony ; `.env.dev` non versionné, `APP_SECRET` dans `.env.local` | L'ancien fichier ignorait `.env` et `bin/console` ; aucun secret dans le dépôt |
 | 2026-11-23 | Suivi des tâches sur un tableau Trello partagé | Outil collaboratif adapté au travail en binôme et à une méthode agile légère (critère « outils collaboratifs choisis en fonction de la méthode de développement ») |
