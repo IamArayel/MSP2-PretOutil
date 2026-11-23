@@ -1,0 +1,65 @@
+@startuml architecture
+' Prêt'Outil : architecture multicouche répartie (ticket #8)
+' Régénérer : plantuml -tsvg docs/diagrammes/architecture.puml
+'             puis rsvg-convert -b white -z 1.5 docs/diagrammes/architecture.svg -o docs/diagrammes/architecture.png
+title Prêt'Outil : architecture en couches et conteneurs Docker
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultTextAlignment center
+skinparam ArrowColor #334155
+skinparam rectangle {
+  BorderColor #0F766E
+  BackgroundColor #F0FDFA
+}
+skinparam node {
+  BorderColor #334155
+  BackgroundColor #F8FAFC
+}
+skinparam database {
+  BorderColor #0F766E
+  BackgroundColor #F0FDFA
+}
+skinparam note {
+  BackgroundColor #FFFBEB
+  BorderColor #D97706
+}
+skinparam legend {
+  BackgroundColor #F1F5F9
+  BorderColor #64748B
+}
+
+actor "Navigateur\n(adhérent, gestionnaire,\nadministrateur)" as nav
+
+node "Hôte Docker (Docker Compose)" as hote {
+
+  node "Conteneur php\nFrankenPHP (Caddy) · PHP 8.5 · Symfony 7.4 LTS" as php {
+    rectangle "**Pare-feu Symfony**\nauthentification, login_throttling, UserChecker,\naccess_control, role_hierarchy\n----\n<color:#B45309>mots de passe hachés, message d'erreur générique</color>" as secu
+    rectangle "**Présentation**\nContrôleurs · Vues Twig + Tailwind\n----\n<color:#B45309>échappement Twig (XSS), aucune règle métier</color>" as presentation
+    rectangle "**Formulaires / DTO**\nSymfony Form · Validator\n----\n<color:#B45309>jeton CSRF, contraintes (types, RG1)</color>" as forms
+    rectangle "**Métier**\nServices (ReservationService…) · Voters\nAuditLogger · exceptions métier\n----\n<color:#B45309>RG1 à RG8, droits métier (Voters),</color>\n<color:#B45309>transaction et verrou (RG4)</color>" as metier
+    rectangle "**Accès aux données**\nRepositories Doctrine ORM · DocumentManager ODM\n----\n<color:#B45309>requêtes préparées, aucun opérateur MongoDB</color>\n<color:#B45309>issu de la saisie</color>" as donnees
+  }
+
+  database "**database**\nPostgreSQL 16\nutilisateur, categorie,\nobjet, reservation\n----\n<color:#B45309>FK RESTRICT, CHECK,</color>\n<color:#B45309>EXCLUDE (RG2),</color>\n<color:#B45309>rôle pretoutil_app</color>\n<color:#B45309>aux droits minimaux</color>" as pg
+  database "**mongodb**\nMongoDB 8.0\naudit_log\n----\n<color:#B45309>validateur $jsonSchema,</color>\n<color:#B45309>index TTL 1 an (RGPD),</color>\n<color:#B45309>rôle lecture + insertion</color>" as mongo
+}
+
+nav --> secu : HTTPS (TLS automatique Caddy)\nHTTP/2, HTTP/3
+secu --> presentation
+presentation -right-> forms : valide la saisie
+presentation --> metier : délègue
+metier --> donnees
+donnees --> pg : SQL (pdo_pgsql)
+donnees --> mongo : protocole MongoDB\n(extension mongodb)
+
+legend bottom
+  <color:#B45309>En orange : mesure de sécurité de la couche</color>
+  Flux internes sur le réseau Docker ; hors développement, seuls les ports 80 et 443 (php) sont exposés sur l'hôte.
+
+  **Éco-conception** : pagination du catalogue (20 objets) · pas de polling ni de temps réel ·
+  requêtes indexées (idx_*) · assets minifiés et versionnés (AssetMapper, Tailwind) · pas d'image ni de police externe
+endlegend
+
+@enduml
