@@ -6,6 +6,8 @@ Projet réalisé pour la mise en situation professionnelle du CCP 2 « Concevoir
 
 **Équipe** : projet réalisé en binôme par Anthony Dégeilh et Chloé Baïsse.
 
+**Suivi des tâches** : [tableau Trello Prêt'Outil](https://trello.com/b/hk6mi5ST/pretoutil) (créé par Chloé Baïsse).
+
 ---
 
 ## Sommaire
@@ -260,3 +262,4 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 | 2026-11-23 | Maquettes construites avec des composants Figma (Bouton, Badge, Champ, Navbar, CarteObjet) et la palette Tailwind en variables | Correspondance directe avec les composants Twig et les classes Tailwind à J4-J8 |
 | 2026-11-23 | Diagramme de cas d'utilisation en PlantUML, enchaînement des écrans en Mermaid | Sources textuelles versionnées dans Git, régénérables |
 | 2026-11-23 | Projet réalisé en binôme (Anthony Dégeilh, Chloé Baïsse) | Organisation de la formation |
+| 2026-11-23 | Suivi des tâches sur un tableau Trello partagé | Outil collaboratif adapté au travail en binôme et à une méthode agile légère (critère « outils collaboratifs choisis en fonction de la méthode de développement ») |
