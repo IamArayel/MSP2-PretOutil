@@ -6,7 +6,7 @@ Projet réalisé pour la mise en situation professionnelle du CCP 2 « Concevoir
 
 **Équipe** : projet réalisé en binôme par Anthony Dégeilh et Chloé Baïsse.
 
-**Suivi des tâches** : [tableau Trello Prêt'Outil](https://trello.com/b/hk6mi5ST/pretoutil) (créé par Chloé Baïsse).
+**Suivi des tâches** : [GitHub Project Prêt'Outil](https://github.com/users/IamArayel/projects/14/views/1) (tickets liés aux PR) et [tableau Trello Prêt'Outil](https://trello.com/b/hk6mi5ST/pretoutil) (créé par Chloé Baïsse).
 
 ---
 
@@ -209,6 +209,7 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 | Diagramme de cas d'utilisation | [docs/diagrammes/cas-utilisation.puml](docs/diagrammes/cas-utilisation.puml) (PlantUML) | [SVG](docs/diagrammes/cas-utilisation.svg), [PNG](docs/diagrammes/cas-utilisation.png) |
 | Maquettes (E1, E3, E4, E5, E6, E9) et composants | [Figma : Prêt'Outil - Maquettes](https://www.figma.com/design/eyw5N9ZI2sKFkVAalYHFlc) | [docs/maquettes/](docs/maquettes/) |
 | Enchaînement des écrans | [FigJam](https://www.figma.com/board/4JSeLbE6WlRh5la3TAbomW), [Mermaid](docs/diagrammes/enchainement-ecrans.md) | [SVG](docs/diagrammes/enchainement-ecrans.svg) |
+| MCD (Merise) | [docs/conception/mcd.mcd](docs/conception/mcd.mcd) (Mocodo), [note de conception](docs/conception/mcd.md) | [SVG](docs/conception/mcd.svg), [PNG](docs/conception/mcd.png) |
 
 Régénérer le diagramme de cas d'utilisation après modification :
 
@@ -223,7 +224,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | Jour | Conception et développement | Dossier | Statut |
 |---|---|---|---|
 | J1 | Expression des besoins finalisée, diagramme de cas d'utilisation, maquettes Figma de 4 écrans (catalogue, réservation, mes réservations, retours), schéma d'enchaînement | Exports des maquettes et diagrammes | ✅ |
-| J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques | ⬜ |
+| J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques | 🟡 |
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ⬜ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories | ⬜ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | ⬜ |
@@ -263,3 +264,9 @@ Légende : ⬜ à faire · 🟡 en cours · ✅ terminé
 | 2026-11-23 | Diagramme de cas d'utilisation en PlantUML, enchaînement des écrans en Mermaid | Sources textuelles versionnées dans Git, régénérables |
 | 2026-11-23 | Projet réalisé en binôme (Anthony Dégeilh, Chloé Baïsse) | Organisation de la formation |
 | 2026-11-23 | Suivi des tâches sur un tableau Trello partagé | Outil collaboratif adapté au travail en binôme et à une méthode agile légère (critère « outils collaboratifs choisis en fonction de la méthode de développement ») |
+| 2026-11-23 | Tâches de J2 en tickets GitHub (#1 à #9) dans un GitHub Project, une branche et une PR par bloc | Tickets fermés automatiquement par les PR (`Closes #n`) : le suivi reste lié au code |
+| 2026-11-23 | MCD en Merise avec Mocodo (source texte `docs/conception/mcd.mcd`) | Versionné dans Git, régénérable, et génère aussi le MLD et le SQL pour le MPD |
+| 2026-11-23 | RESERVATION modélisée comme une entité, pas comme une association porteuse | Un adhérent peut réserver plusieurs fois le même objet : il faut un identifiant propre |
+| 2026-11-23 | Pas d'entité PRÊT : sortie et retour portés par RESERVATION (`sortie_le`, `retour_le`, `etat_retour`) | Relation 1-1 avec la réservation ; évite une jointure et garde le cycle de vie au même endroit |
+| 2026-11-23 | Rôles stockés dans `UTILISATEUR.roles`, pas d'entité RÔLE | 3 rôles fixes et hiérarchisés, convention Symfony Security |
+| 2026-11-23 | Disponibilité d'un objet calculée, jamais stockée | Évite une donnée dérivée incohérente avec les réservations |
