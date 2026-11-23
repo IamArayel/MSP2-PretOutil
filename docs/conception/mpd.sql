@@ -1,4 +1,4 @@
--- Prêt'Outil : modèle physique de données (PostgreSQL 17)
+-- Prêt'Outil : modèle physique de données (PostgreSQL 16)
 -- Ticket #2. Script de référence : à J3, le schéma est créé par les migrations
 -- Doctrine ; les contraintes CHECK et EXCLUDE ci-dessous y sont recopiées à la main.
 -- Conventions : snake_case, tables au singulier, clé primaire id,

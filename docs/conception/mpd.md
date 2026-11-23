@@ -4,7 +4,7 @@ Ticket : [#2 J2-A2 MLD / MPD et contrainte anti-chevauchement](https://github.co
 
 | Fichier | Rôle |
 |---|---|
-| [mpd.sql](mpd.sql) | Script de création PostgreSQL 17 : tables, contraintes, index, droits |
+| [mpd.sql](mpd.sql) | Script de création PostgreSQL 16 : tables, contraintes, index, droits |
 | [mpd_tests.sql](mpd_tests.sql) | Jeu d'essai des contraintes PostgreSQL (21 cas) |
 | [audit_log.mongodb.js](audit_log.mongodb.js) | Collection MongoDB du journal d'audit : validateur, index, rôle |
 | [audit_log_tests.mongodb.js](audit_log_tests.mongodb.js) | Jeu d'essai du validateur MongoDB (8 cas) |
@@ -106,7 +106,7 @@ Un document par action sensible (RG8) :
 
 ## 8. Jeu d'essai
 
-Exécuté le 2026-11-23 sur des conteneurs `postgres:17-alpine` et `mongo:8.0`.
+Exécuté le 2026-11-23 sur des conteneurs `postgres:16-alpine` et `mongo:8.0`, versions de l'environnement Docker du projet. Un premier passage sur PostgreSQL 17 donnait le même résultat.
 
 ### PostgreSQL : 21 cas, 21 conformes
 
@@ -159,7 +159,7 @@ Code 121 : `DocumentValidationFailure`. Le cas « entier 64 bits » a été ajou
 ### Reproduire les tests
 
 ```bash
-docker run -d --rm --name pretoutil-test-pg -e POSTGRES_PASSWORD=test -e POSTGRES_DB=pretoutil postgres:17-alpine
+docker run -d --rm --name pretoutil-test-pg -e POSTGRES_PASSWORD=test -e POSTGRES_DB=pretoutil postgres:16-alpine
 docker exec -i pretoutil-test-pg psql -v ON_ERROR_STOP=1 -U postgres -d pretoutil < docs/conception/mpd.sql
 docker exec -i pretoutil-test-pg psql -v ON_ERROR_STOP=1 -U postgres -d pretoutil < docs/conception/mpd_tests.sql
 ```

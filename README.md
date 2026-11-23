@@ -188,6 +188,8 @@ Rôle de chaque couche :
 
 RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle pour afficher un message clair, et la contrainte `EXCLUDE` PostgreSQL la garantit en dernier recours.
 
+Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [docs/diagrammes/architecture.md](docs/diagrammes/architecture.md).
+
 ## 12. Livrables
 
 - [ ] Code source versionné, avec ce README
@@ -215,6 +217,7 @@ RG2 est appliquée en défense en profondeur : `ReservationService` la contrôle
 | Dictionnaire de données (et RGPD) | [docs/conception/dictionnaire-donnees.md](docs/conception/dictionnaire-donnees.md) | |
 | Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
 | Diagramme de séquence « Réserver un objet » | [PlantUML](docs/diagrammes/sequence-reserver.puml), [note](docs/diagrammes/sequence-reserver.md) | [SVG](docs/diagrammes/sequence-reserver.svg), [PNG](docs/diagrammes/sequence-reserver.png) |
+| Schéma d'architecture | [PlantUML](docs/diagrammes/architecture.puml), [note](docs/diagrammes/architecture.md) | [SVG](docs/diagrammes/architecture.svg), [PNG](docs/diagrammes/architecture.png) |
 
 Régénérer le diagramme de cas d'utilisation après modification :
 
@@ -387,3 +390,6 @@ Dans Docker, `compose.yaml` construit `DATABASE_URL` à partir des variables `PO
 | 2026-11-23 | Réservation : refus signalés par des exceptions métier, fragments `break` dans le diagramme de séquence | Le contrôleur traduit le refus en message sans connaître la règle ; un refus termine le scénario |
 | 2026-11-23 | RG4 vérifiée sous verrou `SELECT ... FOR UPDATE` sur l'adhérent | Deux demandes simultanées du même adhérent ne peuvent pas dépasser le quota de 3 |
 | 2026-11-23 | Journalisation d'une réservation après le `COMMIT`, sans bloquer si MongoDB est indisponible | On ne journalise que ce qui a eu lieu ; le journal ne doit pas empêcher le service rendu |
+| 2026-11-23 | Schéma d'architecture unique : cinq couches logicielles dans le conteneur `php`, une base par conteneur | Montre sur une seule page le découpage logique, la répartition physique et la sécurité de chaque couche |
+| 2026-11-23 | Seul le conteneur `php` exposé hors développement ; bases joignables par le réseau Docker uniquement | Réduit la surface d'attaque : aucune base accessible depuis l'extérieur |
+| 2026-11-23 | Scripts de conception alignés sur PostgreSQL 16, jeu d'essai rejoué (21/21) | Même version que l'environnement Docker : ce qui est testé est ce qui tourne |

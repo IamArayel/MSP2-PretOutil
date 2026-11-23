@@ -1,5 +1,5 @@
 @startuml mpd
-title Prêt'Outil : modèle physique de données (PostgreSQL 17)
+title Prêt'Outil : modèle physique de données (PostgreSQL 16)
 hide circle
 skinparam class {
   BackgroundColor #F8FAFC
