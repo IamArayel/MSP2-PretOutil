@@ -236,7 +236,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques ([notes J1-J2](docs/dossier/notes-j1-j2.md)) | ✅ |
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
-| J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | ⬜ |
+| J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | 🟡 |
 | J6 | Sortie, retour, annulation, mes réservations. Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
@@ -627,3 +627,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Suppression non journalisée, pas de réactivation d'un objet retiré | Hors périmètre du MVP : l'énumération des actions de `audit_log` ne prévoit ni `OBJET_SUPPRIME` ni réactivation ; améliorations possibles |
 | 2026-11-24 | Parcours complet de fin de journée fait par requêtes HTTP, rôle par rôle, sur les fixtures | Reproductible et rapide ; le rendu visuel reste vérifié à la main, car le certificat local bloque les navigateurs automatisés |
 | 2026-11-24 | Remarques de relecture du bloc B (journalisation de la suppression, objet désactivé avec réservations à venir, réactivation) reportées à J5 et J6 | Elles touchent `AuditLogger` et `ReservationService`, réalisés ces jours-là ; voir les notes J4, section 6 |
+| 2026-11-24 | J5 en 4 tickets GitHub (#44 à #47) : `ReservationService` pour Anthony, tests du service et formulaire de réservation pour Chloé, relecture croisée ensemble | Le service suit le diagramme de séquence conçu par Anthony ; tester le code de l'autre oblige chacun à le comprendre, ce qui prépare l'entretien individuel |
+| 2026-11-24 | Signature de `reserver()` et exceptions métier poussées en premier | Le formulaire de réservation (#46) peut avancer en parallèle du service |
+| 2026-11-24 | Règle du retour en retard tranchée ensemble au début de J5 (#44) | Elle s'applique à la fois au service et au filtre du catalogue |
