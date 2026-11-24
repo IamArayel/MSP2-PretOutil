@@ -31,3 +31,8 @@ Thumbs.db
 
 # Sauvegardes des bases (données personnelles) : jamais dans le dépôt
 /sauvegardes/
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
