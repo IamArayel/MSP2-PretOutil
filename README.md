@@ -561,6 +561,10 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Integration/AuditLogIntegrationTest.php` | Sur MongoDB `pretoutil_test` : document écrit puis relu (types BSON), `details` vide écrit comme objet, 3 documents invalides refusés par le validateur (code 121), suppression et modification refusées au compte applicatif (code 13), filtre et tri du journal, `CONNEXION_ECHOUEE` après un vrai échec de connexion |
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Sur `pretoutil_test` : contrainte `EXCLUDE` (SQLSTATE 23P01) traduite en `PeriodeIndisponibleException`, réservation annulée qui ne bloque ni la période ni le quota |
 | `tests/Security/Voter/ReservationVoterTest.php` | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6) |
+| `tests/Controller/Api/DisponibiliteControllerTest.php` | API des disponibilités : réponses JSON, absence de donnée personnelle, mêmes règles que la réservation, erreurs 400, 404 et 405, limite de débit (429) |
+| `tests/Controller/ControleAccesTest.php` | Contrôle d'accès des 20 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu |
+
+Plan de tests (objectifs, niveaux, matrice du contrôle d'accès, critères de réussite) : [docs/tests/plan-de-tests.md](docs/tests/plan-de-tests.md).
 
 Correspondance entre chaque règle de gestion et ses tests : [docs/tests/correspondance-rg-tests.md](docs/tests/correspondance-rg-tests.md).
 
@@ -761,3 +765,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Parcours de fin de J6 sur tout le cycle de vie, avec contrôle sur E9 d'un document par action (21 contrôles) | Prouve RG8 de bout en bout : chaque action sensible produit exactement une entrée du journal |
 | 2026-11-24 | J7 en 5 tickets GitHub (#64 à #68) : plan de tests, contrôle d'accès de chaque route et jeu d'essai « Réserver un objet » pour Anthony ; tests de sécurité (CSRF, injections, XSS) et veille OWASP pour Chloé ; relecture croisée ensemble | RG1 à RG6 déjà couvertes à J5 et J6 : J7 complète O5 par les routes et démontre les protections par des tests ; Anthony rejoue la réservation qu'il a écrite, Chloé teste l'injection NoSQL sur E9 qu'elle a réalisé |
 | 2026-11-24 | Contrôle d'accès testé par une matrice routes × profils, qui échoue si une route n'y figure pas | Une route ajoutée plus tard ne peut pas échapper au critère O5 |
+| 2026-11-24 | Requêtes en POST de la matrice d'accès envoyées sans jeton CSRF | Le test vérifie qui passe le contrôle d'accès, sans exécuter l'action ; le CSRF a ses propres tests (#66) |
+| 2026-11-24 | Compteurs de limitation (API et tentatives de connexion) remis à zéro au début des tests qui les utilisent | Stockés sur disque en test, ils faisaient échouer le lancement suivant ou le test suivant |
