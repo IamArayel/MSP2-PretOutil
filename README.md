@@ -470,6 +470,15 @@ docker compose exec php bin/console app:mongodb:check
 
 PHPUnit est installé en dépendance de développement (`symfony/test-pack`). Les tests sont dans `tests/`, rangés comme le code de `src/`.
 
+Les tests d'intégration utilisent une base à part, `pretoutil_test` (suffixe `_test` ajouté par `doctrine.yaml` en environnement `test`). À créer une fois, puis à migrer après chaque nouvelle migration :
+
+```bash
+docker compose exec -e APP_ENV=test php bin/console doctrine:database:create --connection=proprietaire --if-not-exists
+docker compose exec -e APP_ENV=test php bin/console doctrine:migrations:migrate --no-interaction
+```
+
+Elle a les mêmes comptes que la base de développement : créée et migrée par le propriétaire, utilisée par les tests avec `pretoutil_app`. Elle reste vide : chaque test d'intégration s'exécute dans une transaction annulée à la fin. Elle disparaît avec `docker compose down -v`.
+
 ```bash
 docker compose exec php bin/phpunit --testdox
 ```
@@ -477,7 +486,11 @@ docker compose exec php bin/phpunit --testdox
 | Tests | Ce qu'ils vérifient |
 |---|---|
 | `tests/Security/Voter/ObjetVoterTest.php` | `OBJET_GERER` : gestionnaire et administrateur autorisés, adhérent et visiteur refusés ; `OBJET_SUPPRIMER` : refusé pour un objet déjà réservé (US6) |
+| `tests/Service/ReservationServiceTest.php` | Règles RG1 à RG5 de `ReservationService` et annulation : une méthode par branche du diagramme de séquence, cas limites (14 et 15 jours, aujourd'hui, hier, 3e et 4e réservation) ; base simulée |
+| `tests/Integration/ReservationServiceIntegrationTest.php` | Sur `pretoutil_test` : contrainte `EXCLUDE` (SQLSTATE 23P01) traduite en `PeriodeIndisponibleException`, réservation annulée qui ne bloque ni la période ni le quota |
 | `tests/Security/Voter/ReservationVoterTest.php` | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6) |
+
+Correspondance entre chaque règle de gestion et ses tests : [docs/tests/correspondance-rg-tests.md](docs/tests/correspondance-rg-tests.md).
 
 Les tests des Voters sont des tests unitaires : ni base de données ni conteneur Symfony. La hiérarchie des rôles est reconstruite comme dans `security.yaml`, et la date du jour est fixée par une horloge de test (`MockClock`).
 
@@ -636,3 +649,7 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Transaction ouverte sur la connexion plutôt que `wrapInTransaction()` | `wrapInTransaction()` ferme l'EntityManager à toute exception, y compris un refus métier, ce qui empêcherait d'afficher l'écran E4 |
 | 2026-11-24 | Index partiel `idx_reservation_en_cours` et sous-requête non corrélée pour les retours en retard | Mesures `EXPLAIN` : 16 ms avec un `OR`, 83 ms avec un second `NOT EXISTS`, 4,6 ms stable avec l'index ; il servira aussi à l'écran E6 |
 | 2026-11-24 | `VACUUM ANALYZE` avant et après le script de mesure `EXPLAIN` | Ses insertions annulées laissaient 1,4 million de lignes mortes qui faussaient les plans |
+| 2026-11-24 | Base de test `pretoutil_test` créée par les migrations, avec les mêmes comptes qu'en développement | Les tests d'intégration vérifient le vrai comportement de PostgreSQL (contrainte `EXCLUDE`, droits de `pretoutil_app`) |
+| 2026-11-24 | Tests d'intégration dans une transaction annulée, sans bundle supplémentaire | Base toujours vide entre deux tests ; le service ouvre sa transaction en point de sauvegarde (`SAVEPOINT`) de celle du test |
+| 2026-11-24 | Conflit concurrent simulé par un repository qui ne voit pas le chevauchement | Seule façon reproductible d'atteindre la contrainte `EXCLUDE` (23P01) sans deux processus en parallèle |
+| 2026-11-24 | Tableau RG → tests et vérification par erreurs volontaires ([correspondance-rg-tests.md](docs/tests/correspondance-rg-tests.md)) | Critère O5 démontrable : chaque règle a un test qui échoue quand on la casse |
