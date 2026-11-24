@@ -16,15 +16,6 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class EspaceController extends AbstractController
 {
-    #[Route('/mes-reservations', name: 'app_mes_reservations', methods: ['GET'])]
-    public function mesReservations(): Response
-    {
-        return $this->render('espace/index.html.twig', [
-            'titre' => 'Mes réservations',
-            'role' => 'Adhérent',
-        ]);
-    }
-
     #[Route('/gestion', name: 'app_gestion', methods: ['GET'])]
     public function gestion(): Response
     {

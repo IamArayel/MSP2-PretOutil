@@ -135,6 +135,26 @@ class ReservationRepository extends ServiceEntityRepository
     }
 
     /**
+     * Réservations d'un adhérent pour l'écran E5, avec leur objet (une seule requête) :
+     * à venir, puis en cours, puis terminées et annulées ; dans chaque groupe, par date de début décroissante.
+     *
+     * @return list<Reservation>
+     */
+    public function listerPourAdherent(Utilisateur $adherent): array
+    {
+        return $this->createQueryBuilder('r')
+            ->addSelect('o')
+            ->innerJoin('r.objet', 'o')
+            ->addSelect("CASE WHEN r.statut = 'confirmee' THEN 1 WHEN r.statut = 'en_cours' THEN 2 ELSE 3 END AS HIDDEN rang")
+            ->where('r.utilisateur = :adherent')
+            ->setParameter('adherent', $adherent)
+            ->orderBy('rang', 'ASC')
+            ->addOrderBy('r.dateDebut', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Verrouille la ligne de l'adhérent jusqu'à la fin de la transaction en cours
      * (SELECT ... FOR UPDATE) : deux demandes simultanées du même adhérent passent
      * l'une après l'autre et ne peuvent pas dépasser le quota (RG4).
