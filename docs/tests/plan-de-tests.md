@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-24
 
-245 tests, 679 assertions, tous verts, en 40 secondes environ.
+257 tests, 794 assertions, tous verts, en 40 secondes environ.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -50,6 +50,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
 | `tests/Controller/ControleAccesTest.php` | Fonctionnel | 92 | Section 5 ci-dessous |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 55 | Section 6 ci-dessous |
+| `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 80 cas.
 
@@ -144,6 +145,8 @@ Test : [tests/Controller/SecuriteTest.php](../../tests/Controller/SecuriteTest.p
 | | | `testObjetPiegeEchappeDansLApi` | `<script>` dans le JSON, valeur décodée intacte |
 | Force brute sur la connexion (US2) | `login_throttling` : 5 échecs en 15 minutes | `testConnexionBloqueeApresCinqEchecs` : 5 échecs puis le bon mot de passe | « Trop de tentatives de connexion », aucune session |
 | | | `testConnexionPossibleSousLeSeuil` : témoin, 4 échecs puis le bon mot de passe | Session ouverte |
+| XSS (seconde barrière) | `Content-Security-Policy` avec nonce, sans `unsafe-inline` | `EntetesSecuriteTest::testChaqueScriptPorteLeNonceDeLaRequete`, `testAucunJavaScriptEnLigneDansLesGabarits` | Chaque script porte le nonce ; aucun `on…=` dans les gabarits |
+| Clickjacking, mauvaise configuration | `X-Frame-Options`, `frame-ancestors`, HSTS, `nosniff`, `Referrer-Policy` | `EntetesSecuriteTest` | En-têtes présents sur les pages et l'API, HSTS en HTTPS seulement |
 | Vol de la base | Mot de passe haché (`auto` : bcrypt ou Argon2, salé) | `testMotDePasseStockeSousFormeDEmpreinte` : inscription par le formulaire, colonne lue en SQL | Mot de passe absent de la colonne, empreinte `$2y$` ou `$argon2`, vérifiée par `password_verify` |
 
 ### Le test détecte-t-il vraiment une faille ?
@@ -159,6 +162,7 @@ Vérification du 2026-11-24 : chaque protection a été retirée seule, puis le 
 | Filtre `\|raw` sur le détail du journal (E9) | `testObjetPiegeEchappeDansLeJournal` échoue |
 | Mot de passe enregistré sans `hashPassword()` | `testMotDePasseStockeSousFormeDEmpreinte` échoue |
 | Bloc `login_throttling` retiré | `testConnexionBloqueeApresCinqEchecs` échoue : le bon mot de passe ouvre la session au 6e essai |
+| `EntetesSecuriteSubscriber` désactivé | 11 échecs dans `EntetesSecuriteTest` |
 | Filtre de E9 lu brut dans la requête et transmis tel quel au repository | 3 échecs : `action[$ne]=x`, `[$gt]` et `[$regex]` renvoient 200 avec tout le journal, l'injection fonctionne |
 
 Injection SQL : la protection est portée par Doctrine (paramètres liés) et par le typage des filtres. La retirer reviendrait à réécrire les requêtes en concaténation : cela n'a pas été simulé. `testSaisieContenantDuSqlEnregistreeTelleQuelle` échouerait alors avec une erreur de syntaxe (500).
