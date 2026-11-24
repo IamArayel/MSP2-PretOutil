@@ -98,6 +98,7 @@ Livrer le MVP fonctionnel, le dossier de projet et le diaporama en **10 jours ou
 | US8 | Gestionnaire | enregistrer un retour et l'état de l'objet | suivre l'usure du matériel | État bon, abîmé ou hors service (RG7) |
 | US9 | Administrateur | changer le rôle d'un compte ou le désactiver | contrôler les accès | Action journalisée |
 | US10 | Administrateur | consulter le journal d'audit | tracer les actions | Liste paginée, filtre par type d'action |
+| US11 | Visiteur ou adhérent | savoir si un objet est disponible sur mes dates avant de réserver | éviter un refus après l'envoi du formulaire | Réponse sans rechargement de la page (API REST interne) ; écran utilisable sans JavaScript |
 
 ## 7. Règles de gestion
 
@@ -157,7 +158,8 @@ Renvoyé à une version ultérieure :
 
 | Besoin | Choix | Justification |
 |---|---|---|
-| Framework | Symfony 7 + Twig | Rendu côté serveur : pas d'API ni de SPA à construire |
+| Framework | Symfony 7 + Twig | Rendu côté serveur, sans SPA ; une API REST interne en lecture seule pour les disponibilités (US11) |
+| API | Contrôleur Symfony qui renvoie du JSON, limitation de débit par `symfony/rate-limiter` | Un seul point d'accès en lecture : un framework d'API (API Platform) serait disproportionné |
 | Style | Tailwind CSS via `symfonycasts/tailwind-bundle` + AssetMapper | Pas de Node ni de webpack |
 | BDD relationnelle | PostgreSQL + Doctrine ORM + Doctrine Migrations | Contrainte `EXCLUDE` pour garantir RG2 |
 | BDD NoSQL | MongoDB + `doctrine/mongodb-odm-bundle` | Journal d'audit : volumineux, sans jointure, en ajout seul |
@@ -170,10 +172,12 @@ Renvoyé à une version ultérieure :
 ## 11. Architecture
 
 ```text
-Controller (présentation : Twig + Tailwind)
-   └─> Service métier (ReservationService, AuditLogger, ...)
-         ├─> Repository Doctrine ORM ──> PostgreSQL (données métier)
-         └─> DocumentManager ODM     ──> MongoDB    (journal d'audit)
+Navigateur
+ ├─ HTML  ──> Controller (présentation : Twig + Tailwind) ─┐
+ └─ fetch ──> Controller d'API (JSON, lecture seule, US11) ┤
+                                                           └─> Service métier (ReservationService, CatalogueService, AuditLogger, ...)
+                                                                 ├─> Repository Doctrine ORM ──> PostgreSQL (données métier)
+                                                                 └─> DocumentManager ODM     ──> MongoDB    (journal d'audit)
 ```
 
 Rôle de chaque couche :
@@ -238,7 +242,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | 🟡 |
-| J6 | Sortie, retour, annulation, mes réservations. Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
+| J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
 | J9 | | Rédaction du dossier | ⬜ |
@@ -644,6 +648,9 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | J5 en 4 tickets GitHub (#44 à #47) : `ReservationService` pour Anthony, tests du service et formulaire de réservation pour Chloé, relecture croisée ensemble | Le service suit le diagramme de séquence conçu par Anthony ; tester le code de l'autre oblige chacun à le comprendre, ce qui prépare l'entretien individuel |
 | 2026-11-24 | Signature de `reserver()` et exceptions métier poussées en premier | Le formulaire de réservation (#46) peut avancer en parallèle du service |
 | 2026-11-24 | Règle du retour en retard tranchée ensemble au début de J5 (#44) | Elle s'applique à la fois au service et au filtre du catalogue |
+| 2026-11-24 | Ajout d'une API REST interne en lecture seule (disponibilités d'un objet, US11), appelée par l'écran E4 | Consigne de l'épreuve signalée par le binôme ; le REAC cite « utiliser un service distant (API REST) ». API interne plutôt qu'externe : elle sert le métier existant sans dépendre d'un tiers. Complète la décision du 2026-11-23 (rendu côté serveur, pas de SPA), qui reste valable |
+| 2026-11-24 | API construite avec un contrôleur Symfony et `JsonResponse`, sans API Platform | Un seul point d'accès en lecture : réutiliser les services existants suffit, sans nouvelle dépendance lourde |
+| 2026-11-24 | API placée à J6, avec l'écran E5 | Ne pas charger J5, déjà dense (service de réservation et formulaire) |
 | 2026-11-24 | Un objet dont le retour est en retard n'est pas réservable, et le catalogue ne l'annonce disponible sur aucune période | Décision du binôme : l'objet n'est physiquement pas là ; même règle dans `ReservationService` et dans le filtre du catalogue |
 | 2026-11-24 | Une exception métier par règle, sous une classe mère `ReservationRefuseeException` portant le message affiché | Le contrôleur affiche le refus sans connaître la règle ; les tests distinguent chaque règle |
 | 2026-11-24 | Transaction ouverte sur la connexion plutôt que `wrapInTransaction()` | `wrapInTransaction()` ferme l'EntityManager à toute exception, y compris un refus métier, ce qui empêcherait d'afficher l'écran E4 |
