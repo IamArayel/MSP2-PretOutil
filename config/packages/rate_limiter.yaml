@@ -1,0 +1,23 @@
+# Limitation de débit de l'API des disponibilités (US11, cahier des charges section 6.5) :
+# au plus 30 appels par minute et par adresse IP, fenêtre glissante. L'écran E4 n'appelle
+# l'API qu'à la saisie des dates : une utilisation normale reste très en dessous.
+framework:
+    rate_limiter:
+        api_disponibilites:
+            policy: sliding_window
+            limit: 30
+            interval: '1 minute'
+            cache_pool: cache.limiteur_api
+    cache:
+        pools:
+            cache.limiteur_api:
+                adapter: cache.app
+
+when@test:
+    framework:
+        cache:
+            pools:
+                # Sur disque, et non en mémoire : Symfony vide les services en mémoire entre deux
+                # requêtes d'un même test. Les tests vident ce cache au démarrage pour ne pas se gêner.
+                cache.limiteur_api:
+                    adapter: cache.adapter.filesystem

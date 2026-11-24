@@ -222,6 +222,7 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 | Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
 | Requêtes du catalogue (vérification et plan d'exécution) | [docs/conception/requetes-catalogue.md](docs/conception/requetes-catalogue.md) | |
 | ReservationService : règles, exceptions et vérification | [docs/conception/reservation-service.md](docs/conception/reservation-service.md) | |
+| API REST des disponibilités (point d'accès, réponses, erreurs, sécurité, tests) | [docs/conception/api.md](docs/conception/api.md) | |
 | Diagramme de séquence « Réserver un objet » | [PlantUML](docs/diagrammes/sequence-reserver.puml), [note](docs/diagrammes/sequence-reserver.md) | [SVG](docs/diagrammes/sequence-reserver.svg), [PNG](docs/diagrammes/sequence-reserver.png) |
 | Schéma d'architecture | [PlantUML](docs/diagrammes/architecture.puml), [note](docs/diagrammes/architecture.md) | [SVG](docs/diagrammes/architecture.svg), [PNG](docs/diagrammes/architecture.png) |
 
@@ -499,6 +500,14 @@ docker compose exec php bin/console app:mongodb:check
 
 `app:mongodb:check` lit la collection `audit_log` avec le compte applicatif, puis vérifie qu'une écriture dans une autre collection est refusée.
 
+### API REST des disponibilités
+
+`GET /api/objets/{id}/disponibilites`, avec `debut` et `fin` facultatifs (`AAAA-MM-JJ`) : lecture seule, publique, 30 appels par minute et par adresse IP. L'écran E4 l'appelle quand l'adhérent saisit ses dates. Documentation complète : [docs/conception/api.md](docs/conception/api.md).
+
+```bash
+curl -k "https://localhost/api/objets/1/disponibilites?debut=2026-12-02&fin=2026-12-04"
+```
+
 ### Tests
 
 PHPUnit est installé en dépendance de développement (`symfony/test-pack`). Les tests sont dans `tests/`, rangés comme le code de `src/`.
@@ -707,3 +716,8 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | L'objet prend l'état constaté au retour, y compris « bon » après « abîmé » | Le gestionnaire constate l'état réel ; un objet réparé redevient « bon » |
 | 2026-11-24 | RG7 : réservations confirmées d'un objet devenu hors service signalées, pas annulées | Le gestionnaire prévient l'adhérent et décide (réparation rapide, autre objet) ; une annulation automatique serait irréversible |
 | 2026-11-24 | Tri des retours sur `date_fin` seule | Permet à PostgreSQL d'utiliser l'ordre de l'index partiel `idx_reservation_en_cours` |
+| 2026-11-24 | Disponibilité calculée par `ReservationService::verifierDisponibilite()`, qui réutilise les vérifications de `reserver()` hors quota | Une seule écriture des règles ; l'API informe, la réservation revérifie tout sous verrou ; le quota dépend de l'adhérent et l'API est publique |
+| 2026-11-24 | Erreurs de l'API au format JSON par un écouteur d'exceptions limité aux chemins `/api/`, messages génériques sauf erreurs de saisie | Même format pour 400, 404, 405, 429 et 500 ; rien du fonctionnement interne n'est révélé |
+| 2026-11-24 | Appel de l'API depuis E4 en amélioration progressive, zone `aria-live` toujours présente, message inséré avec `textContent` | Le formulaire marche sans JavaScript ; les lecteurs d'écran annoncent la réponse ; aucun risque d'injection HTML |
+| 2026-11-24 | US11 servie aux adhérents sur E4 ; les visiteurs vérifient une période avec le filtre du catalogue | Un visiteur n'a pas de formulaire de réservation sur E4 ; le filtre de E3 applique déjà les mêmes règles |
+| 2026-11-24 | Compteurs de la limitation de débit dans un cache sur disque vidé au début de chaque test | Symfony vide les services en mémoire entre deux requêtes d'un test : le test du 429 ne pouvait pas passer avec un cache en mémoire |
