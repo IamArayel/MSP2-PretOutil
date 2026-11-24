@@ -139,6 +139,13 @@ class Reservation
         return $this->creeLe;
     }
 
+    /** Objet sorti et pas rendu après le dernier jour de la période. */
+    public function estEnRetardLe(\DateTimeImmutable $jour): bool
+    {
+        return StatutReservation::EnCours === $this->statut
+            && $this->dateFin->format('Y-m-d') < $jour->format('Y-m-d');
+    }
+
     public function getSortieLe(): ?\DateTimeImmutable
     {
         return $this->sortieLe;

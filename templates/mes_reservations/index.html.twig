@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes réservations{% endblock %}
+
+{#
+    Écran E5 (US5), d'après la maquette. Couleurs des statuts : celles de la charte
+    (confirmée = réservé, en cours = sorti, terminée = disponible, annulée = neutre).
+#}
+{% set classes_statut = {
+    confirmee: 'bg-statut-reserve-bg text-statut-reserve',
+    en_cours: 'bg-statut-sorti-bg text-statut-sorti',
+    terminee: 'bg-statut-disponible-bg text-statut-disponible',
+    annulee: 'bg-slate-100 text-ink-muted',
+} %}
+
+{% block body %}
+    <h1 class="text-3xl font-bold">Mes réservations</h1>
+    <p class="mt-1 text-ink-muted">
+        {{ actives }} réservation{{ actives > 1 ? 's' }} active{{ actives > 1 ? 's' }} sur {{ quota }} autorisées
+    </p>
+
+    {% if reservations is empty %}
+        <div class="mt-6 rounded-lg border border-line bg-surface p-6 text-center">
+            <p class="text-ink-muted">Vous n'avez encore aucune réservation.</p>
+            <a href="{{ path('app_catalogue') }}" class="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">Voir le catalogue</a>
+        </div>
+    {% else %}
+        <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
+            <table class="w-full text-left text-sm">
+                <caption class="sr-only">Mes réservations, des plus proches aux plus anciennes</caption>
+                <thead class="bg-slate-50 text-xs uppercase text-ink-muted">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 font-semibold">Objet</th>
+                        <th scope="col" class="px-4 py-3 font-semibold">Du</th>
+                        <th scope="col" class="px-4 py-3 font-semibold">Au</th>
+                        <th scope="col" class="px-4 py-3 font-semibold">Statut</th>
+                        <th scope="col" class="px-4 py-3 font-semibold">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    {% for reservation in reservations %}
+                        {% set objet = reservation.objet %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                {% if objet.actif %}
+                                    <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}" class="hover:text-primary hover:underline">{{ objet.nom }}</a>
+                                {% else %}
+                                    {{ objet.nom }}
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">{{ reservation.dateDebut|date('d/m/Y') }}</td>
+                            <td class="px-4 py-3">{{ reservation.dateFin|date('d/m/Y') }}</td>
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ classes_statut[reservation.statut.value] }}">{{ reservation.statut.libelle }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if is_granted('RESERVATION_ANNULER', reservation) %}
+                                    <form method="post" action="{{ path('app_mes_reservations_annuler', {id: reservation.id}) }}"
+                                          onsubmit="return confirm('Annuler la réservation de « {{ objet.nom|e('js') }} » ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('annuler-reservation-' ~ reservation.id) }}">
+                                        <button type="submit" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page"
+                                                aria-label="Annuler la réservation : {{ objet.nom }}, du {{ reservation.dateDebut|date('d/m/Y') }} au {{ reservation.dateFin|date('d/m/Y') }}">
+                                            Annuler
+                                        </button>
+                                    </form>
+                                {% elseif reservation.statut.value == 'confirmee' %}
+                                    <span class="text-ink-muted">Annulation impossible à partir du premier jour</span>
+                                {% elseif reservation.estEnRetardLe(aujourdhui) %}
+                                    <span class="font-semibold text-statut-hors-service">Retour en retard : à rendre le {{ reservation.dateFin|date('d/m/Y') }} au plus tard</span>
+                                {% elseif reservation.statut.value == 'en_cours' %}
+                                    Sortie validée le {{ reservation.sortieLe|date('d/m/Y') }}
+                                {% elseif reservation.statut.value == 'terminee' %}
+                                    Rendu {{ reservation.etatRetour.value == 'bon' ? 'en bon état' : (reservation.etatRetour.value == 'abime' ? 'abîmé' : 'hors service') }}
+                                {% else %}
+                                    <span class="text-ink-muted">Aucune action</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

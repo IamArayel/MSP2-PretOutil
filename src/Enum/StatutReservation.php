@@ -23,6 +23,17 @@ enum StatutReservation: string
         return \in_array($this, self::actifs(), true);
     }
 
+    /** Libellé affiché (écrans E5 et E6). */
+    public function libelle(): string
+    {
+        return match ($this) {
+            self::Confirmee => 'Confirmée',
+            self::EnCours => 'En cours',
+            self::Terminee => 'Terminée',
+            self::Annulee => 'Annulée',
+        };
+    }
+
     /**
      * Statuts actifs, pour les requêtes qui filtrent sur la colonne statut.
      *
