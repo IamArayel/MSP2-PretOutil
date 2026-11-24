@@ -58,7 +58,7 @@
                                 {# Suppression physique : seulement pour un objet jamais réservé (US6) #}
                                 {% if deja_reserves[objet.id] is not defined %}
                                     <form method="post" action="{{ path('app_gestion_catalogue_supprimer', {id: objet.id}) }}"
-                                          onsubmit="return confirm('Supprimer définitivement « {{ objet.nom|e('js') }} » ?');">
+                                          data-confirmation="Supprimer définitivement « {{ objet.nom }} » ?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('supprimer-objet-' ~ objet.id) }}">
                                         <button type="submit" class="rounded-md border border-red-200 bg-statut-hors-service-bg px-3 py-1.5 font-semibold text-statut-hors-service hover:border-statut-hors-service"
                                                 aria-label="Supprimer définitivement : {{ objet.nom }}">Supprimer</button>

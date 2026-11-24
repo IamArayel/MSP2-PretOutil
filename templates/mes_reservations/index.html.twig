@@ -56,7 +56,7 @@
                             <td class="px-4 py-3">
                                 {% if is_granted('RESERVATION_ANNULER', reservation) %}
                                     <form method="post" action="{{ path('app_mes_reservations_annuler', {id: reservation.id}) }}"
-                                          onsubmit="return confirm('Annuler la réservation de « {{ objet.nom|e('js') }} » ?');">
+                                          data-confirmation="Annuler la réservation de « {{ objet.nom }} » ?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('annuler-reservation-' ~ reservation.id) }}">
                                         <button type="submit" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page"
                                                 aria-label="Annuler la réservation : {{ objet.nom }}, du {{ reservation.dateDebut|date('d/m/Y') }} au {{ reservation.dateFin|date('d/m/Y') }}">
