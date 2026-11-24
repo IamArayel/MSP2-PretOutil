@@ -217,6 +217,7 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 | Dictionnaire de données (et RGPD) | [docs/conception/dictionnaire-donnees.md](docs/conception/dictionnaire-donnees.md) | |
 | Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
 | Requêtes du catalogue (vérification et plan d'exécution) | [docs/conception/requetes-catalogue.md](docs/conception/requetes-catalogue.md) | |
+| ReservationService : règles, exceptions et vérification | [docs/conception/reservation-service.md](docs/conception/reservation-service.md) | |
 | Diagramme de séquence « Réserver un objet » | [PlantUML](docs/diagrammes/sequence-reserver.puml), [note](docs/diagrammes/sequence-reserver.md) | [SVG](docs/diagrammes/sequence-reserver.svg), [PNG](docs/diagrammes/sequence-reserver.png) |
 | Schéma d'architecture | [PlantUML](docs/diagrammes/architecture.puml), [note](docs/diagrammes/architecture.md) | [SVG](docs/diagrammes/architecture.svg), [PNG](docs/diagrammes/architecture.png) |
 
@@ -630,3 +631,8 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | J5 en 4 tickets GitHub (#44 à #47) : `ReservationService` pour Anthony, tests du service et formulaire de réservation pour Chloé, relecture croisée ensemble | Le service suit le diagramme de séquence conçu par Anthony ; tester le code de l'autre oblige chacun à le comprendre, ce qui prépare l'entretien individuel |
 | 2026-11-24 | Signature de `reserver()` et exceptions métier poussées en premier | Le formulaire de réservation (#46) peut avancer en parallèle du service |
 | 2026-11-24 | Règle du retour en retard tranchée ensemble au début de J5 (#44) | Elle s'applique à la fois au service et au filtre du catalogue |
+| 2026-11-24 | Un objet dont le retour est en retard n'est pas réservable, et le catalogue ne l'annonce disponible sur aucune période | Décision du binôme : l'objet n'est physiquement pas là ; même règle dans `ReservationService` et dans le filtre du catalogue |
+| 2026-11-24 | Une exception métier par règle, sous une classe mère `ReservationRefuseeException` portant le message affiché | Le contrôleur affiche le refus sans connaître la règle ; les tests distinguent chaque règle |
+| 2026-11-24 | Transaction ouverte sur la connexion plutôt que `wrapInTransaction()` | `wrapInTransaction()` ferme l'EntityManager à toute exception, y compris un refus métier, ce qui empêcherait d'afficher l'écran E4 |
+| 2026-11-24 | Index partiel `idx_reservation_en_cours` et sous-requête non corrélée pour les retours en retard | Mesures `EXPLAIN` : 16 ms avec un `OR`, 83 ms avec un second `NOT EXISTS`, 4,6 ms stable avec l'index ; il servira aussi à l'écran E6 |
+| 2026-11-24 | `VACUUM ANALYZE` avant et après le script de mesure `EXPLAIN` | Ses insertions annulées laissaient 1,4 million de lignes mortes qui faussaient les plans |
