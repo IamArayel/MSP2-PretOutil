@@ -13,4 +13,14 @@ enum EtatObjet: string
     case Bon = 'bon';
     case Abime = 'abime';
     case HorsService = 'hors_service';
+
+    /** Libellé affiché (formulaire et liste de l'écran E7, écran E6). */
+    public function libelle(): string
+    {
+        return match ($this) {
+            self::Bon => 'Bon',
+            self::Abime => 'Abîmé',
+            self::HorsService => 'Hors service',
+        };
+    }
 }
