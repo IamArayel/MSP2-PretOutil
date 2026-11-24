@@ -24,4 +24,24 @@ enum ActionAudit: string
     case ReservationAnnulee = 'RESERVATION_ANNULEE';
     case SortieValidee = 'SORTIE_VALIDEE';
     case RetourEnregistre = 'RETOUR_ENREGISTRE';
+
+    /** Libellé lisible, pour la liste du filtre de E9 (le code reste affiché dans le badge). */
+    public function libelle(): string
+    {
+        return match ($this) {
+            self::CompteCree => 'Compte créé',
+            self::ConnexionEchouee => 'Connexion échouée',
+            self::CompteDesactive => 'Compte désactivé',
+            self::CompteReactive => 'Compte réactivé',
+            self::RoleModifie => 'Rôle modifié',
+            self::ObjetCree => 'Objet créé',
+            self::ObjetModifie => 'Objet modifié',
+            self::ObjetDesactive => 'Objet désactivé',
+            self::ObjetSupprime => 'Objet supprimé',
+            self::ReservationCreee => 'Réservation créée',
+            self::ReservationAnnulee => 'Réservation annulée',
+            self::SortieValidee => 'Sortie validée',
+            self::RetourEnregistre => 'Retour enregistré',
+        };
+    }
 }
