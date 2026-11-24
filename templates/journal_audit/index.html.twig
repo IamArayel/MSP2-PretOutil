@@ -11,10 +11,10 @@
           class="mt-6 flex flex-wrap items-end gap-4 rounded-lg border border-line bg-surface p-5">
         <div class="w-full sm:w-72">
             <label for="action" class="block text-sm font-medium">Type d'action</label>
-            <select id="action" name="action" class="mt-1.5 block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm">
+            <select id="action" name="action" class="liste-choix mt-1.5 block w-full py-2">
                 <option value="">Toutes les actions</option>
                 {% for action in actions %}
-                    <option value="{{ action.value }}"{% if filtre == action %} selected{% endif %}>{{ action.value }}</option>
+                    <option value="{{ action.value }}"{% if filtre == action %} selected{% endif %}>{{ action.libelle }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -43,51 +43,35 @@
         COMPTE_REACTIVE: 'bg-statut-disponible-bg text-statut-disponible',
         ROLE_MODIFIE: 'bg-statut-reserve-bg text-statut-reserve',
     } %}
-    {% set cellule_entete = 'px-4 py-3 font-medium uppercase tracking-wide' %}
 
-    <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table class="w-full text-left text-sm">
+    <div class="cadre-tableau mt-6" role="region" aria-label="Entrées du journal" tabindex="0">
+        <table class="tableau">
             <caption class="sr-only">Journal d'audit{{ filtre ? ', action ' ~ filtre.value }}, page {{ page.numero }} sur {{ max(page.nombreDePages, 1) }}</caption>
-            <thead class="border-b border-line bg-page text-xs text-ink-muted">
+            <thead class="tableau-entete">
                 <tr>
-                    <th scope="col" class="{{ cellule_entete }}">Date et heure</th>
-                    <th scope="col" class="{{ cellule_entete }}">Utilisateur</th>
-                    <th scope="col" class="{{ cellule_entete }}">Action</th>
-                    <th scope="col" class="{{ cellule_entete }}">Détail</th>
+                    <th scope="col" class="cellule-entete">Date et heure</th>
+                    <th scope="col" class="cellule-entete">Utilisateur</th>
+                    <th scope="col" class="cellule-entete">Action</th>
+                    <th scope="col" class="cellule-entete">Détail</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-line">
                 {% for ligne in lignes %}
                     <tr>
                         {# Stocké en UTC, affiché dans le fuseau de l'application #}
-                        <td class="whitespace-nowrap px-4 py-3">{{ ligne.entree.horodatage|date('d/m/Y H:i') }}</td>
-                        <td class="px-4 py-3">{{ ligne.utilisateur }}</td>
-                        <td class="px-4 py-3">
-                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ couleurs[ligne.entree.action.value] ?? 'bg-page text-ink-muted' }}">{{ ligne.entree.action.value }}</span>
+                        <td class="cellule whitespace-nowrap">{{ ligne.entree.horodatage|date('d/m/Y H:i') }}</td>
+                        <td class="cellule">{{ ligne.utilisateur }}</td>
+                        <td class="cellule">
+                            <span class="badge {{ couleurs[ligne.entree.action.value] ?? 'bg-page text-ink-muted' }}">{{ ligne.entree.action.value }}</span>
                         </td>
-                        <td class="px-4 py-3">{{ ligne.detail }}</td>
+                        <td class="cellule">{{ ligne.detail }}</td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="4" class="px-4 py-6 text-center text-ink-muted">Aucune action enregistrée.</td></tr>
+                    <tr><td colspan="4" class="cellule-vide">{{ filtre ? 'Aucune action de ce type.' : 'Aucune action enregistrée.' }}</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    {% if page.nombreDePages > 1 %}
-        {% set parametres = filtre ? {action: filtre.value} : {} %}
-        <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
-            {% if page.aUnePagePrecedente %}
-                <a href="{{ path('app_journal_audit', parametres|merge({page: page.numero - 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
-            {% endif %}
-            <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
-            {% if page.aUnePageSuivante %}
-                <a href="{{ path('app_journal_audit', parametres|merge({page: page.numero + 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
-            {% endif %}
-        </nav>
-    {% endif %}
+    {{ include('_partials/pagination.html.twig', {route: 'app_journal_audit', parametres: filtre ? {action: filtre.value} : {}}) }}
 {% endblock %}
