@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-24
 
-362 tests, 1 483 assertions, tous verts, en 40 secondes environ (mis à jour à J8 : écran E8, accessibilité des écrans adhérent et de gestion).
+363 tests, 1 466 assertions, tous verts, en 30 secondes environ (mis à jour au gel du code de J8 : écran E8, accessibilité des écrans adhérent et de gestion, dernière activité à la connexion). Nombre d'assertions identique sur trois lancements de suite, après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -52,7 +52,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Controller/ControleAccesTest.php` | Fonctionnel | 111 | Section 5 ci-dessous |
 | `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 69 | Structure accessible de E1 à E9 ([accessibilite.md](accessibilite.md)) |
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
-| `tests/Controller/SecuriteTest.php` | Fonctionnel | 55 | Section 6 ci-dessous |
+| `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.

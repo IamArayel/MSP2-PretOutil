@@ -82,7 +82,7 @@ Commandes à lancer depuis la racine du dépôt.
 | `code-migration-exclude.png` | Éditeur : `migrations/Version20261123095233.php`, extension `btree_gist` et contrainte `ex_reservation_chevauchement` | J3 | ✅ |
 | `terminal-explain.png` | `docker compose exec -T database sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < docs/conception/requetes_catalogue_explain.sql` : plan de la requête du catalogue sur 10 000 objets et 200 000 réservations, avec les deux index partiels | J4, J5 | ✅ |
 | `terminal-phpunit-matrice.png` | `docker compose exec php bin/phpunit --testdox --filter ControleAccesTest` : début de la matrice d'accès | J4 à J7 | ✅ |
-| `terminal-phpunit-fin.png` | `docker compose exec php bin/phpunit --testdox` : fin de la sortie (tests de sécurité) et ligne `OK (363 tests, 1485 assertions)` | J4 à J7 | ✅ |
+| `terminal-phpunit-fin.png` | `docker compose exec php bin/phpunit --testdox` : fin de la sortie (tests de sécurité) et ligne `OK (363 tests, 1485 assertions)` ; 1 466 assertions depuis la stabilisation du compte au gel du code (#80) | J4 à J7 | ✅ |
 | `terminal-jeu-essai.png` | Fixtures rechargées, puis `bash docs/tests/jeu_essai_reserver.sh` : tableau des 20 cas, tous conformes | J7 | ✅ |
 | `terminal-audits.png` | `docker compose exec php composer audit` puis `docker compose exec php bin/console importmap:audit` : aucune faille | J7 | ✅ |
 | `mongodb-audit-log.png` | `mongosh` avec le compte administrateur, comme pour `audit_log.mongodb.js` (README, section « Journal d'audit ») : dernier document `RETOUR_ENREGISTRE` de `pretoutil.audit_log` | J6 | ✅ |

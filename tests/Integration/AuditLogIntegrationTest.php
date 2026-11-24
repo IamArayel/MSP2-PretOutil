@@ -127,9 +127,10 @@ final class AuditLogIntegrationTest extends WebTestCase
 
         $page = self::getContainer()->get(AuditLogRepository::class)->lister(ActionAudit::ReservationCreee);
 
-        foreach ($page->elements as $entree) {
-            self::assertSame(ActionAudit::ReservationCreee, $entree->getAction(), 'Filtre par action');
-        }
+        // Une seule assertion : la page grossit d'un lancement à l'autre (base en ajout seul),
+        // une assertion par entrée rendrait le nombre d'assertions instable.
+        $autresActions = array_filter($page->elements, static fn (AuditLog $e): bool => ActionAudit::ReservationCreee !== $e->getAction());
+        self::assertSame([], $autresActions, 'Filtre par action');
         $miens = array_values(array_filter($page->elements, fn (AuditLog $e): bool => $this->marqueur === ($e->getDetails()['marqueur'] ?? null)));
         self::assertSame([2, 1], array_map(static fn (AuditLog $e): int => $e->getDetails()['rang'], $miens), 'Plus récent en premier');
     }
