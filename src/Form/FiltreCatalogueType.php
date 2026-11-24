@@ -39,7 +39,7 @@ final class FiltreCatalogueType extends AbstractType
                 'invalid_message' => 'Cette date n\'est pas valide.',
             ])
             ->add('fin', DateType::class, [
-                'label' => 'au',
+                'label' => 'jusqu\'au',
                 'required' => false,
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',

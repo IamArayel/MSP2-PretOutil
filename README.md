@@ -586,11 +586,14 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Controller/Api/DisponibiliteControllerTest.php`    | API des disponibilités : réponses JSON, absence de donnée personnelle, mêmes règles que la réservation, erreurs 400, 404 et 405, limite de débit (429)                                                                                                                                                                          |
 | `tests/Service/CompteServiceTest.php` | Écran E8 sans base : rôle changé et journalisé avec l'ancien et le nouveau rôle, désactivation et réactivation journalisées, action sans effet sans écriture, refus sur son propre compte |
 | `tests/Controller/GestionComptesControllerTest.php` | Écran E8 par HTTP : actions depuis la liste, refus sur soi-même, jeton faux, rôle inconnu, session fermée après une désactivation ou un changement de rôle, détail lisible sur E9 |
+| `tests/Controller/AccessibiliteTest.php` | Accessibilité de E1 à E5, états d'erreur compris : langue, titre de page, titres sans saut, étiquette de chaque champ, aide et erreurs reliées au champ, tableaux, lien d'évitement, page en cours dans la navigation |
 | `tests/Controller/ControleAccesTest.php`                  | Contrôle d'accès des 24 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu                                                                                                     |
 | `tests/Controller/SecuriteTest.php`                       | Tests de sécurité (#66) : CSRF des 10 formulaires en POST (jeton absent ou faux refusé, vrai jeton accepté), injection SQL (filtres du catalogue, paramètres d'URL, saisies de l'inscription), injection NoSQL (filtre de E9), XSS (E3, E4, E7, E9, API), blocage après 5 échecs de connexion, mot de passe stocké en empreinte |
 | `tests/Controller/EntetesSecuriteTest.php`                | En-têtes de sécurité HTTP sur les pages et l'API (CSP, HSTS en HTTPS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`), nonce sur chaque script et différent à chaque requête, aucun JavaScript en ligne dans les gabarits                                                                                                      |
 
 Veille sécurité (OWASP Top 10:2025, chaque risque avec sa mesure et sa preuve, audit des dépendances) : [docs/securite/veille-owasp.md](docs/securite/veille-owasp.md).
+
+Accessibilité de base (grille RGAA par écran, contrastes de la charte, vérifications manuelles) : [docs/tests/accessibilite.md](docs/tests/accessibilite.md).
 
 Plan de tests (objectifs, niveaux, matrice du contrôle d'accès, critères de réussite) : [docs/tests/plan-de-tests.md](docs/tests/plan-de-tests.md).
 
@@ -819,3 +822,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Un administrateur n'agit pas sur son propre compte (ni désactivation, ni changement de rôle) | Seul un administrateur utilise E8 : l'association garde donc toujours un administrateur actif, sans compter les administrateurs |
 | 2026-11-24 | Session fermée à la requête suivante quand le compte est désactivé ou change de rôle (`Utilisateur::isEqualTo()`) | Sans cela, un compte désactivé gardait l'accès jusqu'à la fin de sa session ; un rôle retiré cessait aussi d'agir tout de suite |
 | 2026-11-24 | `/admin` renvoie vers E8, avec `IsGranted('ROLE_ADMIN')` en plus de `access_control` | Remplace l'emplacement provisoire de J3 ; remarque de relecture de J7 |
+| 2026-11-24 | Couleur de charte `champ` (`slate-500`) pour le contour des champs, `line` gardée pour séparer les blocs | Le contour en `slate-200` (1,23:1) ne permettait pas de repérer un champ ; 3:1 exigé pour un élément d'interface (RGAA 3.3) |
+| 2026-11-24 | Aide et erreurs reliées aux champs dans le thème de formulaire | Le thème remplace le `form_row` de Symfony, qui reliait l'aide : le lien s'était perdu sans qu'on le voie |
+| 2026-11-24 | Critères d'accessibilité vérifiables testés automatiquement (`AccessibiliteTest`), clavier, lecteur d'écran et zoom vérifiés à la main | Une régression de structure est détectée à chaque lancement ; le ressenti d'un utilisateur ne peut pas être automatisé |

@@ -10,7 +10,8 @@
             {% set sur_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_catalogue' %}
             <li><a href="{{ path('app_catalogue') }}" class="hover:text-primary{{ sur_catalogue ? ' font-semibold text-primary' }}"{% if sur_catalogue %} aria-current="page"{% endif %}>Catalogue</a></li>
             {% if is_granted('ROLE_USER') %}
-                <li><a href="{{ path('app_mes_reservations') }}" class="hover:text-primary">Mes réservations</a></li>
+                {% set sur_mes_reservations = (app.request.attributes.get('_route') ?? '') starts with 'app_mes_reservations' %}
+                <li><a href="{{ path('app_mes_reservations') }}" class="hover:text-primary{{ sur_mes_reservations ? ' font-semibold text-primary' }}"{% if sur_mes_reservations %} aria-current="page"{% endif %}>Mes réservations</a></li>
             {% endif %}
             {% if is_granted('ROLE_MANAGER') %}
                 {% set sur_sorties_retours = (app.request.attributes.get('_route') ?? '') starts with 'app_sorties_retours' %}

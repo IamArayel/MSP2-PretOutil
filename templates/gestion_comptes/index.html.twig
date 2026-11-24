@@ -48,7 +48,7 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token('role-compte-' ~ compte.id) }}">
                                         <input type="hidden" name="page" value="{{ page.numero }}">
                                         <label for="role-{{ compte.id }}" class="sr-only">Rôle de {{ nom }}</label>
-                                        <select id="role-{{ compte.id }}" name="role" class="rounded-md border border-line bg-surface px-2 py-1.5 text-sm">
+                                        <select id="role-{{ compte.id }}" name="role" class="rounded-md border border-champ bg-surface px-2 py-1.5 text-sm">
                                             {% for choix in roles %}
                                                 <option value="{{ choix.value }}"{% if choix == role %} selected{% endif %}>{{ choix.libelle }}</option>
                                             {% endfor %}

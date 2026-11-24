@@ -21,14 +21,14 @@ final class ReservationType extends AbstractType
 
         $builder
             ->add('debut', DateType::class, [
-                'label' => 'Du',
+                'label' => 'Du (premier jour)',
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
                 // Aide à la saisie seulement : la validation se fait côté serveur.
                 'attr' => ['min' => $aujourdhui],
             ])
             ->add('fin', DateType::class, [
-                'label' => 'Au',
+                'label' => 'Au (dernier jour, inclus)',
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
                 'attr' => ['min' => $aujourdhui],

@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-24
 
-293 tests, 909 assertions, tous verts, en 40 secondes environ (mis à jour à J8, écran E8).
+306 tests, 1 090 assertions, tous verts, en 40 secondes environ (mis à jour à J8, écran E8 et accessibilité).
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -50,6 +50,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
 | `tests/Controller/ControleAccesTest.php` | Fonctionnel | 111 | Section 5 ci-dessous |
+| `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 13 | Structure accessible de E1 à E5 ([accessibilite.md](accessibilite.md)) |
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 55 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
@@ -195,6 +196,6 @@ Injection SQL : la protection est portée par Doctrine (paramètres liés) et pa
 
 | Non testé automatiquement | Raison, et ce qui le remplace |
 |---|---|
-| Rendu visuel et navigation au clavier | Pas d'outil de test de navigateur dans le MVP ; vérifiés à la main à J8 |
+| Rendu visuel et navigation au clavier | Pas d'outil de test de navigateur dans le MVP ; structure accessible testée par `AccessibiliteTest`, le reste vérifié à la main ([accessibilite.md](accessibilite.md), section 5) |
 | Montée en charge | Volume d'une association ; requête du catalogue mesurée par `EXPLAIN` ([requetes-catalogue.md](../conception/requetes-catalogue.md)) |
 | Sauvegarde et restauration | Testées par script sur une pile Docker isolée (README, section Sauvegarde) |

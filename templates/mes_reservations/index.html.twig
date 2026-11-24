@@ -41,13 +41,14 @@
                     {% for reservation in reservations %}
                         {% set objet = reservation.objet %}
                         <tr>
-                            <td class="px-4 py-3">
+                            {# En-tête de ligne : le lecteur d'écran annonce l'objet avec chaque cellule #}
+                            <th scope="row" class="px-4 py-3 font-normal">
                                 {% if objet.actif %}
                                     <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}" class="hover:text-primary hover:underline">{{ objet.nom }}</a>
                                 {% else %}
                                     {{ objet.nom }}
                                 {% endif %}
-                            </td>
+                            </th>
                             <td class="px-4 py-3">{{ reservation.dateDebut|date('d/m/Y') }}</td>
                             <td class="px-4 py-3">{{ reservation.dateFin|date('d/m/Y') }}</td>
                             <td class="px-4 py-3">
