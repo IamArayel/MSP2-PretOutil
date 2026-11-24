@@ -242,7 +242,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception ([notes J5](docs/dossier/notes-j5.md)) | ✅ |
-| J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
+| J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | 🟡 |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
 | J9 | | Rédaction du dossier | ⬜ |
@@ -677,3 +677,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | RG1 vérifiée aussi par le formulaire (`ReservationDto`), en plus du service | Erreur affichée sous le bon champ ; le service reste la garantie pour tous les appels |
 | 2026-11-24 | Base `pretoutil_test` à créer une fois par poste, et à migrer en environnement de test après chaque nouvelle migration | Les tests d'intégration échouent sans elle ; procédure du README vérifiée sur un second poste |
 | 2026-11-24 | Parcours de réservation de fin de journée fait par requêtes HTTP (17 contrôles), fixtures rechargées ensuite | Chaque refus vérifié avec son message et son code ; le rendu visuel reste vérifié à la main |
+| 2026-11-24 | J6 en 5 tickets GitHub (#49, #54 à #57) : écran E5 et annulation, API des disponibilités pour Anthony ; sorties et retours (E6), journal d'audit MongoDB et écran E9 pour Chloé ; relecture croisée ensemble | Anthony prolonge E4 et la réservation ; Chloé prolonge la gestion (E7) et MongoDB qu'elle a installé ; la relecture croisée couvre la partie NoSQL pour les deux |
+| 2026-11-24 | Remarques de relecture de J4 intégrées à J6 : action `OBJET_SUPPRIME` (#56), réservations à venir signalées lors d'un retour hors service (#55) | Elles dépendaient de l'`AuditLogger` réel et des retours, réalisés à J6 ; la réactivation d'un objet reste hors MVP |
+| 2026-11-24 | US9 (gestion des comptes, écran E8, « Should ») non planifiée à J6 | Les « Must » passent d'abord ; à placer en J8 ou dans la marge si le temps le permet |
