@@ -14,6 +14,7 @@ enum ActionAudit: string
     case CompteCree = 'COMPTE_CREE';
     case ConnexionEchouee = 'CONNEXION_ECHOUEE';
     case CompteDesactive = 'COMPTE_DESACTIVE';
+    case CompteReactive = 'COMPTE_REACTIVE';
     case RoleModifie = 'ROLE_MODIFIE';
     case ObjetCree = 'OBJET_CREE';
     case ObjetModifie = 'OBJET_MODIFIE';

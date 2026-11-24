@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Utilisateur;
+use App\Pagination\Page;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -16,6 +18,8 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class UtilisateurRepository extends ServiceEntityRepository
 {
+    public const int COMPTES_PAR_PAGE = 20;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Utilisateur::class);
@@ -54,5 +58,33 @@ class UtilisateurRepository extends ServiceEntityRepository
         }
 
         return $noms;
+    }
+
+    /**
+     * Comptes de l'écran E8 (US9), comptes actifs d'abord, puis par nom.
+     *
+     * @return Page<Utilisateur>
+     */
+    public function listerPourGestion(int $numeroPage = 1): Page
+    {
+        $numeroPage = max(1, $numeroPage);
+
+        $requete = $this->createQueryBuilder('u')
+            ->orderBy('u.actif', 'DESC')
+            ->addOrderBy('u.nom', 'ASC')
+            ->addOrderBy('u.prenom', 'ASC')
+            ->addOrderBy('u.id', 'ASC')
+            ->setFirstResult(($numeroPage - 1) * self::COMPTES_PAR_PAGE)
+            ->setMaxResults(self::COMPTES_PAR_PAGE)
+            ->getQuery();
+
+        $paginator = new Paginator($requete, fetchJoinCollection: false);
+
+        return new Page(
+            iterator_to_array($paginator, false),
+            \count($paginator),
+            $numeroPage,
+            self::COMPTES_PAR_PAGE,
+        );
     }
 }

@@ -7,6 +7,7 @@ namespace App\Audit;
 use App\Document\AuditLog;
 use App\Enum\ActionAudit;
 use App\Enum\EtatObjet;
+use App\Enum\RoleCompte;
 
 /**
  * Une ligne de l'écran E9 : l'entrée du journal, l'auteur à afficher et le détail
@@ -42,6 +43,9 @@ final readonly class LigneJournal
             ActionAudit::ConnexionEchouee => 'blocage' === ($d['motif'] ?? null)
                 ? \sprintf('%s, connexion bloquée %d min', $entree->getActeur()->getEmail(), $d['minutes'] ?? 15)
                 : \sprintf('%s, échec de connexion', $entree->getActeur()->getEmail()),
+            ActionAudit::CompteDesactive => \sprintf('Compte désactivé : %s', $d['email'] ?? '?'),
+            ActionAudit::CompteReactive => \sprintf('Compte réactivé : %s', $d['email'] ?? '?'),
+            ActionAudit::RoleModifie => \sprintf('%s : %s → %s', $d['email'] ?? '?', self::role($d['ancien_role'] ?? null), self::role($d['nouveau_role'] ?? null)),
             ActionAudit::ObjetCree => \sprintf('%s (%s), état : %s', $d['nom'] ?? '?', $d['categorie'] ?? '?', self::etat($d['etat'] ?? null)),
             ActionAudit::ObjetModifie => ($d['nom'] ?? '?').(isset($d['etat']['avant'], $d['etat']['apres'])
                 ? \sprintf(', état : %s → %s', self::etat($d['etat']['avant']), self::etat($d['etat']['apres']))
@@ -58,6 +62,11 @@ final readonly class LigneJournal
     private static function etat(mixed $valeur): string
     {
         return \is_string($valeur) ? (EtatObjet::tryFrom($valeur)?->libelle() ?? $valeur) : '?';
+    }
+
+    private static function role(mixed $valeur): string
+    {
+        return \is_string($valeur) ? (RoleCompte::tryFrom($valeur)?->libelle() ?? $valeur) : '?';
     }
 
     private static function date(mixed $valeur, string $format): string

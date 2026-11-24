@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Repository\UtilisateurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -14,7 +15,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * Personne inscrite : adhérent, gestionnaire ou administrateur (table utilisateur).
  */
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface, EquatableInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -174,6 +175,32 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->derniereActiviteLe = $derniereActiviteLe;
 
         return $this;
+    }
+
+    /**
+     * Appelée par Symfony à chaque requête, entre l'utilisateur gardé en session et
+     * celui relu en base : si elle répond non, la session est fermée.
+     *
+     * Remplace la comparaison par défaut de Symfony (identifiant, mot de passe, rôles)
+     * pour y ajouter RG9 : un compte désactivé sur l'écran E8 perd sa session à sa
+     * requête suivante, sans attendre une nouvelle connexion. Un changement de rôle
+     * ferme aussi la session : les nouveaux droits s'appliquent à la reconnexion.
+     */
+    public function isEqualTo(UserInterface $relu): bool
+    {
+        if (!$relu instanceof self || !$relu->isActif()) {
+            return false;
+        }
+
+        $roles = $this->getRoles();
+        $rolesRelus = $relu->getRoles();
+        sort($roles);
+        sort($rolesRelus);
+
+        return $this->id === $relu->getId()
+            && $this->email === $relu->getUserIdentifier()
+            && $this->motDePasse === $relu->getPassword()
+            && $roles === $rolesRelus;
     }
 
     #[\Deprecated]

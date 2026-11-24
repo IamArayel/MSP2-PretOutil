@@ -7,21 +7,20 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Pages d'entrée provisoires des trois espaces protégés, pour vérifier
- * l'access_control dès J3. Chacune sera remplacée par son écran :
- * E5 Mes réservations (J6), E6 Sorties et retours (J6), E8 Gestion des comptes.
- * Les droits sont vérifiés par access_control (config/packages/security.yaml).
+ * Entrée de l'espace administrateur : renvoie vers l'écran E8 Gestion des comptes.
+ *
+ * Deux protections, comme les autres écrans : access_control (^/admin) et IsGranted
+ * (remarque de relecture de J7 : la page n'avait que access_control).
  */
 final class EspaceController extends AbstractController
 {
     #[Route('/admin', name: 'app_admin', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function admin(): Response
     {
-        return $this->render('espace/index.html.twig', [
-            'titre' => 'Administration',
-            'role' => 'Administrateur',
-        ]);
+        return $this->redirectToRoute('app_gestion_comptes');
     }
 }

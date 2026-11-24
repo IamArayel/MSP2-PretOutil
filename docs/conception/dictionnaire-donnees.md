@@ -90,10 +90,12 @@ Un document par action sensible (RG8, US10). Aucun champ en dehors de cette list
 | `COMPTE_CREE` | utilisateur | `{}` |
 | `CONNEXION_ECHOUEE` | utilisateur | `{ tentative }` |
 | `COMPTE_DESACTIVE` | utilisateur | `{ email }` |
+| `COMPTE_REACTIVE` | utilisateur | `{ email }` |
 | `ROLE_MODIFIE` | utilisateur | `{ email, ancien_role, nouveau_role }` |
 | `OBJET_CREE` | objet | `{ nom }` |
 | `OBJET_MODIFIE` | objet | `{ nom, champs_modifies }` |
 | `OBJET_DESACTIVE` | objet | `{ nom }` |
+| `OBJET_SUPPRIME` | objet | `{ nom, categorie }` |
 | `RESERVATION_CREEE` | reservation | `{ objet, date_debut, date_fin }` |
 | `RESERVATION_ANNULEE` | reservation | `{ objet, date_debut, date_fin }` |
 | `SORTIE_VALIDEE` | reservation | `{ objet, adherent }` |
