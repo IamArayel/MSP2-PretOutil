@@ -74,9 +74,7 @@ class ReservationService
                 throw new QuotaAtteintException(self::QUOTA_RESERVATIONS_ACTIVES);
             }
 
-            if ($this->reservationRepository->existeChevauchement($objet, $debut, $fin)) {
-                throw new PeriodeIndisponibleException();
-            }
+            $this->verifierChevauchement($objet, $debut, $fin);
 
             $reservation = new Reservation($adherent, $objet, $debut, $fin);
             $adherent->setDerniereActiviteLe($this->horloge->now());
@@ -100,6 +98,26 @@ class ReservationService
         ]);
 
         return $reservation;
+    }
+
+    /**
+     * Vérifie qu'une période est réservable pour un objet, sans rien enregistrer : mêmes
+     * règles que reserver() hors quota (RG1, RG3, RG5, retour en retard, RG2). Utilisé par
+     * l'API des disponibilités (US11), qui informe avant l'envoi du formulaire ; la
+     * réservation elle-même revérifie tout, sous verrou.
+     *
+     * @throws PeriodeInvalideException|DureeDepasseeException|ObjetNonReservableException|PeriodeIndisponibleException
+     */
+    public function verifierDisponibilite(Objet $objet, \DateTimeImmutable $debut, \DateTimeImmutable $fin): void
+    {
+        $aujourdhui = $this->aujourdhui();
+        $debut = $debut->setTime(0, 0);
+        $fin = $fin->setTime(0, 0);
+
+        $this->verifierPeriode($debut, $fin, $aujourdhui);
+        $this->verifierDuree($debut, $fin);
+        $this->verifierObjetReservable($objet, $aujourdhui);
+        $this->verifierChevauchement($objet, $debut, $fin);
     }
 
     /**
@@ -155,6 +173,14 @@ class ReservationService
         }
         if ($this->reservationRepository->existeRetourEnRetard($objet, $aujourdhui)) {
             throw new ObjetNonReservableException('Cet objet n\'a pas encore été rendu par l\'emprunteur précédent : il ne peut pas être réservé pour le moment.');
+        }
+    }
+
+    /** RG2 : aucune réservation active de l'objet ne chevauche la période. */
+    private function verifierChevauchement(Objet $objet, \DateTimeImmutable $debut, \DateTimeImmutable $fin): void
+    {
+        if ($this->reservationRepository->existeChevauchement($objet, $debut, $fin)) {
+            throw new PeriodeIndisponibleException();
         }
     }
 
