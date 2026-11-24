@@ -348,6 +348,18 @@ Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
 docker compose exec php bin/console cache:pool:clear cache.rate_limiter
 ```
 
+### Réserver un objet (écran E4)
+
+Sur la fiche d'un objet (<https://localhost/catalogue/{id}>), un adhérent connecté choisit ses dates dans le panneau « Réserver cet objet ». Le formulaire est envoyé en POST à `/catalogue/{id}/reserver` (`ROLE_USER`, jeton CSRF).
+
+| Étape | Qui | Rôle |
+|---|---|---|
+| Saisie | `ReservationType` sur `ReservationDto` | Dates présentes, fin après début, début pas dans le passé (RG1) : erreur sous le champ |
+| Règles | `ReservationService::reserver()` | RG1 à RG5, sous transaction ; chaque refus lève une `ReservationRefuseeException` |
+| Affichage | `CatalogueController::reserver()` | Succès : redirection 303 vers « Mes réservations » avec « Réservation confirmée » ; refus : fiche réaffichée (422) avec le message et les dates saisies |
+
+Le contrôleur ne connaît aucune règle : il affiche le message de l'exception. Un visiteur est invité à se connecter ; un objet hors service affiche un message à la place du formulaire. Pour essayer chaque refus : `adherent.quota@pretoutil.test` (quota atteint), « Tente 4 places » (période déjà réservée), « Glacière électrique » (retour en retard), une période de plus de 14 jours.
+
 ### Gestion du catalogue (écran E7)
 
 <https://localhost/gestion/catalogue>, accessible au gestionnaire et à l'administrateur (compte de test `gestionnaire@pretoutil.test`).
@@ -660,3 +672,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Tests d'intégration dans une transaction annulée, sans bundle supplémentaire | Base toujours vide entre deux tests ; le service ouvre sa transaction en point de sauvegarde (`SAVEPOINT`) de celle du test |
 | 2026-11-24 | Conflit concurrent simulé par un repository qui ne voit pas le chevauchement | Seule façon reproductible d'atteindre la contrainte `EXCLUDE` (23P01) sans deux processus en parallèle |
 | 2026-11-24 | Tableau RG → tests et vérification par erreurs volontaires ([correspondance-rg-tests.md](docs/tests/correspondance-rg-tests.md)) | Critère O5 démontrable : chaque règle a un test qui échoue quand on la casse |
+| 2026-11-24 | Réservation en POST sur `/catalogue/{id}/reserver` ; en cas de refus, la fiche est réaffichée (422) au lieu d'une redirection | Le message et les dates saisies restent à l'écran ; 303 vers E5 seulement après un succès, pour éviter un double envoi |
+| 2026-11-24 | Le contrôleur attrape `ReservationRefuseeException` (classe parente) et affiche son message | Aucune règle dans le contrôleur ; une nouvelle règle n'exige aucune modification de l'écran |
+| 2026-11-24 | RG1 vérifiée aussi par le formulaire (`ReservationDto`), en plus du service | Erreur affichée sous le bon champ ; le service reste la garantie pour tous les appels |
