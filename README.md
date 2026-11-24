@@ -452,6 +452,21 @@ docker compose exec php bin/console app:mongodb:check
 
 `app:mongodb:check` lit la collection `audit_log` avec le compte applicatif, puis vérifie qu'une écriture dans une autre collection est refusée.
 
+### Tests
+
+PHPUnit est installé en dépendance de développement (`symfony/test-pack`). Les tests sont dans `tests/`, rangés comme le code de `src/`.
+
+```bash
+docker compose exec php bin/phpunit --testdox
+```
+
+| Tests | Ce qu'ils vérifient |
+|---|---|
+| `tests/Security/Voter/ObjetVoterTest.php` | `OBJET_GERER` : gestionnaire et administrateur autorisés, adhérent et visiteur refusés ; `OBJET_SUPPRIMER` : refusé pour un objet déjà réservé (US6) |
+| `tests/Security/Voter/ReservationVoterTest.php` | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6) |
+
+Les tests des Voters sont des tests unitaires : ni base de données ni conteneur Symfony. La hiérarchie des rôles est reconstruite comme dans `security.yaml`, et la date du jour est fixée par une horloge de test (`MockClock`).
+
 ### Styles (Tailwind CSS)
 
 Tailwind CSS 4 est intégré via `symfonycasts/tailwind-bundle` et AssetMapper : pas de Node ni de npm.
@@ -490,6 +505,7 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
 | Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
 | Débloquer les comptes après 5 échecs | `docker compose exec php bin/console cache:pool:clear cache.rate_limiter` |
+| Lancer les tests | `docker compose exec php bin/phpunit --testdox` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB (root) | `docker compose exec mongodb sh -c 'mongosh -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil'` |
@@ -585,3 +601,8 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | `CatalogueService` entre les contrôleurs et les repositories | Les contrôleurs ne font que lire la requête et rendre la vue ; le calcul du statut du jour est à un seul endroit |
 | 2026-11-24 | Badge « statut du jour » calculé (hors service, sorti, réservé, disponible), jamais stocké, en une requête par page | Donnée dérivée des réservations ; un retour en retard s'affiche « Sorti » ; pas de requête par objet |
 | 2026-11-24 | Filtres du catalogue en GET sans jeton CSRF ; filtres invalides : erreurs affichées, code 422, catalogue complet | Une recherche ne modifie rien et son URL se partage ; un filtre incohérent n'est jamais ignoré silencieusement |
+| 2026-11-24 | Contrôle d'accès métier par Voters (`ObjetVoter`, `ReservationVoter`), attributs en constantes | Les règles qui dépendent de l'objet (propriétaire, objet déjà réservé, date) ne s'expriment pas par chemin dans `access_control` ; un seul endroit par règle, testable |
+| 2026-11-24 | Rôle requis vérifié par `AccessDecisionManager` dans les Voters, pas par `in_array` sur les rôles | Respecte `role_hierarchy` : un administrateur a les droits d'un gestionnaire sans les répéter |
+| 2026-11-24 | `RESERVATION_ANNULER` limité aux réservations confirmées | Cycle de vie : une réservation en cours, terminée ou annulée ne peut plus être annulée |
+| 2026-11-24 | Date du jour fournie par l'horloge Symfony (`ClockInterface`), comparée en jours calendaires | RG6 testable à la journée près ; comparer `AAAA-MM-JJ` évite un décalage d'un jour lié aux fuseaux |
+| 2026-11-24 | PHPUnit via `symfony/test-pack` dès J4 | Critère O5 (contrôle d'accès testé) ; même outillage pour les tests fonctionnels de J7 |

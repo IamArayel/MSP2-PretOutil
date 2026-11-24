@@ -87,5 +87,20 @@ class ReservationRepository extends ServiceEntityRepository
         }
 
         return $statuts;
+     * Vrai si l'objet a au moins une réservation, quel que soit son statut (annulée comprise).
+     * Un tel objet ne peut pas être supprimé physiquement (US6) : la clé étrangère
+     * fk_reservation_objet (ON DELETE RESTRICT) le refuserait.
+     */
+    public function existePourObjet(Objet $objet): bool
+    {
+        $resultat = $this->createQueryBuilder('r')
+            ->select('1')
+            ->where('r.objet = :objet')
+            ->setParameter('objet', $objet)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return null !== $resultat;
     }
 }
