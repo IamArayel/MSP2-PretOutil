@@ -1,14 +1,14 @@
 {#
     Barre de navigation, d'après les maquettes Figma (E1 pour le visiteur, E3 pour l'adhérent).
     Les liens affichés dépendent des rôles (role_hierarchy : un admin voit tout).
-    Le lien "#" du catalogue sera remplacé par path() à J4.
 #}
 <header class="border-b border-line bg-surface">
     <nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
         <a href="{{ path('app_accueil') }}" class="text-xl font-bold text-primary">Prêt'Outil</a>
 
         <ul class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-ink-muted">
-            <li><a href="#" class="hover:text-primary">Catalogue</a></li>
+            {% set sur_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_catalogue' %}
+            <li><a href="{{ path('app_catalogue') }}" class="hover:text-primary{{ sur_catalogue ? ' font-semibold text-primary' }}"{% if sur_catalogue %} aria-current="page"{% endif %}>Catalogue</a></li>
             {% if is_granted('ROLE_USER') %}
                 <li><a href="{{ path('app_mes_reservations') }}" class="hover:text-primary">Mes réservations</a></li>
             {% endif %}

@@ -6,12 +6,14 @@ namespace App\Repository;
 
 use App\Entity\Objet;
 use App\Entity\Reservation;
+use App\Enum\StatutReservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * Accès aux données de la table reservation. Les requêtes métier sont ajoutées
- * avec les fonctionnalités qui les utilisent.
+ * Accès aux données de la table reservation.
  *
  * @extends ServiceEntityRepository<Reservation>
  */
@@ -23,6 +25,68 @@ class ReservationRepository extends ServiceEntityRepository
     }
 
     /**
+     * Périodes pendant lesquelles un objet est déjà réservé (écran E4), de la plus proche
+     * à la plus lointaine. Seules les réservations actives qui ne sont pas terminées avant
+     * $aPartirDu sont renvoyées ; aucune donnée sur l'adhérent n'est exposée.
+     *
+     * @return list<array{dateDebut: \DateTimeImmutable, dateFin: \DateTimeImmutable}>
+     */
+    public function periodesReservees(Objet $objet, \DateTimeImmutable $aPartirDu): array
+    {
+        return $this->createQueryBuilder('r')
+            ->select('r.dateDebut', 'r.dateFin')
+            ->where('r.objet = :objet')
+            ->andWhere('r.statut IN (:statutsActifs)')
+            ->andWhere('r.dateFin >= :aPartirDu')
+            ->orderBy('r.dateDebut', 'ASC')
+            ->setParameter('objet', $objet)
+            ->setParameter(
+                'statutsActifs',
+                array_map(static fn (StatutReservation $statut): string => $statut->value, StatutReservation::actifs()),
+                ArrayParameterType::STRING,
+            )
+            ->setParameter('aPartirDu', $aPartirDu, Types::DATE_IMMUTABLE)
+            ->getQuery()
+            ->getArrayResult();
+    }
+
+    /**
+     * Statut des réservations actives qui couvrent une date, pour une liste d'objets,
+     * en une seule requête (évite une requête par objet affiché).
+     *
+     * @param list<Objet> $objets
+     *
+     * @return array<int, list<StatutReservation>> statuts indexés par identifiant d'objet
+     */
+    public function statutsActifsAuJour(array $objets, \DateTimeImmutable $jour): array
+    {
+        if ([] === $objets) {
+            return [];
+        }
+
+        $lignes = $this->createQueryBuilder('r')
+            ->select('IDENTITY(r.objet) AS objetId', 'r.statut')
+            ->where('r.objet IN (:objets)')
+            ->andWhere('r.statut IN (:statutsActifs)')
+            ->andWhere('r.dateDebut <= :jour')
+            ->andWhere('r.dateFin >= :jour OR r.statut = :enCours')
+            ->setParameter('objets', $objets)
+            ->setParameter(
+                'statutsActifs',
+                array_map(static fn (StatutReservation $statut): string => $statut->value, StatutReservation::actifs()),
+                ArrayParameterType::STRING,
+            )
+            ->setParameter('jour', $jour, Types::DATE_IMMUTABLE)
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            ->getQuery()
+            ->getArrayResult();
+
+        $statuts = [];
+        foreach ($lignes as $ligne) {
+            $statuts[(int) $ligne['objetId']][] = $ligne['statut'];
+        }
+
+        return $statuts;
      * Vrai si l'objet a au moins une réservation, quel que soit son statut (annulée comprise).
      * Un tel objet ne peut pas être supprimé physiquement (US6) : la clé étrangère
      * fk_reservation_objet (ON DELETE RESTRICT) le refuserait.

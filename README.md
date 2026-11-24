@@ -216,6 +216,7 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 | Collection MongoDB `audit_log` | [docs/conception/audit_log.mongodb.js](docs/conception/audit_log.mongodb.js), [audit_log_tests.mongodb.js](docs/conception/audit_log_tests.mongodb.js) | |
 | Dictionnaire de données (et RGPD) | [docs/conception/dictionnaire-donnees.md](docs/conception/dictionnaire-donnees.md) | |
 | Conventions de nommage | [docs/conception/conventions-nommage.md](docs/conception/conventions-nommage.md) | |
+| Requêtes du catalogue (vérification et plan d'exécution) | [docs/conception/requetes-catalogue.md](docs/conception/requetes-catalogue.md) | |
 | Diagramme de séquence « Réserver un objet » | [PlantUML](docs/diagrammes/sequence-reserver.puml), [note](docs/diagrammes/sequence-reserver.md) | [SVG](docs/diagrammes/sequence-reserver.svg), [PNG](docs/diagrammes/sequence-reserver.png) |
 | Schéma d'architecture | [PlantUML](docs/diagrammes/architecture.puml), [note](docs/diagrammes/architecture.md) | [SVG](docs/diagrammes/architecture.svg), [PNG](docs/diagrammes/architecture.png) |
 
@@ -593,6 +594,13 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-23 | J4 en 5 tickets GitHub (#33 à #37) : catalogue (requêtes et écrans E3, E4) pour Anthony, Voters et gestion du catalogue (E7) pour Chloé, relecture croisée ensemble | Chacun prolonge son domaine de J3 (données, sécurité) ; la relecture croisée prépare l'entretien individuel |
 | 2026-11-23 | Voters faits avant l'écran E7 et testés unitairement | E7 s'appuie sur `ObjetVoter` pour autoriser la suppression ; critère O5 « contrôle d'accès testé » |
 | 2026-11-23 | Ports fixes 5433 (PostgreSQL) et 27018 (MongoDB), limités à `127.0.0.1` | Connexion stable depuis pgAdmin et Compass ; 5432 et 27017 sont souvent pris par des serveurs installés localement ; bases non exposées au réseau local |
+| 2026-11-24 | Filtre de disponibilité du catalogue en `NOT EXISTS` avec bornes incluses, objets hors service exclus dès qu'une période est demandée | Même règle que la contrainte `EXCLUDE` (RG2) et RG5 : le catalogue n'annonce disponible que ce qui est réservable |
+| 2026-11-24 | Index partiel `idx_reservation_dates_actives` sur les dates des réservations actives | `EXPLAIN` sur 200 000 réservations : lecture complète de la table sans lui (25 ms), 7 ms avec ; éco-conception « requêtes indexées » |
+| 2026-11-24 | Repositories qui renvoient un objet `Page` plutôt que le `Paginator` de Doctrine | Les contrôleurs et les vues ne dépendent pas de l'ORM (séparation des couches) ; `Page` sert aussi aux écrans E7 et E9 |
+| 2026-11-24 | Catalogue sur `/catalogue` (E3) et détail sur `/catalogue/{id}` (E4), page d'accueil conservée | L'accueil présente l'association et mène au catalogue ; les URL du catalogue restent stables |
+| 2026-11-24 | `CatalogueService` entre les contrôleurs et les repositories | Les contrôleurs ne font que lire la requête et rendre la vue ; le calcul du statut du jour est à un seul endroit |
+| 2026-11-24 | Badge « statut du jour » calculé (hors service, sorti, réservé, disponible), jamais stocké, en une requête par page | Donnée dérivée des réservations ; un retour en retard s'affiche « Sorti » ; pas de requête par objet |
+| 2026-11-24 | Filtres du catalogue en GET sans jeton CSRF ; filtres invalides : erreurs affichées, code 422, catalogue complet | Une recherche ne modifie rien et son URL se partage ; un filtre incohérent n'est jamais ignoré silencieusement |
 | 2026-11-24 | Contrôle d'accès métier par Voters (`ObjetVoter`, `ReservationVoter`), attributs en constantes | Les règles qui dépendent de l'objet (propriétaire, objet déjà réservé, date) ne s'expriment pas par chemin dans `access_control` ; un seul endroit par règle, testable |
 | 2026-11-24 | Rôle requis vérifié par `AccessDecisionManager` dans les Voters, pas par `in_array` sur les rôles | Respecte `role_hierarchy` : un administrateur a les droits d'un gestionnaire sans les répéter |
 | 2026-11-24 | `RESERVATION_ANNULER` limité aux réservations confirmées | Cycle de vie : une réservation en cours, terminée ou annulée ne peut plus être annulée |

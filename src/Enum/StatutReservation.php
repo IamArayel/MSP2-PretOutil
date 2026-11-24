@@ -20,6 +20,16 @@ enum StatutReservation: string
      */
     public function estActive(): bool
     {
-        return self::Confirmee === $this || self::EnCours === $this;
+        return \in_array($this, self::actifs(), true);
+    }
+
+    /**
+     * Statuts actifs, pour les requêtes qui filtrent sur la colonne statut.
+     *
+     * @return list<self>
+     */
+    public static function actifs(): array
+    {
+        return [self::Confirmee, self::EnCours];
     }
 }

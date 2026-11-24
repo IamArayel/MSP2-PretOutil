@@ -20,6 +20,14 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ReservationRepository::class)]
 // RG4 : compter les réservations actives d'un adhérent.
 #[ORM\Index(name: 'idx_reservation_utilisateur_statut', columns: ['utilisateur_id', 'statut'])]
+// Catalogue (US3) : réservations actives qui chevauchent une période. Index partiel : seules
+// les réservations actives y figurent. Créé par migration avec « statut IN (...) » ; la condition
+// est écrite ici comme PostgreSQL la restitue, pour que Doctrine ne voie pas d'écart.
+#[ORM\Index(
+    name: 'idx_reservation_dates_actives',
+    columns: ['date_debut', 'date_fin'],
+    options: ['where' => "((statut)::text = ANY ((ARRAY['confirmee'::character varying, 'en_cours'::character varying])::text[]))"],
+)]
 class Reservation
 {
     #[ORM\Id]

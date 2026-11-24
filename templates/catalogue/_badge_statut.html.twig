@@ -1,0 +1,11 @@
+{#
+    Badge du statut du jour d'un objet (App\Enum\StatutDuJour), couleurs de la charte.
+    Variable attendue : statut
+#}
+{% set classes = {
+    disponible: 'bg-statut-disponible-bg text-statut-disponible',
+    reserve: 'bg-statut-reserve-bg text-statut-reserve',
+    sorti: 'bg-statut-sorti-bg text-statut-sorti',
+    hors_service: 'bg-statut-hors-service-bg text-statut-hors-service',
+} %}
+<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ classes[statut.value] }}">{{ statut.libelle }}</span>
