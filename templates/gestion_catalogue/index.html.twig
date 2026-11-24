@@ -2,14 +2,14 @@
 
 {% block title %}Gestion du catalogue{% endblock %}
 
-{# E7 non maquetté : charte et composants de E3 (cartes, badges, pagination) #}
+{# E7 non maquetté : composants communs à E6-E9 (assets/styles/app.css) #}
 {% block body %}
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold">Gestion du catalogue</h1>
             <p class="mt-1 text-ink-muted">{{ page.total }} objet{{ page.total > 1 ? 's' }}, actifs et retirés du catalogue</p>
         </div>
-        <a href="{{ path('app_gestion_catalogue_nouveau') }}" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">
+        <a href="{{ path('app_gestion_catalogue_nouveau') }}" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold whitespace-nowrap text-white hover:bg-primary-hover">
             Ajouter un objet
         </a>
     </div>
@@ -20,38 +20,39 @@
         hors_service: 'bg-statut-hors-service-bg text-statut-hors-service',
     } %}
 
-    <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table class="w-full text-left text-sm">
-            <caption class="sr-only">Objets du catalogue, page {{ page.numero }} sur {{ page.nombreDePages }}</caption>
-            <thead class="border-b border-line text-xs text-ink-muted">
+    <div class="cadre-tableau mt-6" role="region" aria-label="Objets du catalogue" tabindex="0">
+        <table class="tableau">
+            <caption class="sr-only">Objets du catalogue, page {{ page.numero }} sur {{ max(page.nombreDePages, 1) }}</caption>
+            <thead class="tableau-entete">
                 <tr>
-                    <th scope="col" class="px-4 py-3 font-medium">Objet</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Catégorie</th>
-                    <th scope="col" class="px-4 py-3 font-medium">État</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Catalogue</th>
-                    <th scope="col" class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
+                    <th scope="col" class="cellule-entete">Objet</th>
+                    <th scope="col" class="cellule-entete">Catégorie</th>
+                    <th scope="col" class="cellule-entete">État</th>
+                    <th scope="col" class="cellule-entete">Catalogue</th>
+                    <th scope="col" class="cellule-entete text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-line">
                 {% for objet in page.elements %}
                     <tr class="{{ objet.actif ? '' : 'bg-page text-ink-muted' }}">
-                        <th scope="row" class="px-4 py-3 font-semibold">{{ objet.nom }}</th>
-                        <td class="px-4 py-3">{{ objet.categorie.libelle }}</td>
-                        <td class="px-4 py-3">
-                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ badges_etat[objet.etat.value] }}">{{ objet.etat.libelle }}</span>
+                        <th scope="row" class="cellule font-normal">{{ objet.nom }}</th>
+                        <td class="cellule">{{ objet.categorie.libelle }}</td>
+                        <td class="cellule">
+                            <span class="badge {{ badges_etat[objet.etat.value] }}">{{ objet.etat.libelle }}</span>
                         </td>
-                        <td class="px-4 py-3">{{ objet.actif ? 'Actif' : 'Retiré' }}</td>
-                        <td class="px-4 py-3">
+                        <td class="cellule">{{ objet.actif ? 'Actif' : 'Retiré' }}</td>
+                        <td class="cellule">
                             <div class="flex flex-wrap justify-end gap-2">
                                 <a href="{{ path('app_gestion_catalogue_modifier', {id: objet.id}) }}"
-                                   class="rounded-md border border-line bg-surface px-3 py-1.5 font-semibold text-ink hover:bg-page"
+                                   class="bouton-ligne bouton-secondaire"
                                    aria-label="Modifier : {{ objet.nom }}">Modifier</a>
 
                                 {% if objet.actif %}
                                     <form method="post" action="{{ path('app_gestion_catalogue_desactiver', {id: objet.id}) }}">
                                         <input type="hidden" name="_token" value="{{ csrf_token('desactiver-objet-' ~ objet.id) }}">
-                                        <button type="submit" class="rounded-md border border-line bg-surface px-3 py-1.5 font-semibold text-ink hover:bg-page"
-                                                aria-label="Retirer du catalogue : {{ objet.nom }}">Désactiver</button>
+                                        {# Nom accessible qui commence par le texte visible (WCAG 2.5.3) #}
+                                        <button type="submit" class="bouton-ligne bouton-secondaire"
+                                                aria-label="Désactiver : {{ objet.nom }} (retirer du catalogue)">Désactiver</button>
                                     </form>
                                 {% endif %}
 
@@ -60,7 +61,7 @@
                                     <form method="post" action="{{ path('app_gestion_catalogue_supprimer', {id: objet.id}) }}"
                                           data-confirmation="Supprimer définitivement « {{ objet.nom }} » ?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('supprimer-objet-' ~ objet.id) }}">
-                                        <button type="submit" class="rounded-md border border-red-200 bg-statut-hors-service-bg px-3 py-1.5 font-semibold text-statut-hors-service hover:border-statut-hors-service"
+                                        <button type="submit" class="bouton-ligne bouton-danger"
                                                 aria-label="Supprimer définitivement : {{ objet.nom }}">Supprimer</button>
                                     </form>
                                 {% endif %}
@@ -68,25 +69,11 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="5" class="px-4 py-6 text-center text-ink-muted">Aucun objet dans le catalogue.</td></tr>
+                    <tr><td colspan="5" class="cellule-vide">Aucun objet dans le catalogue.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    {% if page.nombreDePages > 1 %}
-        <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
-            {% if page.aUnePagePrecedente %}
-                <a href="{{ path('app_gestion_catalogue', {page: page.numero - 1}) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
-            {% endif %}
-            <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
-            {% if page.aUnePageSuivante %}
-                <a href="{{ path('app_gestion_catalogue', {page: page.numero + 1}) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
-            {% endif %}
-        </nav>
-    {% endif %}
+    {{ include('_partials/pagination.html.twig', {route: 'app_gestion_catalogue'}) }}
 {% endblock %}

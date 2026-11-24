@@ -43,3 +43,61 @@
         @apply outline-2 outline-offset-2 outline-primary;
     }
 }
+
+/*
+ * Composants des écrans de gestion (E6 à E9), d'après les maquettes E6 et E9 : une seule
+ * définition pour que les quatre écrans aient la même présentation.
+ */
+
+/* Cadre d'un tableau : sur mobile, le tableau défile dans son cadre, pas la page. */
+@utility cadre-tableau {
+    @apply mt-4 overflow-x-auto rounded-lg border border-line bg-surface;
+}
+
+/* Tableau : largeur minimale, en dessous de laquelle le cadre défile. */
+@utility tableau {
+    @apply w-full min-w-3xl text-left text-sm;
+}
+
+@utility tableau-entete {
+    @apply border-b border-line bg-page text-xs text-ink-muted;
+}
+
+@utility cellule-entete {
+    @apply px-4 py-3 font-medium tracking-wide uppercase;
+}
+
+@utility cellule {
+    @apply px-4 py-3;
+}
+
+/* Ligne « aucun élément » d'un tableau vide. */
+@utility cellule-vide {
+    @apply px-4 py-6 text-center text-ink-muted;
+}
+
+@utility badge {
+    @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap;
+}
+
+/* Boutons d'action d'une ligne de tableau. */
+@utility bouton-ligne {
+    @apply inline-block rounded-md border px-3 py-1.5 text-sm font-semibold whitespace-nowrap;
+}
+
+@utility bouton-primaire {
+    @apply border-primary bg-primary text-white hover:border-primary-hover hover:bg-primary-hover;
+}
+
+@utility bouton-secondaire {
+    @apply border-line bg-surface text-ink hover:bg-page;
+}
+
+@utility bouton-danger {
+    @apply border-red-200 bg-statut-hors-service-bg text-statut-hors-service hover:border-statut-hors-service;
+}
+
+/* Liste de choix dans une ligne ou un filtre : contour à 4,77:1 (RGAA 3.3). */
+@utility liste-choix {
+    @apply rounded-md border border-champ bg-surface px-3 py-1.5 text-sm;
+}

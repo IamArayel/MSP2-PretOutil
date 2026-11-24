@@ -83,6 +83,51 @@ Le certificat local bloque les navigateurs automatisés : ces contrôles se font
 | Zoom à 200 % : aucun contenu coupé ni masqué | Mises en page en flex et grille qui passent à la ligne | À faire |
 | Mobile (375 px) : navigation, cartes du catalogue, formulaire de réservation, tableau de E5 | Balise `viewport`, colonnes empilées sous `sm`, tableau de E5 défilant seul (`overflow-x-auto`) | À faire |
 
-## 6. Écrans de gestion (E6 à E9)
+## 6. Grille des écrans de gestion (E6 à E9)
 
-À compléter par [#78](https://github.com/IamArayel/MSP2-PretOutil/issues/78), avec la même grille. Pour étendre la vérification automatique, ajouter les écrans à `AccessibiliteTest::ecrans()`. La liste du journal (E9) a encore le contour `border-line` : à passer en `border-champ`, comme les champs du thème et la liste des rôles de E8.
+Vérifiée le 2026-11-24 ([#78](https://github.com/IamArayel/MSP2-PretOutil/issues/78)). ✅ conforme · 🔧 corrigé à J8 · ➖ sans objet.
+
+| Critère (RGAA 4.1) | E6 Sorties et retours | E7 Gestion du catalogue | E7 Formulaire d'objet | E8 Gestion des comptes | E9 Journal d'audit |
+|---|---|---|---|---|---|
+| 8.3 Langue, 8.6 titre de page | ✅ | ✅ | ✅ « Ajouter un objet », « Modifier « nom » » | ✅ | ✅ |
+| 9.1 Un `h1`, niveaux de titres sans saut | ✅ un `h2` par tableau | ✅ | ✅ | ✅ | ✅ |
+| 11.1 et 11.2 Chaque champ a une étiquette pertinente | ✅ « État de *objet* au retour » (masquée) | ➖ | ✅ | ✅ « Rôle de *nom* » (masquée) | ✅ « Type d'action » ; 🔧 options en clair (« Connexion échouée ») au lieu des codes |
+| 11.10 Champs obligatoires signalés, erreurs reliées | ➖ | ➖ | 🔧 mention « Tous les champs sont obligatoires, sauf mention contraire » ; erreurs reliées par le thème | ➖ | ➖ |
+| 3.2 Contraste des textes (4,5:1) | ✅ | ✅ ligne d'un objet retiré : 7,23:1 | ✅ | ✅ | ✅ |
+| 3.3 Contraste des éléments d'interface (3:1) | 🔧 contour de la liste « État au retour » | ➖ | ✅ thème | ✅ | 🔧 contour de la liste du filtre |
+| 5.4 Tableau titré (`caption`) | 🔧 deux légendes ajoutées | ✅ | ➖ | ✅ | ✅ |
+| 5.7 En-têtes de colonnes (`scope="col"`) et de lignes (`scope="row"`) | ✅ objet en en-tête de ligne | ✅ | ➖ | ✅ nom en en-tête de ligne | ✅ colonnes |
+| 6.1 Lien ou bouton explicite, nom accessible qui contient le texte visible (WCAG 2.5.3) | ✅ « Valider la sortie : *objet*, *adhérent* » | 🔧 « Désactiver » était annoncé « Retirer du catalogue : … » | ✅ « ← Gestion du catalogue » | ✅ « Changer le rôle de *nom* » | ✅ |
+| 7.5 Message après une action annoncé | ✅ `role="status"` (succès), `role="alert"` (refus, avertissement RG7) | ✅ | ✅ erreurs du formulaire | ✅ | ✅ filtre inconnu en `role="alert"` |
+| 10.7 Focus visible | ✅ contour `teal-700`, y compris le cadre du tableau | ✅ | ✅ | ✅ | ✅ |
+| 12.8 Ordre de tabulation (aucun `tabindex` positif) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 10.11 Affichage mobile : le tableau défile dans son cadre, pas la page | 🔧 | 🔧 | ➖ | 🔧 | 🔧 |
+| Navigation : page en cours signalée (`aria-current`) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| États vides | 🔧 « Aucune sortie à valider aujourd'hui. », « Aucun retour attendu. » | ✅ « Aucun objet dans le catalogue. » | ➖ | ✅ « Aucun compte. » | 🔧 « Aucune action de ce type. » avec un filtre |
+
+## 7. Corrections de J8 (E6 à E9)
+
+| Écart | Correction | Fichier |
+|---|---|---|
+| Présentation différente d'un écran à l'autre : en-têtes de tableau en majuscules sur fond gris (E6, E9, maquettes) ou non (E7, E8), boutons de tailles différentes, trois copies de la pagination | Composants communs dans la feuille de styles (`cadre-tableau`, `tableau`, `tableau-entete`, `cellule-entete`, `cellule`, `cellule-vide`, `badge`, `bouton-ligne` et ses variantes, `liste-choix`), d'après les maquettes E6 et E9 ; pagination dans une seule inclusion | `assets/styles/app.css`, `templates/_partials/pagination.html.twig` |
+| Tableaux de E6 sans légende | `<caption class="sr-only">` sur chacun | `templates/sorties_retours/index.html.twig` |
+| Bouton « Désactiver » de E7 annoncé « Retirer du catalogue : … » : un utilisateur de commande vocale qui dit « Désactiver » n'est pas compris | « Désactiver : *objet* (retirer du catalogue) » | `templates/gestion_catalogue/index.html.twig` |
+| Contour des listes « État au retour » (E6) et du filtre (E9) à 1,23:1 | `liste-choix` : couleur `champ`, 4,77:1 | E6, E9 |
+| Tableaux tassés sur mobile, texte coupé sur plusieurs lignes | Largeur minimale du tableau (768 px, 1024 px pour E8) et défilement dans le cadre ; cadre nommé (`role="region"`) et atteignable au clavier (`tabindex="0"`) pour le faire défiler sans souris | E6 à E9 |
+| Liste du filtre de E9 : codes techniques lus lettre à lettre par le lecteur d'écran (« CONNEXION_ECHOUEE ») | Libellés en clair (`ActionAudit::libelle()`) ; le badge garde le code, comme la maquette | `src/Enum/ActionAudit.php`, E9 |
+| Formulaire d'objet : champs obligatoires non signalés | Même mention que E2 | `templates/gestion_catalogue/formulaire.html.twig` |
+| États vides formulés différemment | « Aucune sortie à valider aujourd'hui. », « Aucun retour attendu. », « Aucune action de ce type. » | E6, E9 |
+
+Preuve : `AccessibiliteTest`, étendu aux écrans de gestion (69 tests). Trois vérifications s'ajoutent pour tous les écrans : nom accessible qui contient le texte visible, contour des listes de choix, tableaux dans un cadre défilant. En réintroduisant un à un l'ancien nom du bouton « Désactiver », l'ancien contour de la liste de E6, la légende manquante et un cadre non atteignable au clavier, un test échoue à chaque fois.
+
+## 8. Vérifications manuelles des écrans de gestion
+
+Même méthode que la section 5, dans un vrai navigateur.
+
+| Parcours au clavier seul | Déjà garanti par le code | Résultat à la main |
+|---|---|---|
+| Valider une sortie (E6) | Bouton atteint par Tab dans l'ordre de la ligne ; message de succès en `role="status"` | À faire |
+| Enregistrer un retour hors service (E6) | Liste « État au retour » puis bouton de la même ligne ; avertissement RG7 en `role="alert"` | À faire |
+| Créer puis désactiver un objet (E7) | Formulaire du thème (étiquettes, erreurs reliées) ; « Désactiver » atteint dans la ligne de l'objet | À faire |
+| Filtrer le journal (E9) | Liste, puis « Filtrer » ; « Réinitialiser » apparaît ensuite | À faire |
+| Mobile (375 px) : E6 à E9 | Tableaux défilants dans leur cadre, page sans défilement horizontal | À faire |

@@ -2,7 +2,7 @@
 
 {% block title %}Gestion des comptes{% endblock %}
 
-{# E8 non maquetté : charte et composants de E7 et E9 (tableau, badges, boutons, pagination) #}
+{# E8 non maquetté : composants communs à E6-E9 (assets/styles/app.css) #}
 {% block body %}
     <h1 class="text-3xl font-bold">Gestion des comptes</h1>
     <p class="mt-1 text-ink-muted">{{ page.total }} compte{{ page.total > 1 ? 's' }} · chaque changement est enregistré dans le journal d'audit</p>
@@ -12,19 +12,18 @@
         gestionnaire: 'bg-statut-sorti-bg text-statut-sorti',
         administrateur: 'bg-statut-reserve-bg text-statut-reserve',
     } %}
-    {% set bouton = 'rounded-md border border-line bg-surface px-3 py-1.5 font-semibold text-ink hover:bg-page' %}
 
-    <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-        <table class="w-full text-left text-sm">
-            <caption class="sr-only">Comptes de l'association, page {{ page.numero }} sur {{ page.nombreDePages }}</caption>
-            <thead class="border-b border-line text-xs text-ink-muted">
+    <div class="cadre-tableau mt-6" role="region" aria-label="Comptes de l'association" tabindex="0">
+        <table class="tableau min-w-5xl">
+            <caption class="sr-only">Comptes de l'association, page {{ page.numero }} sur {{ max(page.nombreDePages, 1) }}</caption>
+            <thead class="tableau-entete">
                 <tr>
-                    <th scope="col" class="px-4 py-3 font-medium">Nom</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Email</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Rôle</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Compte</th>
-                    <th scope="col" class="px-4 py-3 font-medium">Dernière activité</th>
-                    <th scope="col" class="px-4 py-3 font-medium"><span class="sr-only">Actions</span></th>
+                    <th scope="col" class="cellule-entete">Nom</th>
+                    <th scope="col" class="cellule-entete">Email</th>
+                    <th scope="col" class="cellule-entete">Rôle</th>
+                    <th scope="col" class="cellule-entete">Compte</th>
+                    <th scope="col" class="cellule-entete">Dernière activité</th>
+                    <th scope="col" class="cellule-entete text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-line">
@@ -33,14 +32,14 @@
                     {% set nom = compte.prenom ~ ' ' ~ compte.nom %}
                     {% set soi_meme = compte.id == app.user.id %}
                     <tr class="{{ compte.actif ? '' : 'bg-page text-ink-muted' }}">
-                        <th scope="row" class="px-4 py-3 font-semibold">{{ nom }}{% if soi_meme %} <span class="font-normal text-ink-muted">(vous)</span>{% endif %}</th>
-                        <td class="px-4 py-3">{{ compte.email }}</td>
-                        <td class="px-4 py-3">
-                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ badges_role[role.value] }}">{{ role.libelle }}</span>
+                        <th scope="row" class="cellule font-normal">{{ nom }}{% if soi_meme %} <span class="font-normal text-ink-muted">(vous)</span>{% endif %}</th>
+                        <td class="cellule">{{ compte.email }}</td>
+                        <td class="cellule">
+                            <span class="badge {{ badges_role[role.value] }}">{{ role.libelle }}</span>
                         </td>
-                        <td class="px-4 py-3">{{ compte.actif ? 'Actif' : 'Désactivé' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3">{{ compte.derniereActiviteLe ? compte.derniereActiviteLe|date('d/m/Y') : 'Aucune' }}</td>
-                        <td class="px-4 py-3">
+                        <td class="cellule">{{ compte.actif ? 'Actif' : 'Désactivé' }}</td>
+                        <td class="cellule whitespace-nowrap">{{ compte.derniereActiviteLe ? compte.derniereActiviteLe|date('d/m/Y') : 'Aucune' }}</td>
+                        <td class="cellule">
                             {# Un administrateur n'agit pas sur son propre compte (CompteService) #}
                             {% if not soi_meme %}
                                 <div class="flex flex-wrap items-center justify-end gap-2">
@@ -48,12 +47,12 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token('role-compte-' ~ compte.id) }}">
                                         <input type="hidden" name="page" value="{{ page.numero }}">
                                         <label for="role-{{ compte.id }}" class="sr-only">Rôle de {{ nom }}</label>
-                                        <select id="role-{{ compte.id }}" name="role" class="rounded-md border border-champ bg-surface px-2 py-1.5 text-sm">
+                                        <select id="role-{{ compte.id }}" name="role" class="liste-choix">
                                             {% for choix in roles %}
                                                 <option value="{{ choix.value }}"{% if choix == role %} selected{% endif %}>{{ choix.libelle }}</option>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" class="{{ bouton }}" aria-label="Changer le rôle de {{ nom }}">Changer</button>
+                                        <button type="submit" class="bouton-ligne bouton-secondaire" aria-label="Changer le rôle de {{ nom }}">Changer</button>
                                     </form>
 
                                     {% if compte.actif %}
@@ -61,14 +60,14 @@
                                               data-confirmation="Désactiver le compte de {{ nom }} ? Sa session en cours sera fermée.">
                                             <input type="hidden" name="_token" value="{{ csrf_token('desactiver-compte-' ~ compte.id) }}">
                                             <input type="hidden" name="page" value="{{ page.numero }}">
-                                            <button type="submit" class="rounded-md border border-red-200 bg-statut-hors-service-bg px-3 py-1.5 font-semibold text-statut-hors-service hover:border-statut-hors-service"
+                                            <button type="submit" class="bouton-ligne bouton-danger"
                                                     aria-label="Désactiver le compte de {{ nom }}">Désactiver</button>
                                         </form>
                                     {% else %}
                                         <form method="post" action="{{ path('app_gestion_comptes_reactiver', {id: compte.id}) }}">
                                             <input type="hidden" name="_token" value="{{ csrf_token('reactiver-compte-' ~ compte.id) }}">
                                             <input type="hidden" name="page" value="{{ page.numero }}">
-                                            <button type="submit" class="{{ bouton }}" aria-label="Réactiver le compte de {{ nom }}">Réactiver</button>
+                                            <button type="submit" class="bouton-ligne bouton-secondaire" aria-label="Réactiver le compte de {{ nom }}">Réactiver</button>
                                         </form>
                                     {% endif %}
                                 </div>
@@ -76,25 +75,11 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="6" class="px-4 py-6 text-center text-ink-muted">Aucun compte.</td></tr>
+                    <tr><td colspan="6" class="cellule-vide">Aucun compte.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    {% if page.nombreDePages > 1 %}
-        <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
-            {% if page.aUnePagePrecedente %}
-                <a href="{{ path('app_gestion_comptes', {page: page.numero - 1}) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
-            {% endif %}
-            <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
-            {% if page.aUnePageSuivante %}
-                <a href="{{ path('app_gestion_comptes', {page: page.numero + 1}) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
-            {% else %}
-                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
-            {% endif %}
-        </nav>
-    {% endif %}
+    {{ include('_partials/pagination.html.twig', {route: 'app_gestion_comptes'}) }}
 {% endblock %}
