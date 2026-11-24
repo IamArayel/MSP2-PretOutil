@@ -243,7 +243,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception ([notes J5](docs/dossier/notes-j5.md)) | ✅ |
-| J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | 🟡 |
+| J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL ([notes J6](docs/dossier/notes-j6.md)) | ✅ |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
 | J9 | | Rédaction du dossier | ⬜ |
@@ -757,3 +757,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | `audit_log.mongodb.js` rejouable (`collMod` si la collection existe) | Une seule source pour le validateur ; ajouter une action (`OBJET_SUPPRIME`) ne demande pas de script de migration séparé |
 | 2026-11-24 | Base MongoDB de test `pretoutil_test`, créée par le même script, mêmes droits | Les tests vérifient le vrai validateur et les vrais droits ; documents de test non supprimables, retrouvés par marqueur |
 | 2026-11-24 | Filtre de E9 converti en `ActionAudit` avant la requête | Protection contre l'injection NoSQL : `?action[$ne]=x` est refusé (404), une valeur inconnue est ignorée |
+| 2026-11-24 | La suppression physique d'un objet est journalisée (`OBJET_SUPPRIME`) | Remplace la décision « suppression non journalisée » prise à J4 : RG8 couvre toute action sensible ; validateur MongoDB mis à jour par `collMod` |
+| 2026-11-24 | Parcours de fin de J6 sur tout le cycle de vie, avec contrôle sur E9 d'un document par action (21 contrôles) | Prouve RG8 de bout en bout : chaque action sensible produit exactement une entrée du journal |
