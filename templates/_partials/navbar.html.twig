@@ -13,7 +13,8 @@
                 <li><a href="{{ path('app_mes_reservations') }}" class="hover:text-primary">Mes réservations</a></li>
             {% endif %}
             {% if is_granted('ROLE_MANAGER') %}
-                <li><a href="{{ path('app_gestion') }}" class="hover:text-primary">Sorties et retours</a></li>
+                {% set sur_sorties_retours = (app.request.attributes.get('_route') ?? '') starts with 'app_sorties_retours' %}
+                <li><a href="{{ path('app_sorties_retours') }}" class="hover:text-primary{{ sur_sorties_retours ? ' font-semibold text-primary' }}"{% if sur_sorties_retours %} aria-current="page"{% endif %}>Sorties et retours</a></li>
                 {% set sur_gestion_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_gestion_catalogue' %}
                 <li><a href="{{ path('app_gestion_catalogue') }}" class="hover:text-primary{{ sur_gestion_catalogue ? ' font-semibold text-primary' }}"{% if sur_gestion_catalogue %} aria-current="page"{% endif %}>Gestion du catalogue</a></li>
             {% endif %}

@@ -16,15 +16,6 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class EspaceController extends AbstractController
 {
-    #[Route('/gestion', name: 'app_gestion', methods: ['GET'])]
-    public function gestion(): Response
-    {
-        return $this->render('espace/index.html.twig', [
-            'titre' => 'Sorties et retours',
-            'role' => 'Gestionnaire',
-        ]);
-    }
-
     #[Route('/admin', name: 'app_admin', methods: ['GET'])]
     public function admin(): Response
     {

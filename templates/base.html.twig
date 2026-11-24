@@ -33,6 +33,11 @@
                     {{ message }}
                 </div>
             {% endfor %}
+            {% for message in app.flashes('avertissement') %}
+                <div class="mx-auto mb-6 max-w-3xl rounded-md border border-amber-200 bg-statut-sorti-bg px-4 py-3 text-sm text-statut-sorti" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
             {% for message in app.flashes('erreur') %}
                 <div class="mx-auto mb-6 max-w-md rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
                     {{ message }}

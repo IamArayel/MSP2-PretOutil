@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sorties et retours{% endblock %}
+
+{# Écran E6, d'après la maquette e6-sorties-retours.png #}
+{% block body %}
+    {% set jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'] %}
+    {% set mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
+    {% set badge = 'rounded-full px-2.5 py-0.5 text-xs font-medium' %}
+    {% set cellule_entete = 'px-4 py-3 font-medium uppercase tracking-wide' %}
+
+    <h1 class="text-3xl font-bold">Sorties et retours</h1>
+    <p class="mt-1 text-ink-muted">
+        {{ jours[aujourdhui|date('w')]|capitalize }} {{ aujourdhui|date('j') }} {{ mois[aujourdhui|date('n') - 1] }} {{ aujourdhui|date('Y') }}
+    </p>
+
+    {# US7 : sorties à valider #}
+    <section class="mt-8" aria-labelledby="sorties-titre">
+        <h2 id="sorties-titre" class="text-xl font-semibold">À sortir aujourd'hui ({{ sorties|length }})</h2>
+
+        <div class="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-line bg-page text-xs text-ink-muted">
+                    <tr>
+                        <th scope="col" class="{{ cellule_entete }}">Objet</th>
+                        <th scope="col" class="{{ cellule_entete }}">Adhérent</th>
+                        <th scope="col" class="{{ cellule_entete }}">Période</th>
+                        <th scope="col" class="{{ cellule_entete }}">Statut</th>
+                        <th scope="col" class="{{ cellule_entete }}">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    {% for reservation in sorties %}
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-normal">{{ reservation.objet.nom }}</th>
+                            <td class="px-4 py-3">{{ reservation.utilisateur.prenom }} {{ reservation.utilisateur.nom }}</td>
+                            <td class="px-4 py-3">{{ reservation.dateDebut|date('d/m') }} au {{ reservation.dateFin|date('d/m/Y') }}</td>
+                            <td class="px-4 py-3"><span class="{{ badge }} bg-statut-reserve-bg text-statut-reserve">{{ reservation.statut.libelle }}</span></td>
+                            <td class="px-4 py-3">
+                                <form method="post" action="{{ path('app_sorties_retours_sortie', {id: reservation.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('sortie-reservation-' ~ reservation.id) }}">
+                                    <button type="submit" class="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
+                                            aria-label="Valider la sortie : {{ reservation.objet.nom }}, {{ reservation.utilisateur.prenom }} {{ reservation.utilisateur.nom }}">
+                                        Valider la sortie
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="px-4 py-6 text-center text-ink-muted">Aucune sortie à valider.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    {# US8 : retours attendus, retards en premier #}
+    <section class="mt-10" aria-labelledby="retours-titre">
+        <h2 id="retours-titre" class="text-xl font-semibold">Retours attendus ({{ retours|length }})</h2>
+
+        <div class="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-line bg-page text-xs text-ink-muted">
+                    <tr>
+                        <th scope="col" class="{{ cellule_entete }}">Objet</th>
+                        <th scope="col" class="{{ cellule_entete }}">Adhérent</th>
+                        <th scope="col" class="{{ cellule_entete }}">Période</th>
+                        <th scope="col" class="{{ cellule_entete }}">Statut</th>
+                        <th scope="col" class="{{ cellule_entete }}">État au retour</th>
+                        <th scope="col" class="{{ cellule_entete }}">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    {% for reservation in retours %}
+                        {% set formulaire = 'retour-' ~ reservation.id %}
+                        <tr>
+                            <th scope="row" class="px-4 py-3 font-normal">{{ reservation.objet.nom }}</th>
+                            <td class="px-4 py-3">{{ reservation.utilisateur.prenom }} {{ reservation.utilisateur.nom }}</td>
+                            <td class="px-4 py-3">{{ reservation.dateDebut|date('d/m') }} au {{ reservation.dateFin|date('d/m/Y') }}</td>
+                            <td class="px-4 py-3">
+                                {% if reservation.estEnRetardLe(aujourdhui) %}
+                                    <span class="{{ badge }} bg-statut-hors-service-bg text-statut-hors-service">En retard</span>
+                                {% else %}
+                                    <span class="{{ badge }} bg-statut-sorti-bg text-statut-sorti">{{ reservation.statut.libelle }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <label for="etat-{{ reservation.id }}" class="sr-only">État de {{ reservation.objet.nom }} au retour</label>
+                                {# État actuel de l'objet proposé par défaut #}
+                                <select id="etat-{{ reservation.id }}" name="etat" form="{{ formulaire }}"
+                                        class="rounded-md border border-line bg-surface px-3 py-2 text-sm">
+                                    {% for etat in etats %}
+                                        <option value="{{ etat.value }}"{% if etat == reservation.objet.etat %} selected{% endif %}>{{ etat.libelle }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="px-4 py-3">
+                                <form id="{{ formulaire }}" method="post" action="{{ path('app_sorties_retours_retour', {id: reservation.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('retour-reservation-' ~ reservation.id) }}">
+                                    <button type="submit" class="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover"
+                                            aria-label="Enregistrer le retour : {{ reservation.objet.nom }}, {{ reservation.utilisateur.prenom }} {{ reservation.utilisateur.nom }}">
+                                        Enregistrer le retour
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="px-4 py-6 text-center text-ink-muted">Aucun objet sorti.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="mt-4 text-xs text-ink-muted">
+            État possible au retour : Bon, Abîmé, Hors service. « Hors service » rend l'objet indisponible à la réservation (RG7) ; ses réservations à venir sont signalées, pas annulées.
+        </p>
+    </section>
+{% endblock %}
