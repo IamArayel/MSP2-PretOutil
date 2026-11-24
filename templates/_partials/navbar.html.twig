@@ -14,6 +14,8 @@
             {% endif %}
             {% if is_granted('ROLE_MANAGER') %}
                 <li><a href="{{ path('app_gestion') }}" class="hover:text-primary">Sorties et retours</a></li>
+                {% set sur_gestion_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_gestion_catalogue' %}
+                <li><a href="{{ path('app_gestion_catalogue') }}" class="hover:text-primary{{ sur_gestion_catalogue ? ' font-semibold text-primary' }}"{% if sur_gestion_catalogue %} aria-current="page"{% endif %}>Gestion du catalogue</a></li>
             {% endif %}
             {% if is_granted('ROLE_ADMIN') %}
                 <li><a href="{{ path('app_admin') }}" class="hover:text-primary">Administration</a></li>

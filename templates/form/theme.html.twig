@@ -31,6 +31,23 @@
     {% endif %}
 {% endblock %}
 
+{# Classes communes aux listes déroulantes et zones de texte (E7) #}
+{% block textarea_widget %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1.5 block w-full rounded-md border px-3 py-2 text-sm' ~ (errors|length > 0 ? ' border-statut-hors-service' : ' border-line'))|trim}) %}
+    {% if errors|length > 0 %}
+        {% set attr = attr|merge({'aria-invalid': 'true', 'aria-describedby': id ~ '_erreurs'}) %}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{% block choice_widget_collapsed %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1.5 block w-full rounded-md border bg-surface px-3 py-2 text-sm' ~ (errors|length > 0 ? ' border-statut-hors-service' : ' border-line'))|trim}) %}
+    {% if errors|length > 0 %}
+        {% set attr = attr|merge({'aria-invalid': 'true', 'aria-describedby': id ~ '_erreurs'}) %}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
 {% block form_help %}
     {% if help is not empty %}
         <p id="{{ id }}_help" class="mt-1 text-xs text-ink-muted">{{ help }}</p>

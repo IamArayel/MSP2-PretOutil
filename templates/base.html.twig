@@ -33,6 +33,11 @@
                     {{ message }}
                 </div>
             {% endfor %}
+            {% for message in app.flashes('erreur') %}
+                <div class="mx-auto mb-6 max-w-md rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
 
             {% block body %}{% endblock %}
         </main>
