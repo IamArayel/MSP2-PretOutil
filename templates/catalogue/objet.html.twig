@@ -47,29 +47,47 @@
             {% endif %}
         </article>
 
-        {# Réservation (US4) : le formulaire est ajouté à J5 avec ReservationService #}
+        {# Réservation (US4), d'après la maquette E4 #}
         <aside class="self-start rounded-lg border border-line bg-surface p-6" aria-labelledby="reserver-titre">
             <h2 id="reserver-titre" class="text-xl font-semibold">Réserver cet objet</h2>
+
+            {% set regles %}
+                <p class="mt-4 text-xs text-ink-muted">
+                    14 jours maximum · 3 réservations actives maximum · annulation possible jusqu'à la veille du début
+                </p>
+            {% endset %}
 
             {% if not fiche.estReservable %}
                 <p class="mt-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service">
                     Cet objet est hors service : il ne peut pas être réservé pour le moment.
                 </p>
-            {% elseif not app.user %}
+                {{ regles }}
+            {% elseif not is_granted('ROLE_USER') %}
                 <p class="mt-4 text-sm text-ink-muted">Connectez-vous pour réserver cet objet.</p>
                 <div class="mt-4 flex flex-col gap-3">
                     <a href="{{ path('app_connexion') }}" class="rounded-md bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-primary-hover">Se connecter</a>
                     <a href="{{ path('app_inscription') }}" class="rounded-md border border-line bg-surface px-4 py-2.5 text-center text-sm font-semibold text-ink hover:bg-page">Créer un compte</a>
                 </div>
+                {{ regles }}
             {% else %}
-                <p class="mt-4 rounded-md border border-line bg-page px-4 py-3 text-sm text-ink-muted" role="status">
-                    La réservation en ligne sera disponible prochainement.
-                </p>
-            {% endif %}
+                {{ form_start(reservation, {attr: {class: 'mt-4', novalidate: 'novalidate'}}) }}
+                    {{ form_row(reservation.debut) }}
+                    {{ form_row(reservation.fin) }}
 
-            <p class="mt-4 text-xs text-ink-muted">
-                14 jours maximum · 3 réservations actives maximum · annulation possible jusqu'à la veille du début
-            </p>
+                    {# Refus d'une règle de gestion (ReservationService), affiché tel quel #}
+                    {% for erreur in reservation.vars.errors %}
+                        <p class="mb-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
+                            {{ erreur.message }}
+                        </p>
+                    {% endfor %}
+
+                    {{ regles }}
+
+                    <button type="submit" class="mt-4 w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                        Confirmer la réservation
+                    </button>
+                {{ form_end(reservation) }}
+            {% endif %}
         </aside>
     </div>
 {% endblock %}
