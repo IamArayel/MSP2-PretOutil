@@ -566,6 +566,12 @@ docker compose exec php bin/phpunit --testdox
 
 Plan de tests (objectifs, niveaux, matrice du contrôle d'accès, critères de réussite) : [docs/tests/plan-de-tests.md](docs/tests/plan-de-tests.md).
 
+Jeu d'essai de « Réserver un objet » (20 cas : entrée, attendu, obtenu) : [docs/tests/jeu-essai-reserver.md](docs/tests/jeu-essai-reserver.md). Il se rejoue par HTTP sur les fixtures, en environnement de développement :
+
+```bash
+bash docs/tests/jeu_essai_reserver.sh
+```
+
 Correspondance entre chaque règle de gestion et ses tests : [docs/tests/correspondance-rg-tests.md](docs/tests/correspondance-rg-tests.md).
 
 Les tests des Voters sont des tests unitaires : ni base de données ni conteneur Symfony. La hiérarchie des rôles est reconstruite comme dans `security.yaml`, et la date du jour est fixée par une horloge de test (`MockClock`).
@@ -767,3 +773,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Contrôle d'accès testé par une matrice routes × profils, qui échoue si une route n'y figure pas | Une route ajoutée plus tard ne peut pas échapper au critère O5 |
 | 2026-11-24 | Requêtes en POST de la matrice d'accès envoyées sans jeton CSRF | Le test vérifie qui passe le contrôle d'accès, sans exécuter l'action ; le CSRF a ses propres tests (#66) |
 | 2026-11-24 | Compteurs de limitation (API et tentatives de connexion) remis à zéro au début des tests qui les utilisent | Stockés sur disque en test, ils faisaient échouer le lancement suivant ou le test suivant |
+| 2026-11-24 | Jeu d'essai de la réservation rejoué par un script HTTP versionné, avec un verdict par cas (code HTTP et document du journal) | Résultats reproductibles par le jury ou le binôme ; 20 cas conformes le 2026-11-24 |
+| 2026-11-24 | Accès simultanés du jeu d'essai renvoyés aux tests automatisés | Par HTTP, on ne peut pas forcer deux transactions à se croiser ; les tests le simulent (contrainte `EXCLUDE`, verrou du quota) |
