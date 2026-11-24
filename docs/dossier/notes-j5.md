@@ -95,8 +95,10 @@ Le code respecte les tickets #45 et #46 : contrôleur sans règle métier, DTO v
 
 ## 8. Captures à faire
 
-- E4 : formulaire vide, puis chaque message de refus (dates, 14 jours, quota, période indisponible, retour en retard)
-- Message « Réservation confirmée » sur « Mes réservations »
-- Sortie de `phpunit --testdox` (58 tests)
-- Diagramme de séquence mis à jour ([sequence-reserver.png](../diagrammes/sequence-reserver.png))
-- Extrait d'`EXPLAIN` avec les deux index partiels ([requetes-catalogue.md](../conception/requetes-catalogue.md), section 4)
+Faites le 2026-11-24, état détaillé dans [captures.md](captures.md).
+
+- [x] E4 : formulaire vide, puis chaque message de refus (dates, 14 jours, quota, période indisponible, retour en retard) : [e4-reservation.png](captures/e4-reservation.png), [e4-refus-dates.png](captures/e4-refus-dates.png), [e4-refus-14-jours.png](captures/e4-refus-14-jours.png), [e4-refus-quota.png](captures/e4-refus-quota.png), [e4-refus-periode.png](captures/e4-refus-periode.png), [e4-refus-retard.png](captures/e4-refus-retard.png)
+- [x] Message « Réservation confirmée » sur « Mes réservations » : [e5-confirmation.png](captures/e5-confirmation.png)
+- [x] Sortie de `phpunit --testdox` (58 tests) : remplacée par la suite finale, [terminal-phpunit-matrice.png](captures/terminal-phpunit-matrice.png) et [terminal-phpunit-fin.png](captures/terminal-phpunit-fin.png)
+- [x] Diagramme de séquence mis à jour ([sequence-reserver.png](../diagrammes/sequence-reserver.png))
+- [x] Extrait d'`EXPLAIN` avec les deux index partiels : [terminal-explain.png](captures/terminal-explain.png) (`idx_reservation_dates_actives` et `idx_reservation_en_cours`)

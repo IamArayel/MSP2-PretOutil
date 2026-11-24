@@ -102,10 +102,12 @@ Le code respecte les tickets #55 et #56 : transitions dans le service avec excep
 
 ## 8. Captures à faire
 
-- E5 : liste avec chaque statut, message après annulation
-- E4 : message de l'API après saisie des dates (disponible, puis refusé)
-- E6 : sorties à valider, retours en retard, message après un retour hors service
-- E9 : journal complet, puis filtré sur une action
-- Réponse JSON de l'API dans le navigateur, et une erreur 400
-- Document `audit_log` dans MongoDB Compass
-- Sortie de `phpunit --testdox` (98 tests)
+Faites le 2026-11-24, état détaillé dans [captures.md](captures.md).
+
+- [x] E5 : liste avec chaque statut, message après annulation : [e5-mes-reservations.png](captures/e5-mes-reservations.png), [e5-annulation.png](captures/e5-annulation.png), boîte de confirmation [e5-annulation-confirmation.png](captures/e5-annulation-confirmation.png)
+- [x] E4 : message de l'API après saisie des dates (disponible, puis refusé) : [e4-api-disponible.png](captures/e4-api-disponible.png), [e4-api-indisponible.png](captures/e4-api-indisponible.png)
+- [x] E6 : sorties à valider, retours en retard, message après un retour hors service : [e6-sorties-retours.png](captures/e6-sorties-retours.png), [e6-retour-hors-service.png](captures/e6-retour-hors-service.png)
+- [x] E9 : journal complet, puis filtré sur une action : [e9-journal.png](captures/e9-journal.png), [e9-journal-filtre.png](captures/e9-journal-filtre.png)
+- [x] Réponse JSON de l'API dans le navigateur, et une erreur 400 : [api-disponibilites.png](captures/api-disponibilites.png), [api-erreur-400.png](captures/api-erreur-400.png)
+- [x] Document `audit_log` : lu avec `mongosh` (Compass non installé), [mongodb-audit-log.png](captures/mongodb-audit-log.png)
+- [x] Sortie de `phpunit --testdox` (98 tests) : remplacée par la suite finale, [terminal-phpunit-matrice.png](captures/terminal-phpunit-matrice.png) et [terminal-phpunit-fin.png](captures/terminal-phpunit-fin.png)

@@ -89,8 +89,10 @@ Le code est conforme au ticket : Voters testés, contrôleur sans logique métie
 
 ## 8. Captures à faire
 
-- E3 Catalogue sans filtre, puis filtré sur une catégorie et une période
-- E4 Détail : un objet avec indisponibilités, un objet hors service, la vue visiteur
-- E7 Gestion du catalogue : liste, formulaire avec erreurs, message après désactivation
-- Sortie de `phpunit --testdox` (31 tests)
-- Extrait de `EXPLAIN` avant et après l'index (section 4 de [requetes-catalogue.md](../conception/requetes-catalogue.md))
+Faites le 2026-11-24, état détaillé dans [captures.md](captures.md).
+
+- [x] E3 Catalogue sans filtre, puis filtré sur une catégorie et une période : [e3-catalogue.png](captures/e3-catalogue.png), [e3-catalogue-filtre.png](captures/e3-catalogue-filtre.png)
+- [x] E4 Détail : un objet avec indisponibilités, un objet hors service, la vue visiteur : [e4-detail-visiteur.png](captures/e4-detail-visiteur.png) (Tente 4 places, réservée), [e4-detail-hors-service.png](captures/e4-detail-hors-service.png)
+- [x] E7 Gestion du catalogue : liste, formulaire avec erreurs, message après désactivation : [e7-gestion-catalogue.png](captures/e7-gestion-catalogue.png), [e7-formulaire-erreurs.png](captures/e7-formulaire-erreurs.png), [e7-desactivation.png](captures/e7-desactivation.png), [e7-desactivation-retire.png](captures/e7-desactivation-retire.png)
+- [x] Sortie de `phpunit --testdox` (31 tests) : remplacée par la suite finale, [terminal-phpunit-matrice.png](captures/terminal-phpunit-matrice.png) et [terminal-phpunit-fin.png](captures/terminal-phpunit-fin.png)
+- [x] Extrait de `EXPLAIN` avant et après l'index : avant, texte de la section 4 de [requetes-catalogue.md](../conception/requetes-catalogue.md) ; après, [terminal-explain.png](captures/terminal-explain.png)
