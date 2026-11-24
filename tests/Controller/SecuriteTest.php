@@ -418,6 +418,18 @@ final class SecuriteTest extends WebTestCase
         self::assertTrue($this->estConnecte());
     }
 
+    /** Dictionnaire de données : la dernière activité est la dernière connexion ou réservation. */
+    public function testConnexionReussieEnregistreLaDerniereActivite(): void
+    {
+        $derniereActivite = fn (): mixed => $this->connexion->fetchOne('SELECT derniere_activite_le FROM utilisateur WHERE email = ?', [self::EMAIL_ADHERENT]);
+
+        $this->seConnecter(self::EMAIL_ADHERENT, 'mauvais-mot-de-passe');
+        self::assertNull($derniereActivite(), 'Un échec ne compte pas comme une activité');
+
+        $this->seConnecter(self::EMAIL_ADHERENT, self::MOT_DE_PASSE);
+        self::assertNotNull($derniereActivite());
+    }
+
     // -------------------------------------------------------------- Mot de passe
 
     /** Le mot de passe saisi à l'inscription n'est jamais stocké : seule son empreinte l'est. */

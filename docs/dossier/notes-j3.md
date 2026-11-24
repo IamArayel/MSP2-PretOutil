@@ -113,12 +113,12 @@ Le jury interroge chaque candidat seul : chacun doit pouvoir expliquer le travai
 
 ## 8. Captures
 
-À enregistrer dans [captures/](captures/) :
+Enregistrées dans [captures/](captures/) le 2026-11-24 (liste complète et état : [captures.md](captures.md)) :
 
 | Fichier                      | Contenu                                                                          | Partie du dossier       |
 | ---------------------------- | -------------------------------------------------------------------------------- | ----------------------- |
-| `j3-migration-exclude.png`   | Migration `Version20261123095233.php`, contrainte `ex_reservation_chevauchement` | Base de données         |
-| `j3-connexion-e1.png`        | Écran de connexion E1                                                            | Interface et sécurité   |
-| `j3-connexion-blocage.png`   | Message « Trop de tentatives de connexion… » après 5 échecs                      | Sécurité                |
-| `j3-inscription-erreurs.png` | Écran E2 avec les erreurs sur les champs                                         | Interface et validation |
-| `j3-comptes-restreints.png`  | Terminal : `SELECT current_user` puis `DELETE FROM reservation` refusé           | Sécurité de la base     |
+| [`code-migration-exclude.png`](captures/code-migration-exclude.png) | Migration `Version20261123095233.php`, contrainte `ex_reservation_chevauchement` | Base de données         |
+| [`e1-connexion.png`](captures/e1-connexion.png) | Écran de connexion E1                                                            | Interface et sécurité   |
+| [`e1-connexion-blocage.png`](captures/e1-connexion-blocage.png) | Message « Trop de tentatives de connexion… » après 5 échecs                      | Sécurité                |
+| [`e2-inscription-erreurs.png`](captures/e2-inscription-erreurs.png) | Écran E2 avec les erreurs sur les champs                                         | Interface et validation |
+| [`terminal-comptes-restreints-1.png`](captures/terminal-comptes-restreints-1.png), [`-2.png`](captures/terminal-comptes-restreints-2.png) | Terminal : `SELECT current_user` puis `DELETE FROM reservation` refusé           | Sécurité de la base     |

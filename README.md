@@ -542,6 +542,13 @@ docker compose exec php bin/console app:mongodb:check
 
 `app:mongodb:check` lit la collection `audit_log` avec le compte applicatif, puis vérifie qu'une écriture dans une autre collection est refusée.
 
+Avertissement de certificat sur `https://localhost` : le certificat est signé par une autorité locale créée par Caddy. Pour que les navigateurs, y compris automatisés, l'acceptent, l'ajouter une fois au trousseau de macOS (mot de passe de session demandé) :
+
+```bash
+docker compose cp php:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-root.crt
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/caddy-root.crt
+```
+
 ### API REST des disponibilités
 
 `GET /api/objets/{id}/disponibilites`, avec `debut` et `fin` facultatifs (`AAAA-MM-JJ`) : lecture seule, publique, 30 appels par minute et par adresse IP. L'écran E4 l'appelle quand l'adhérent saisit ses dates. Documentation complète : [docs/conception/api.md](docs/conception/api.md).
@@ -827,3 +834,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Critères d'accessibilité vérifiables testés automatiquement (`AccessibiliteTest`), clavier, lecteur d'écran et zoom vérifiés à la main | Une régression de structure est détectée à chaque lancement ; le ressenti d'un utilisateur ne peut pas être automatisé |
 | 2026-11-24 | Composants des écrans de gestion (tableau, en-têtes, boutons, listes, pagination) définis une seule fois, dans la feuille de styles et une inclusion Twig | Les quatre écrans E6 à E9 gardent la même présentation, celle des maquettes E6 et E9 |
 | 2026-11-24 | Tableaux larges défilant dans un cadre atteignable au clavier (`role="region"`, `tabindex="0"`) | Lisibles sur mobile sans faire défiler la page ; utilisables sans souris |
+| 2026-11-24 | Autorité locale de Caddy ajoutée au trousseau de macOS pour les vérifications dans le navigateur | Les navigateurs automatisés refusent un certificat non reconnu ; la console, la CSP et les parcours ont ainsi été vérifiés dans un vrai navigateur (#79) |
+| 2026-11-24 | `twig/twig` mis à jour de 3.30.0 en 3.31.1 avant le gel du code | 9 failles publiées les 23 et 24 novembre, relevées par `composer audit` pendant les captures (#79) ; mise à jour corrective, seul `composer.lock` change |
+| 2026-11-24 | Dernière activité d'un compte enregistrée aussi à la connexion réussie (`ConnexionReussieListener`) | Conforme au dictionnaire de données : le délai de conservation RGPD part de la dernière connexion ou réservation, pas de la seule réservation |

@@ -89,8 +89,10 @@ PR #70 et #71 relues et fusionnées par Chloé. Points relevés par Anthony dans
 
 ## 7. Captures à faire
 
-- Sortie de `phpunit --testdox` : début de la matrice d'accès et des tests de sécurité (257 tests)
-- Sortie du script du jeu d'essai (tableau des 20 cas)
-- En-têtes de réponse de `/catalogue` dans les outils de développement du navigateur (CSP, `X-Frame-Options`)
-- Console du navigateur sur E4 sans erreur CSP
-- `composer audit` et `importmap:audit` sans faille
+Faites le 2026-11-24, état détaillé dans [captures.md](captures.md).
+
+- [x] Sortie de `phpunit --testdox` : début de la matrice d'accès et des tests de sécurité (257 tests à J7, 363 au gel) : [terminal-phpunit-matrice.png](captures/terminal-phpunit-matrice.png), [terminal-phpunit-fin.png](captures/terminal-phpunit-fin.png)
+- [x] Sortie du script du jeu d'essai (tableau des 20 cas) : [terminal-jeu-essai.png](captures/terminal-jeu-essai.png)
+- [x] En-têtes de réponse de `/catalogue` dans les outils de développement du navigateur (CSP, `X-Frame-Options`) : [http-entetes-catalogue.png](captures/http-entetes-catalogue.png)
+- [x] Console du navigateur sur E4 sans erreur CSP : [console-e4-sans-erreur.png](captures/console-e4-sans-erreur.png)
+- [x] `composer audit` et `importmap:audit` sans faille : [terminal-audits.png](captures/terminal-audits.png), après la mise à jour de Twig du 2026-11-24 (9 failles publiées la veille et le jour même)
