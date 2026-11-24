@@ -30,8 +30,9 @@ class CatalogueService
 
     public function rechercher(CriteresCatalogue $criteres, int $numeroPage): PageCatalogue
     {
-        $page = $this->objetRepository->rechercherCatalogue($criteres, $numeroPage);
-        $reservations = $this->reservationRepository->statutsActifsAuJour($page->elements, $this->aujourdhui());
+        $aujourdhui = $this->aujourdhui();
+        $page = $this->objetRepository->rechercherCatalogue($criteres, $aujourdhui, $numeroPage);
+        $reservations = $this->reservationRepository->statutsActifsAuJour($page->elements, $aujourdhui);
 
         $statuts = [];
         foreach ($page->elements as $objet) {
