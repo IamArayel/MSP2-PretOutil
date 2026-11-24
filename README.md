@@ -565,6 +565,8 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Controller/ControleAccesTest.php` | Contrôle d'accès des 20 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu |
 | `tests/Controller/SecuriteTest.php` | Tests de sécurité (#66) : CSRF des 10 formulaires en POST (jeton absent ou faux refusé, vrai jeton accepté), injection SQL (filtres du catalogue, paramètres d'URL, saisies de l'inscription), injection NoSQL (filtre de E9), XSS (E3, E4, E7, E9, API), blocage après 5 échecs de connexion, mot de passe stocké en empreinte |
 
+Veille sécurité (OWASP Top 10:2025, chaque risque avec sa mesure et sa preuve, audit des dépendances) : [docs/securite/veille-owasp.md](docs/securite/veille-owasp.md).
+
 Plan de tests (objectifs, niveaux, matrice du contrôle d'accès, critères de réussite) : [docs/tests/plan-de-tests.md](docs/tests/plan-de-tests.md).
 
 Jeu d'essai de « Réserver un objet » (20 cas : entrée, attendu, obtenu) : [docs/tests/jeu-essai-reserver.md](docs/tests/jeu-essai-reserver.md). Il se rejoue par HTTP sur les fixtures, en environnement de développement :
@@ -617,6 +619,7 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
 | Débloquer les comptes après 5 échecs | `docker compose exec php bin/console cache:pool:clear cache.rate_limiter` |
 | Lancer les tests | `docker compose exec php bin/phpunit --testdox` |
+| Rechercher les failles connues des dépendances | `docker compose exec php composer audit` puis `docker compose exec php bin/console importmap:audit` |
 | Appliquer les migrations | `docker compose exec php bin/console doctrine:migrations:migrate` |
 | Ouvrir un shell PostgreSQL | `docker compose exec database psql -U pretoutil pretoutil` |
 | Ouvrir un shell MongoDB (root) | `docker compose exec mongodb sh -c 'mongosh -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil'` |
@@ -778,3 +781,4 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Accès simultanés du jeu d'essai renvoyés aux tests automatisés | Par HTTP, on ne peut pas forcer deux transactions à se croiser ; les tests le simulent (contrainte `EXCLUDE`, verrou du quota) |
 | 2026-11-24 | Chaque test de refus CSRF a un témoin : le même envoi avec le vrai jeton aboutit | Prouve que le refus vient du jeton, et non d'une donnée invalide ou d'un droit manquant |
 | 2026-11-24 | Tests de sécurité validés en retirant chaque protection une à une (8 essais, code restauré ensuite) | Critère de #66 : chaque test doit échouer si sa protection disparaît |
+| 2026-11-24 | Veille de sécurité menée sur l'OWASP Top 10:2025 (édition en vigueur), avec une preuve par risque | Relie chaque risque à une mesure du code et à un test ; écarts (en-têtes HTTP, hub Mercure inutilisé) proposés en relecture |
