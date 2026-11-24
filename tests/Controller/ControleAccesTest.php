@@ -42,7 +42,8 @@ final class ControleAccesTest extends WebTestCase
      * Route => [méthode, chemin, visiteur, adhérent, gestionnaire, administrateur].
      *
      * {objet} : objet réservé ; {objetLibre} : objet jamais réservé (supprimable) ;
-     * {reservation} : réservation confirmée de l'adhérent, qui commence dans 7 jours.
+     * {reservation} : réservation confirmée de l'adhérent, qui commence dans 7 jours ;
+     * {compte} : compte de l'adhérent.
      * Une réponse en 3xx sans redirection vers la connexion est un accès autorisé :
      * l'action a répondu (formulaire déjà connecté, jeton absent, etc.).
      */
@@ -72,8 +73,13 @@ final class ControleAccesTest extends WebTestCase
         'app_sorties_retours_sortie' => ['POST', '/gestion/sorties-retours/{reservation}/sortie', self::CONNEXION, 403, 303, 303],
         'app_sorties_retours_retour' => ['POST', '/gestion/sorties-retours/{reservation}/retour', self::CONNEXION, 403, 303, 303],
         // Administrateur (ROLE_ADMIN)
-        'app_admin' => ['GET', '/admin', self::CONNEXION, 403, 403, 200],
+        // /admin renvoie vers E8
+        'app_admin' => ['GET', '/admin', self::CONNEXION, 403, 403, 302],
         'app_journal_audit' => ['GET', '/admin/journal', self::CONNEXION, 403, 403, 200],
+        'app_gestion_comptes' => ['GET', '/admin/comptes', self::CONNEXION, 403, 403, 200],
+        'app_gestion_comptes_role' => ['POST', '/admin/comptes/{compte}/role', self::CONNEXION, 403, 403, 303],
+        'app_gestion_comptes_desactiver' => ['POST', '/admin/comptes/{compte}/desactiver', self::CONNEXION, 403, 403, 303],
+        'app_gestion_comptes_reactiver' => ['POST', '/admin/comptes/{compte}/reactiver', self::CONNEXION, 403, 403, 303],
     ];
 
     private KernelBrowser $client;
@@ -116,6 +122,7 @@ final class ControleAccesTest extends WebTestCase
             '{objet}' => (int) $objet->getId(),
             '{objetLibre}' => (int) $objetLibre->getId(),
             '{reservation}' => (int) $reservation->getId(),
+            '{compte}' => (int) $this->utilisateurs['adherent']->getId(),
         ];
     }
 

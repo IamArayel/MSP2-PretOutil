@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-24
 
-257 tests, 794 assertions, tous verts, en 40 secondes environ.
+293 tests, 909 assertions, tous verts, en 40 secondes environ (mis à jour à J8, écran E8).
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -45,14 +45,16 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Security/Voter/ReservationVoterTest.php` | Unitaire | 16 | RG6, accès aux réservations |
 | `tests/Security/Voter/ObjetVoterTest.php` | Unitaire | 15 | Gestion et suppression des objets |
 | `tests/Service/AuditLoggerTest.php` | Unitaire | 3 | RG8 sans bloquer l'action métier |
+| `tests/Service/CompteServiceTest.php` | Unitaire | 8 | Écran E8 : rôle, désactivation, réactivation, refus sur son propre compte |
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Intégration | 6 | `EXCLUDE`, quota sur données réelles |
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
-| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 92 | Section 5 ci-dessous |
+| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 111 | Section 5 ci-dessous |
+| `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 55 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 
-Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 80 cas.
+Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.
 
 ## 5. Contrôle d'accès de chaque route
 
@@ -60,7 +62,7 @@ Test : [tests/Controller/ControleAccesTest.php](../../tests/Controller/ControleA
 
 ### Méthode
 
-- La matrice `ROUTES` du test donne, pour chacune des 20 routes, la réponse attendue pour chaque profil. Un fournisseur de données en tire 80 cas, un par route et par profil.
+- La matrice `ROUTES` du test donne, pour chacune des 24 routes, la réponse attendue pour chaque profil. Un fournisseur de données en tire 96 cas, un par route et par profil.
 - `testMatriceCouvreToutesLesRoutes` compare la matrice à la liste des routes de l'application : une route ajoutée sans être placée dans la matrice fait échouer la suite.
 - Les requêtes en POST partent sans jeton CSRF : on vérifie qui passe le contrôle d'accès, pas l'action elle-même (le CSRF est testé par [#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66)).
 - Une redirection vers une autre page que la connexion compte comme un accès autorisé : l'action a répondu, par exemple en refusant le jeton absent.
@@ -89,14 +91,18 @@ Test : [tests/Controller/ControleAccesTest.php](../../tests/Controller/ControleA
 | `app_sorties_retours` | GET `/gestion/sorties-retours` | Connexion | 403 | 200 | 200 |
 | `app_sorties_retours_sortie` | POST `/gestion/sorties-retours/{id}/sortie` | Connexion | 403 | 303 | 303 |
 | `app_sorties_retours_retour` | POST `/gestion/sorties-retours/{id}/retour` | Connexion | 403 | 303 | 303 |
-| `app_admin` | GET `/admin` | Connexion | 403 | 403 | 200 |
+| `app_admin` | GET `/admin` | Connexion | 403 | 403 | 302 vers E8 |
 | `app_journal_audit` | GET `/admin/journal` | Connexion | 403 | 403 | 200 |
+| `app_gestion_comptes` | GET `/admin/comptes` | Connexion | 403 | 403 | 200 |
+| `app_gestion_comptes_role` | POST `/admin/comptes/{id}/role` | Connexion | 403 | 403 | 303 |
+| `app_gestion_comptes_desactiver` | POST `/admin/comptes/{id}/desactiver` | Connexion | 403 | 403 | 303 |
+| `app_gestion_comptes_reactiver` | POST `/admin/comptes/{id}/reactiver` | Connexion | 403 | 403 | 303 |
 
 ### Cas complémentaires
 
 | Test | Cas | Attendu |
 |---|---|---|
-| `testActionRefuseeEnGet` | Les 6 actions en POST appelées en GET (lien piégé dans une page ou un email) | 405, rien n'est modifié |
+| `testActionRefuseeEnGet` | Les 9 actions en POST appelées en GET (lien piégé dans une page ou un email) | 405, rien n'est modifié |
 | `testDeconnexionAvecJeton` | Lien « Déconnexion » de la barre de navigation, qui porte un jeton CSRF | Session fermée, retour à l'accueil |
 | `testCompteDesactiveNePeutPasSeConnecter` | Compte désactivé, bon mot de passe (RG9) | Connexion refusée, message « compte désactivé », aucune session |
 | `testAnnulationDeLaReservationDUnAutreAdherentRefusee` | Un adhérent change l'identifiant dans l'URL d'annulation (IDOR) | 403, réservation toujours confirmée en base |
@@ -116,7 +122,7 @@ Vérification du 2026-11-24, code restauré ensuite :
 
 | Constat | Suite donnée |
 |---|---|
-| `/admin` n'est protégée que par `access_control`, alors que `/admin/journal` et les écrans de gestion ont aussi un `IsGranted` sur le contrôleur | Le test le détecterait ; un `IsGranted('ROLE_ADMIN')` sur `EspaceController::admin()` alignerait la page sur les autres. Proposé en relecture |
+| `/admin` n'est protégée que par `access_control`, alors que `/admin/journal` et les écrans de gestion ont aussi un `IsGranted` sur le contrôleur | Le test le détecterait ; un `IsGranted('ROLE_ADMIN')` sur `EspaceController::admin()` alignerait la page sur les autres. **Fait à J8** (#76) |
 | Un visiteur qui ouvre `/deconnexion` sans jeton reçoit 403 | Voulu : la déconnexion exige un jeton CSRF, un lien piégé ne peut pas déconnecter quelqu'un |
 | Le gestionnaire et l'administrateur ne peuvent pas annuler la réservation d'un adhérent (403) | Conforme à RG6 : seul l'adhérent annule ; le gestionnaire n'a pas d'écran pour cela dans le MVP |
 | Le test du 429 de l'API et le test du compte désactivé laissaient leurs compteurs sur disque, ce qui faisait échouer le lancement suivant | Compteurs de l'API et des tentatives de connexion remis à zéro au début des tests concernés |
@@ -181,7 +187,7 @@ Injection SQL : la protection est portée par Doctrine (paramètres liés) et pa
 |---|---|
 | Suite automatisée | 100 % des tests verts sur une base de test recréée |
 | Règles de gestion | Chaque règle de RG1 à RG6 a un cas refusé et un cas accepté ([correspondance-rg-tests.md](correspondance-rg-tests.md)) |
-| Contrôle d'accès | 20 routes sur 20 dans la matrice, 4 profils chacune |
+| Contrôle d'accès | 24 routes sur 24 dans la matrice, 4 profils chacune |
 | Jeu d'essai | Résultat obtenu identique à l'attendu pour chaque cas, ou écart expliqué ([#65](https://github.com/IamArayel/MSP2-PretOutil/issues/65)) |
 | Sécurité | Chaque protection a un test ([#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66)) |
 

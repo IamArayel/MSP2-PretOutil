@@ -9,6 +9,7 @@ const ACTIONS = [
   'COMPTE_CREE',
   'CONNEXION_ECHOUEE',
   'COMPTE_DESACTIVE',
+  'COMPTE_REACTIVE', // ajoutée à J8 (#76) : réactivation d'un compte depuis l'écran E8
   'ROLE_MODIFIE',
   'OBJET_CREE',
   'OBJET_MODIFIE',

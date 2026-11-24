@@ -373,9 +373,9 @@ Chaque action sensible écrit un document dans la collection MongoDB `audit_log`
 | `AuditLogRepository::lister()`                                    | Filtre reçu sous forme d'`ActionAudit` (`tryFrom`) : aucun opérateur MongoDB ne peut venir de la requête (injection NoSQL)                                                |
 | `JournalAuditController`                                          | Noms des acteurs lus dans PostgreSQL en une requête par page ; email recopié si le compte n'existe plus, « Système » pour une action anonyme                              |
 
-Actions journalisées : `COMPTE_CREE`, `CONNEXION_ECHOUEE`, `OBJET_CREE`, `OBJET_MODIFIE`, `OBJET_DESACTIVE`, `OBJET_SUPPRIME`, `RESERVATION_CREEE`, `RESERVATION_ANNULEE`, `SORTIE_VALIDEE`, `RETOUR_ENREGISTRE`. `COMPTE_DESACTIVE` et `ROLE_MODIFIE` sont prévues pour l'écran E8.
+Actions journalisées : `COMPTE_CREE`, `CONNEXION_ECHOUEE`, `OBJET_CREE`, `OBJET_MODIFIE`, `OBJET_DESACTIVE`, `OBJET_SUPPRIME`, `RESERVATION_CREEE`, `RESERVATION_ANNULEE`, `SORTIE_VALIDEE`, `RETOUR_ENREGISTRE`, et depuis l'écran E8 : `COMPTE_DESACTIVE`, `COMPTE_REACTIVE`, `ROLE_MODIFIE`.
 
-`docs/conception/audit_log.mongodb.js` est rejouable : sur une base existante, il met à jour le validateur (`collMod`) sans toucher aux documents. À relancer quand la liste des actions change (ajout de `OBJET_SUPPRIME` à J6) :
+`docs/conception/audit_log.mongodb.js` est rejouable : sur une base existante, il met à jour le validateur (`collMod`) sans toucher aux documents. À relancer quand la liste des actions change (ajout de `OBJET_SUPPRIME` à J6, de `COMPTE_REACTIVE` à J8), sur `pretoutil` puis sur la base de test `pretoutil_test` :
 
 ```bash
 docker compose exec -T mongodb sh -c 'mongosh --quiet -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil' < docs/conception/audit_log.mongodb.js
@@ -410,6 +410,26 @@ Requête des retours : avec `ORDER BY date_fin` seul, PostgreSQL lit l'index par
 | Supprimer définitivement                                                | POST, jeton CSRF propre à l'objet, confirmation   | `OBJET_SUPPRIMER` : objet jamais réservé (US6) |
 
 Deux protections : `access_control` sur `/gestion` et `ObjetVoter` sur chaque action. Un adhérent reçoit un 403. Le bouton « Supprimer » n'apparaît que pour les objets jamais réservés, calculés en une seule requête pour la page ; si une réservation arrive entre-temps, la clé étrangère refuse la suppression et un message l'explique. Les actions passent par `ObjetService`, qui appelle `AuditLogger` (`OBJET_CREE`, `OBJET_MODIFIE`, `OBJET_DESACTIVE`).
+
+### Gestion des comptes (écran E8)
+
+<https://localhost/admin/comptes>, accessible à l'administrateur seulement (compte de test `admin@pretoutil.test`) ; `/admin` y renvoie.
+
+| Action | Méthode | Journal |
+|---|---|---|
+| Lister les comptes (nom, email, rôle, actif, dernière activité) | GET, paginé par 20, comptes actifs d'abord | |
+| Changer le rôle : adhérent, gestionnaire ou administrateur | POST, jeton CSRF propre au compte | `ROLE_MODIFIE` (`ancien_role`, `nouveau_role`) |
+| Désactiver le compte (RG9) | POST, jeton CSRF propre au compte, confirmation | `COMPTE_DESACTIVE` |
+| Réactiver le compte | POST, jeton CSRF propre au compte | `COMPTE_REACTIVE` |
+
+Règles (`CompteService`) :
+
+- un administrateur n'agit pas sur son propre compte : l'association garde toujours un administrateur actif ;
+- un compte désactivé perd sa session à sa requête suivante, et ne peut plus se reconnecter (`Utilisateur::isEqualTo()`, `UtilisateurChecker`) ;
+- un changement de rôle ferme aussi la session du compte : les nouveaux droits s'appliquent à la reconnexion ;
+- une action sans effet (même rôle, compte déjà désactivé) n'écrit rien.
+
+Deux protections, comme les autres écrans : `access_control` sur `/admin` et `IsGranted('ROLE_ADMIN')` sur le contrôleur.
 
 ### Comptes des bases de données
 
@@ -564,7 +584,9 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Sur `pretoutil_test` : contrainte `EXCLUDE` (SQLSTATE 23P01) traduite en `PeriodeIndisponibleException`, réservation annulée qui ne bloque ni la période ni le quota                                                                                                                                                            |
 | `tests/Security/Voter/ReservationVoterTest.php`           | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6)                                                                                                                               |
 | `tests/Controller/Api/DisponibiliteControllerTest.php`    | API des disponibilités : réponses JSON, absence de donnée personnelle, mêmes règles que la réservation, erreurs 400, 404 et 405, limite de débit (429)                                                                                                                                                                          |
-| `tests/Controller/ControleAccesTest.php`                  | Contrôle d'accès des 20 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu                                                                                                     |
+| `tests/Service/CompteServiceTest.php` | Écran E8 sans base : rôle changé et journalisé avec l'ancien et le nouveau rôle, désactivation et réactivation journalisées, action sans effet sans écriture, refus sur son propre compte |
+| `tests/Controller/GestionComptesControllerTest.php` | Écran E8 par HTTP : actions depuis la liste, refus sur soi-même, jeton faux, rôle inconnu, session fermée après une désactivation ou un changement de rôle, détail lisible sur E9 |
+| `tests/Controller/ControleAccesTest.php`                  | Contrôle d'accès des 24 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu                                                                                                     |
 | `tests/Controller/SecuriteTest.php`                       | Tests de sécurité (#66) : CSRF des 10 formulaires en POST (jeton absent ou faux refusé, vrai jeton accepté), injection SQL (filtres du catalogue, paramètres d'URL, saisies de l'inscription), injection NoSQL (filtre de E9), XSS (E3, E4, E7, E9, API), blocage après 5 échecs de connexion, mot de passe stocké en empreinte |
 | `tests/Controller/EntetesSecuriteTest.php`                | En-têtes de sécurité HTTP sur les pages et l'API (CSP, HSTS en HTTPS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`), nonce sur chaque script et différent à chaque requête, aucun JavaScript en ligne dans les gabarits                                                                                                      |
 
@@ -793,3 +815,7 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | J8 en 5 tickets GitHub (#76 à #80) : écran E8 (US9) le matin et accessibilité des écrans adhérent pour Anthony ; accessibilité et finitions des écrans de gestion, vérification dans le navigateur et captures pour Chloé ; relecture croisée et gel du code ensemble | E8 passe avant les finitions pour être relu et testé avant le gel ; chacun audite les écrans qu'il connaît le moins bien, Chloé fait la vérification visuelle que le certificat local empêche d'automatiser |
 | 2026-11-24 | Accessibilité de base jugée sur une grille issue des critères essentiels du RGAA 4.1, consignée par écran | Objectif mesurable dans la journée ; un audit RGAA complet est hors de portée du MVP |
 | 2026-11-24 | Gel du code marqué par le tag `v1.0.0` sur `main` | Version présentée au jury identifiable ; J9 et J10 ne touchent plus qu'à la documentation |
+| 2026-11-24 | Réactivation d'un compte journalisée par une nouvelle action `COMPTE_REACTIVE`, validateur mis à jour par `collMod` | La tracer sous `COMPTE_DESACTIVE` rendrait le journal trompeur ; même démarche que `OBJET_SUPPRIME` à J6 |
+| 2026-11-24 | Un administrateur n'agit pas sur son propre compte (ni désactivation, ni changement de rôle) | Seul un administrateur utilise E8 : l'association garde donc toujours un administrateur actif, sans compter les administrateurs |
+| 2026-11-24 | Session fermée à la requête suivante quand le compte est désactivé ou change de rôle (`Utilisateur::isEqualTo()`) | Sans cela, un compte désactivé gardait l'accès jusqu'à la fin de sa session ; un rôle retiré cessait aussi d'agir tout de suite |
+| 2026-11-24 | `/admin` renvoie vers E8, avec `IsGranted('ROLE_ADMIN')` en plus de `access_control` | Remplace l'emplacement provisoire de J3 ; remarque de relecture de J7 |

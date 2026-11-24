@@ -98,7 +98,7 @@ Un document par action sensible (RG8) :
 
 | Élément | Choix |
 |---|---|
-| Validateur `$jsonSchema` (`validationAction: error`) | Champs obligatoires, liste fermée des 11 actions et des 3 types de cible, aucun champ imprévu (`additionalProperties: false`). Seul `details` est libre : c'est ce qui justifie MongoDB. |
+| Validateur `$jsonSchema` (`validationAction: error`) | Champs obligatoires, liste fermée des 13 actions et des 3 types de cible, aucun champ imprévu (`additionalProperties: false`). Seul `details` est libre : c'est ce qui justifie MongoDB. |
 | `acteur.email` recopié | Le journal reste lisible même si le compte est modifié ou anonymisé. |
 | Index `idx_action_horodatage` | Filtre par type d'action trié par date (US10). |
 | Index TTL `ttl_horodatage_1an` | Suppression automatique après 1 an (RGPD : durée de conservation des journaux). |
