@@ -244,7 +244,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
 | J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception ([notes J5](docs/dossier/notes-j5.md)) | ✅ |
 | J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL ([notes J6](docs/dossier/notes-j6.md)) | ✅ |
-| J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
+| J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | 🟡 |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
 | J9 | | Rédaction du dossier | ⬜ |
 | J10 | | Fin du dossier et diaporama | ⬜ |
@@ -759,3 +759,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Filtre de E9 converti en `ActionAudit` avant la requête | Protection contre l'injection NoSQL : `?action[$ne]=x` est refusé (404), une valeur inconnue est ignorée |
 | 2026-11-24 | La suppression physique d'un objet est journalisée (`OBJET_SUPPRIME`) | Remplace la décision « suppression non journalisée » prise à J4 : RG8 couvre toute action sensible ; validateur MongoDB mis à jour par `collMod` |
 | 2026-11-24 | Parcours de fin de J6 sur tout le cycle de vie, avec contrôle sur E9 d'un document par action (21 contrôles) | Prouve RG8 de bout en bout : chaque action sensible produit exactement une entrée du journal |
+| 2026-11-24 | J7 en 5 tickets GitHub (#64 à #68) : plan de tests, contrôle d'accès de chaque route et jeu d'essai « Réserver un objet » pour Anthony ; tests de sécurité (CSRF, injections, XSS) et veille OWASP pour Chloé ; relecture croisée ensemble | RG1 à RG6 déjà couvertes à J5 et J6 : J7 complète O5 par les routes et démontre les protections par des tests ; Anthony rejoue la réservation qu'il a écrite, Chloé teste l'injection NoSQL sur E9 qu'elle a réalisé |
+| 2026-11-24 | Contrôle d'accès testé par une matrice routes × profils, qui échoue si une route n'y figure pas | Une route ajoutée plus tard ne peut pas échapper au critère O5 |
