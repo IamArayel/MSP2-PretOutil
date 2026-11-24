@@ -241,7 +241,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J2 | MCD / MPD, diagramme de séquence « Réserver », schéma d'architecture. Initialisation Symfony, Docker (PostgreSQL, MongoDB, extension PHP `mongodb`), Tailwind | Justification des choix techniques ([notes J1-J2](docs/dossier/notes-j1-j2.md)) | ✅ |
 | J3 | Entités Doctrine, migrations (dont `btree_gist` et `EXCLUDE`), fixtures, script de sauvegarde et de restauration. Inscription, connexion, rôles, `login_throttling` | Script SQL, règles de nommage | ✅ |
 | J4 | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md)) | ✅ |
-| J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception | 🟡 |
+| J5 | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation | Code métier, cas d'exception ([notes J5](docs/dossier/notes-j5.md)) | ✅ |
 | J6 | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal | Extraits du code NoSQL | ⬜ |
 | J7 | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP | ⬜ |
 | J8 | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir** | Captures d'écran | ⬜ |
@@ -675,3 +675,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Réservation en POST sur `/catalogue/{id}/reserver` ; en cas de refus, la fiche est réaffichée (422) au lieu d'une redirection | Le message et les dates saisies restent à l'écran ; 303 vers E5 seulement après un succès, pour éviter un double envoi |
 | 2026-11-24 | Le contrôleur attrape `ReservationRefuseeException` (classe parente) et affiche son message | Aucune règle dans le contrôleur ; une nouvelle règle n'exige aucune modification de l'écran |
 | 2026-11-24 | RG1 vérifiée aussi par le formulaire (`ReservationDto`), en plus du service | Erreur affichée sous le bon champ ; le service reste la garantie pour tous les appels |
+| 2026-11-24 | Base `pretoutil_test` à créer une fois par poste, et à migrer en environnement de test après chaque nouvelle migration | Les tests d'intégration échouent sans elle ; procédure du README vérifiée sur un second poste |
+| 2026-11-24 | Parcours de réservation de fin de journée fait par requêtes HTTP (17 contrôles), fixtures rechargées ensuite | Chaque refus vérifié avec son message et son code ; le rendu visuel reste vérifié à la main |
