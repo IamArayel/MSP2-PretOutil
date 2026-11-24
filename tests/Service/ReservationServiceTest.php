@@ -17,6 +17,8 @@ use App\Exception\ObjetNonReservableException;
 use App\Exception\PeriodeIndisponibleException;
 use App\Exception\PeriodeInvalideException;
 use App\Exception\QuotaAtteintException;
+use App\Exception\RetourImpossibleException;
+use App\Exception\SortieImpossibleException;
 use App\Repository\ReservationRepository;
 use App\Service\AuditLogger;
 use App\Service\ReservationService;
@@ -31,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Clock\MockClock;
 
 /**
- * Tests unitaires de ReservationService (US4, US5) : une méthode par branche du
+ * Tests unitaires de ReservationService (US4, US5, US7, US8) : une méthode par branche du
  * diagramme de séquence docs/diagrammes/sequence-reserver.md, plus les cas limites.
  *
  * Base de données simulée : le repository, l'EntityManager et la connexion sont des
@@ -318,6 +320,147 @@ final class ReservationServiceTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // Sortie (US7) : confirmée → en cours
+    // ------------------------------------------------------------------
+
+    public function testValiderSortie(): void
+    {
+        $reservation = $this->reservationDu('2026-12-10', StatutReservation::Confirmee);
+        $gestionnaire = $this->gestionnaire();
+        $this->repository->method('objetEstSorti')->willReturn(false);
+
+        $ordre = [];
+        $this->repository->method('verrouiller')->willReturnCallback(static function () use (&$ordre): void {
+            $ordre[] = 'verrou';
+        });
+        $this->connexion->method('beginTransaction')->willReturnCallback(static function () use (&$ordre): void {
+            $ordre[] = 'transaction';
+        });
+        $this->connexion->expects(self::once())->method('commit');
+        $this->entityManager->expects(self::once())->method('flush');
+        $this->auditLogger->expects(self::once())->method('journaliser')
+            ->with(ActionAudit::SortieValidee, $gestionnaire, 'reservation', self::anything(), self::anything());
+
+        $this->service->validerSortie($reservation, $gestionnaire);
+
+        self::assertSame(StatutReservation::EnCours, $reservation->getStatut());
+        self::assertSame($gestionnaire, $reservation->getSortiePar());
+        self::assertSame(self::MAINTENANT, $reservation->getSortieLe()?->format('Y-m-d H:i:s'));
+        self::assertSame(['transaction', 'verrou'], $ordre, 'Statut relu sous verrou, dans la transaction');
+    }
+
+    public function testValiderSortieDUnePeriodeCommenceeLaVeille(): void
+    {
+        $reservation = $this->reservationDu('2026-12-09', StatutReservation::Confirmee);
+        $this->repository->method('objetEstSorti')->willReturn(false);
+
+        $this->service->validerSortie($reservation, $this->gestionnaire());
+
+        self::assertSame(StatutReservation::EnCours, $reservation->getStatut());
+    }
+
+    /** @return iterable<string, array{string, StatutReservation, EtatObjet, bool, string}> */
+    public static function sortiesRefusees(): iterable
+    {
+        yield 'période qui commence demain' => ['2026-12-11', StatutReservation::Confirmee, EtatObjet::Bon, false, 'commence le 11/12/2026'];
+        yield 'déjà sortie (en cours)' => ['2026-12-10', StatutReservation::EnCours, EtatObjet::Bon, false, 'n\'est plus confirmée'];
+        yield 'annulée' => ['2026-12-10', StatutReservation::Annulee, EtatObjet::Bon, false, 'n\'est plus confirmée'];
+        yield 'objet hors service' => ['2026-12-10', StatutReservation::Confirmee, EtatObjet::HorsService, false, 'hors service'];
+        yield 'objet pas encore rendu par l\'emprunteur précédent' => ['2026-12-10', StatutReservation::Confirmee, EtatObjet::Bon, true, 'pas encore été rendu'];
+    }
+
+    #[DataProvider('sortiesRefusees')]
+    public function testSortieRefusee(string $debut, StatutReservation $statut, EtatObjet $etat, bool $objetSorti, string $extraitMessage): void
+    {
+        $reservation = $this->reservationDu($debut, $statut, $etat);
+        $this->repository->method('objetEstSorti')->willReturn($objetSorti);
+        $this->refusDansTransaction();
+
+        try {
+            $this->service->validerSortie($reservation, $this->gestionnaire());
+            self::fail('SortieImpossibleException attendue');
+        } catch (SortieImpossibleException $e) {
+            self::assertStringContainsString($extraitMessage, $e->getMessage());
+        }
+
+        self::assertSame($statut, $reservation->getStatut(), 'Statut inchangé');
+        self::assertNull($reservation->getSortieLe());
+    }
+
+    // ------------------------------------------------------------------
+    // Retour (US8, RG7) : en cours → terminée, l'objet prend l'état constaté
+    // ------------------------------------------------------------------
+
+    /** @return iterable<string, array{EtatObjet, EtatObjet}> */
+    public static function retoursValides(): iterable
+    {
+        yield 'rendu en bon état' => [EtatObjet::Bon, EtatObjet::Bon];
+        yield 'rendu abîmé' => [EtatObjet::Bon, EtatObjet::Abime];
+        yield 'objet abîmé réparé, rendu en bon état' => [EtatObjet::Abime, EtatObjet::Bon];
+    }
+
+    #[DataProvider('retoursValides')]
+    public function testEnregistrerRetour(EtatObjet $etatAvant, EtatObjet $etatConstate): void
+    {
+        $reservation = $this->reservationDu('2026-12-05', StatutReservation::EnCours, $etatAvant);
+        $reservation->enregistrerSortie($this->gestionnaire(), new \DateTimeImmutable('2026-12-05 09:00'));
+        $gestionnaire = $this->gestionnaire();
+
+        $this->connexion->expects(self::once())->method('commit');
+        $this->repository->expects(self::never())->method('confirmeesPourObjet');
+        $this->auditLogger->expects(self::once())->method('journaliser')
+            ->with(ActionAudit::RetourEnregistre, $gestionnaire, 'reservation', self::anything(), self::callback(
+                static fn (array $details): bool => $etatConstate->value === $details['etat_retour'] && $etatAvant->value === $details['etat_objet_avant'],
+            ));
+
+        $aSignaler = $this->service->enregistrerRetour($reservation, $gestionnaire, $etatConstate);
+
+        self::assertSame(StatutReservation::Terminee, $reservation->getStatut());
+        self::assertSame($etatConstate, $reservation->getEtatRetour());
+        self::assertSame($gestionnaire, $reservation->getRetourPar());
+        self::assertSame($etatConstate, $reservation->getObjet()->getEtat(), 'L\'objet prend l\'état constaté');
+        self::assertSame([], $aSignaler);
+    }
+
+    public function testRG7RetourHorsServiceSignaleLesReservationsAVenir(): void
+    {
+        $reservation = $this->reservationDu('2026-12-05', StatutReservation::EnCours);
+        $reservation->enregistrerSortie($this->gestionnaire(), new \DateTimeImmutable('2026-12-05 09:00'));
+        $aVenir = [$this->reservationDu('2026-12-20', StatutReservation::Confirmee)];
+        $this->repository->expects(self::once())->method('confirmeesPourObjet')
+            ->with($reservation->getObjet())->willReturn($aVenir);
+
+        $aSignaler = $this->service->enregistrerRetour($reservation, $this->gestionnaire(), EtatObjet::HorsService);
+
+        self::assertSame(EtatObjet::HorsService, $reservation->getObjet()->getEtat(), 'Objet non réservable (RG5)');
+        self::assertSame($aVenir, $aSignaler, 'Réservations à venir renvoyées pour être signalées');
+        self::assertSame(StatutReservation::Confirmee, $aVenir[0]->getStatut(), 'Pas d\'annulation automatique');
+    }
+
+    /** @return iterable<string, array{StatutReservation}> */
+    public static function retoursRefuses(): iterable
+    {
+        yield 'pas encore sortie (confirmée)' => [StatutReservation::Confirmee];
+        yield 'retour déjà enregistré (terminée)' => [StatutReservation::Terminee];
+        yield 'annulée' => [StatutReservation::Annulee];
+    }
+
+    #[DataProvider('retoursRefuses')]
+    public function testRetourRefuse(StatutReservation $statut): void
+    {
+        $reservation = $this->reservationDu('2026-12-05', $statut);
+        $this->refusDansTransaction();
+
+        $this->expectException(RetourImpossibleException::class);
+
+        try {
+            $this->service->enregistrerRetour($reservation, $this->gestionnaire(), EtatObjet::HorsService);
+        } finally {
+            self::assertSame(EtatObjet::Bon, $reservation->getObjet()->getEtat(), 'État de l\'objet inchangé');
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Outils
     // ------------------------------------------------------------------
 
@@ -354,6 +497,19 @@ final class ReservationServiceTest extends TestCase
             ->setDescription('Livrée avec deux batteries.')
             ->setEtat($etat)
             ->setActif($actif);
+    }
+
+    private function gestionnaire(): Utilisateur
+    {
+        return (new Utilisateur())->setEmail('gestionnaire@pretoutil.test')->setNom('Bernard')->setPrenom('Léa')->setRoles(['ROLE_MANAGER']);
+    }
+
+    private function reservationDu(string $debut, StatutReservation $statut, EtatObjet $etatObjet = EtatObjet::Bon): Reservation
+    {
+        $dateDebut = $this->jour($debut);
+
+        return (new Reservation($this->adherent, $this->objet($etatObjet), $dateDebut, $dateDebut->modify('+3 days')))
+            ->setStatut($statut);
     }
 
     private function reservation(StatutReservation $statut): Reservation

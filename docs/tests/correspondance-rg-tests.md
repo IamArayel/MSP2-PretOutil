@@ -1,6 +1,6 @@
 # Correspondance règles de gestion → tests
 
-Ticket : [#45 J5-A2 Tests de ReservationService (RG1 à RG6)](https://github.com/IamArayel/MSP2-PretOutil/issues/45)
+Tickets : [#45 J5-A2 Tests de ReservationService (RG1 à RG6)](https://github.com/IamArayel/MSP2-PretOutil/issues/45), [#55 J6-B1 Sorties et retours](https://github.com/IamArayel/MSP2-PretOutil/issues/55)
 
 Objectif O5 du cahier des charges : 100 % des règles RG1 à RG6 couvertes par au moins un test qui fait échouer la règle et un test qui la respecte.
 
@@ -28,6 +28,14 @@ Lancer les tests : `docker compose exec php bin/phpunit --testdox` (prérequis :
 | **RG4** sous verrou | | `testRG4QuotaCompteSousVerrouDeLAdherent` : transaction, puis verrou sur l'adhérent, puis comptage |
 | **RG5** Objet hors service ou désactivé non réservable | `testRG5ObjetNonReservable` : hors service ; retiré du catalogue ; retour en retard de l'emprunteur précédent → `ObjetNonReservableException` | `testRG5ObjetAbimeResteReservable` |
 | **RG6** Annulation jusqu'à la veille | `ReservationVoterTest::testAnnuler` : le jour du début ; début passé ; autre adhérent<br>`ReservationServiceTest::testAnnulationImpossible` : en cours, terminée, déjà annulée → `AnnulationImpossibleException` | `ReservationVoterTest::testAnnuler` : la veille du début ; 10 jours avant<br>`ReservationServiceTest::testAnnulerUneReservationConfirmee` |
+
+## Sorties et retours (US7, US8, RG7)
+
+| Règle | Cas refusé | Cas accepté |
+|---|---|---|
+| **US7** Valider une sortie | `testSortieRefusee` : période qui commence demain ; déjà en cours ; annulée ; objet hors service ; objet pas encore rendu par l'emprunteur précédent → `SortieImpossibleException`, statut inchangé | `testValiderSortie` (période commencée aujourd'hui, statut relu sous verrou), `testValiderSortieDUnePeriodeCommenceeLaVeille` |
+| **US8** Enregistrer un retour | `testRetourRefuse` : confirmée ; terminée ; annulée → `RetourImpossibleException`, état de l'objet inchangé | `testEnregistrerRetour` : bon ; abîmé ; objet abîmé rendu en bon état |
+| **RG7** Retour hors service | | `testRG7RetourHorsServiceSignaleLesReservationsAVenir` : objet hors service, réservations à venir renvoyées, pas annulées |
 
 ## Autres vérifications
 

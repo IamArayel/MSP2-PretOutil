@@ -341,7 +341,7 @@ La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compt
 | CSRF | Jeton sur les formulaires de connexion et d'inscription et sur le lien de déconnexion |
 | Inscription (US1) | DTO `InscriptionDto` validé (email valide et unique, mot de passe de 12 caractères minimum), compte créé par `InscriptionService` : email en minuscules, mot de passe haché, `ROLE_USER`, compte actif |
 
-Les pages `/mes-reservations`, `/gestion` et `/admin` sont provisoires : elles seront remplacées par les écrans E5, E6 et E8.
+La page `/admin` est provisoire : elle sera remplacée par l'écran E8. `/mes-reservations` est l'écran E5 et `/gestion/sorties-retours` l'écran E6.
 
 Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
 
@@ -360,6 +360,23 @@ Sur la fiche d'un objet (<https://localhost/catalogue/{id}>), un adhérent conne
 | Affichage | `CatalogueController::reserver()` | Succès : redirection 303 vers « Mes réservations » avec « Réservation confirmée » ; refus : fiche réaffichée (422) avec le message et les dates saisies |
 
 Le contrôleur ne connaît aucune règle : il affiche le message de l'exception. Un visiteur est invité à se connecter ; un objet hors service affiche un message à la place du formulaire. Pour essayer chaque refus : `adherent.quota@pretoutil.test` (quota atteint), « Tente 4 places » (période déjà réservée), « Glacière électrique » (retour en retard), une période de plus de 14 jours.
+
+### Sorties et retours (écran E6)
+
+<https://localhost/gestion/sorties-retours>, réservé au gestionnaire et à l'administrateur (`access_control` sur `/gestion` et `#[IsGranted('ROLE_MANAGER')]`).
+
+| Liste | Contenu | Action |
+|---|---|---|
+| À sortir aujourd'hui | Réservations confirmées dont la période a commencé | « Valider la sortie » : `ReservationService::validerSortie()`, confirmée → en cours (US7) |
+| Retours attendus | Réservations en cours, retours en retard en premier (badge « En retard ») | « Enregistrer le retour » avec l'état constaté : `ReservationService::enregistrerRetour()`, en cours → terminée (US8) |
+
+- **Refus de sortie** (`SortieImpossibleException`) : réservation plus confirmée, période pas commencée, objet hors service, ou objet pas encore rendu par l'emprunteur précédent.
+- **Refus de retour** (`RetourImpossibleException`) : réservation pas en cours.
+- **RG7** : l'objet prend l'état constaté au retour. « Hors service » le rend non réservable ; ses réservations confirmées sont **signalées** au gestionnaire (nom, email, dates), pas annulées.
+- Chaque transition s'exécute dans une transaction, avec la réservation verrouillée (`SELECT ... FOR UPDATE`) : deux gestionnaires ne peuvent pas valider la même sortie. Journalisation `SORTIE_VALIDEE` et `RETOUR_ENREGISTRE` après le `COMMIT`.
+- Actions en POST, jeton CSRF propre à l'action et à la réservation.
+
+Requête des retours : avec `ORDER BY date_fin` seul, PostgreSQL lit l'index partiel `idx_reservation_en_cours` dans l'ordre, sans tri en mémoire (`EXPLAIN` : `Index Scan using idx_reservation_en_cours`, mesuré avec le parcours séquentiel désactivé ; sur les 11 lignes du jeu d'essai, il préfère lire la table entière).
 
 ### Gestion du catalogue (écran E7)
 
@@ -693,6 +710,12 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Écran E5 dans un contrôleur dédié (`MesReservationsController`), page provisoire retirée de `EspaceController` | Une responsabilité par contrôleur ; évite un conflit avec le remplacement de `/gestion` par l'écran E6 (#55) |
 | 2026-11-24 | Bouton « Annuler » affiché selon `ReservationVoter::ANNULER`, action protégée par le même Voter et un jeton CSRF propre à chaque réservation | La règle RG6 n'est écrite qu'à un endroit ; un jeton ne peut pas servir à annuler une autre réservation |
 | 2026-11-24 | Liste E5 non paginée | Un adhérent a au plus 3 réservations actives et peu d'historique dans le MVP ; une requête avec jointure suffit (3 requêtes par page) |
+| 2026-11-24 | Écran E6 sous `/gestion/sorties-retours` (`SortiesRetoursController`), page provisoire `/gestion` retirée | Une responsabilité par contrôleur, comme E5 ; l'`access_control` de `/gestion` s'applique toujours |
+| 2026-11-24 | Sortie et retour dans une transaction, réservation relue sous verrou (`refresh` en `PESSIMISTIC_WRITE`) | Deux gestionnaires qui cliquent en même temps : le second voit le statut déjà modifié et reçoit un refus clair |
+| 2026-11-24 | Sortie refusée si l'objet est encore sorti par l'emprunteur précédent ou hors service | Remettre un objet absent ou inutilisable n'a pas de sens ; complète le contrôle « retour en retard » de la réservation |
+| 2026-11-24 | L'objet prend l'état constaté au retour, y compris « bon » après « abîmé » | Le gestionnaire constate l'état réel ; un objet réparé redevient « bon » |
+| 2026-11-24 | RG7 : réservations confirmées d'un objet devenu hors service signalées, pas annulées | Le gestionnaire prévient l'adhérent et décide (réparation rapide, autre objet) ; une annulation automatique serait irréversible |
+| 2026-11-24 | Tri des retours sur `date_fin` seule | Permet à PostgreSQL d'utiliser l'ordre de l'index partiel `idx_reservation_en_cours` |
 | 2026-11-24 | Disponibilité calculée par `ReservationService::verifierDisponibilite()`, qui réutilise les vérifications de `reserver()` hors quota | Une seule écriture des règles ; l'API informe, la réservation revérifie tout sous verrou ; le quota dépend de l'adhérent et l'API est publique |
 | 2026-11-24 | Erreurs de l'API au format JSON par un écouteur d'exceptions limité aux chemins `/api/`, messages génériques sauf erreurs de saisie | Même format pour 400, 404, 405, 429 et 500 ; rien du fonctionnement interne n'est révélé |
 | 2026-11-24 | Appel de l'API depuis E4 en amélioration progressive, zone `aria-live` toujours présente, message inséré avec `textContent` | Le formulaire marche sans JavaScript ; les lecteurs d'écran annoncent la réponse ; aucun risque d'injection HTML |
