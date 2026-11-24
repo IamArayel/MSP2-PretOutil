@@ -343,6 +343,19 @@ Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
 docker compose exec php bin/console cache:pool:clear cache.rate_limiter
 ```
 
+### Gestion du catalogue (écran E7)
+
+<https://localhost/gestion/catalogue>, accessible au gestionnaire et à l'administrateur (compte de test `gestionnaire@pretoutil.test`).
+
+| Action | Méthode | Règle |
+|---|---|---|
+| Lister tous les objets, actifs et retirés | GET, paginé par 20 | `OBJET_GERER` |
+| Ajouter, modifier (catégorie, nom, description, caractéristiques, état) | Formulaire `ObjetType` sur `ObjetDto`, jeton CSRF | `OBJET_GERER` |
+| Désactiver (retirer du catalogue, RG5) | POST, jeton CSRF propre à l'objet | `OBJET_GERER` |
+| Supprimer définitivement | POST, jeton CSRF propre à l'objet, confirmation | `OBJET_SUPPRIMER` : objet jamais réservé (US6) |
+
+Deux protections : `access_control` sur `/gestion` et `ObjetVoter` sur chaque action. Un adhérent reçoit un 403. Le bouton « Supprimer » n'apparaît que pour les objets jamais réservés, calculés en une seule requête pour la page ; si une réservation arrive entre-temps, la clé étrangère refuse la suppression et un message l'explique. Les actions passent par `ObjetService`, qui appelle `AuditLogger` (`OBJET_CREE`, `OBJET_MODIFIE`, `OBJET_DESACTIVE`).
+
 ### Comptes des bases de données
 
 L'application ne se connecte jamais avec le propriétaire du schéma ni avec le compte root de MongoDB (droits minimaux).
@@ -606,3 +619,9 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | `RESERVATION_ANNULER` limité aux réservations confirmées | Cycle de vie : une réservation en cours, terminée ou annulée ne peut plus être annulée |
 | 2026-11-24 | Date du jour fournie par l'horloge Symfony (`ClockInterface`), comparée en jours calendaires | RG6 testable à la journée près ; comparer `AAAA-MM-JJ` évite un décalage d'un jour lié aux fuseaux |
 | 2026-11-24 | PHPUnit via `symfony/test-pack` dès J4 | Critère O5 (contrôle d'accès testé) ; même outillage pour les tests fonctionnels de J7 |
+| 2026-11-24 | Écran E7 sous `/gestion/catalogue`, protégé par `access_control` et par `ObjetVoter` sur chaque action | Défense en profondeur : une erreur de configuration d'un côté ne suffit pas à ouvrir la gestion du catalogue |
+| 2026-11-24 | Formulaire d'objet sur un DTO (`ObjetDto`), comme l'inscription | L'entité n'est jamais dans un état invalide ; contraintes du dictionnaire de données au même endroit |
+| 2026-11-24 | Longueur maximale de 2000 caractères pour la description et 5000 pour les caractéristiques | Colonnes `TEXT` sans limite en base : une borne côté application évite les saisies abusives |
+| 2026-11-24 | Désactivation et suppression en POST avec un jeton CSRF par action et par objet | Un lien ou un formulaire tiers ne peut pas retirer un objet ; un jeton ne sert qu'à l'action prévue |
+| 2026-11-24 | Objets déjà réservés d'une page calculés en une requête (`objetsDejaReserves`) | Évite une requête par ligne pour afficher le bouton « Supprimer » (éco-conception) ; la suppression reste contrôlée par le Voter |
+| 2026-11-24 | Suppression non journalisée, pas de réactivation d'un objet retiré | Hors périmètre du MVP : l'énumération des actions de `audit_log` ne prévoit ni `OBJET_SUPPRIME` ni réactivation ; améliorations possibles |
