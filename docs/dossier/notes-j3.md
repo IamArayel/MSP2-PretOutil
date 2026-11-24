@@ -29,7 +29,7 @@ Reste à venir pour l'accès aux données : requêtes de disponibilité (J4), `R
 | `InscriptionService::inscrire()`          | [src/Service/InscriptionService.php](../../src/Service/InscriptionService.php)                                   | Hachage, normalisation, doublon intercepté en base, appel au journal         |
 | Scripts d'initialisation                  | [docker/postgres/initdb/](../../docker/postgres/initdb/), [docker/mongodb/initdb/](../../docker/mongodb/initdb/) | Comptes applicatifs créés sans mot de passe dans le dépôt                    |
 
-Règles de nommage : [conventions-nommage.md](../conception/conventions-nommage.md) (entités et propriétés en français, termes imposés par le framework en anglais, `snake_case` en base par la stratégie `underscore_number_aware`).
+Règles de nommage : [conventions-nommage.md](../conception/conventions-nommage.md) (entités et propriétés en français, termes imposés par le framework en anglais, `snake_case` en base par la stratégie Doctrine `underscore`).
 
 ## 3. Choix techniques à justifier
 
