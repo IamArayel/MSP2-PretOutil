@@ -5,18 +5,22 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use App\Entity\Categorie;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * Filtres du catalogue (US3), tous facultatifs et combinables.
  *
- * La cohérence des dates (fin après début, pas dans le passé) est validée par le
- * formulaire de l'écran E3 ; la période ne s'applique que si les deux dates sont fournies.
+ * Rempli par le formulaire de l'écran E3 et validé avant d'être passé au repository.
+ * La période ne s'applique que si les deux dates sont fournies.
  */
 final class CriteresCatalogue
 {
     public function __construct(
         public ?Categorie $categorie = null,
+        #[Assert\GreaterThanOrEqual('today', message: 'La date de début ne peut pas être dans le passé.')]
         public ?\DateTimeImmutable $debut = null,
+        #[Assert\GreaterThanOrEqual(propertyPath: 'debut', message: 'La date de fin doit être après la date de début.')]
         public ?\DateTimeImmutable $fin = null,
     ) {
     }
@@ -24,5 +28,17 @@ final class CriteresCatalogue
     public function aUnePeriode(): bool
     {
         return null !== $this->debut && null !== $this->fin;
+    }
+
+    /** Une période se saisit avec ses deux dates : une date seule est signalée plutôt qu'ignorée. */
+    #[Assert\Callback]
+    public function validerPeriodeComplete(ExecutionContextInterface $contexte): void
+    {
+        if (null !== $this->debut && null === $this->fin) {
+            $contexte->buildViolation('Indiquez aussi la date de fin.')->atPath('fin')->addViolation();
+        }
+        if (null === $this->debut && null !== $this->fin) {
+            $contexte->buildViolation('Indiquez aussi la date de début.')->atPath('debut')->addViolation();
+        }
     }
 }

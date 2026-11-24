@@ -49,4 +49,43 @@ class ReservationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
     }
+
+    /**
+     * Statut des réservations actives qui couvrent une date, pour une liste d'objets,
+     * en une seule requête (évite une requête par objet affiché).
+     *
+     * @param list<Objet> $objets
+     *
+     * @return array<int, list<StatutReservation>> statuts indexés par identifiant d'objet
+     */
+    public function statutsActifsAuJour(array $objets, \DateTimeImmutable $jour): array
+    {
+        if ([] === $objets) {
+            return [];
+        }
+
+        $lignes = $this->createQueryBuilder('r')
+            ->select('IDENTITY(r.objet) AS objetId', 'r.statut')
+            ->where('r.objet IN (:objets)')
+            ->andWhere('r.statut IN (:statutsActifs)')
+            ->andWhere('r.dateDebut <= :jour')
+            ->andWhere('r.dateFin >= :jour OR r.statut = :enCours')
+            ->setParameter('objets', $objets)
+            ->setParameter(
+                'statutsActifs',
+                array_map(static fn (StatutReservation $statut): string => $statut->value, StatutReservation::actifs()),
+                ArrayParameterType::STRING,
+            )
+            ->setParameter('jour', $jour, Types::DATE_IMMUTABLE)
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            ->getQuery()
+            ->getArrayResult();
+
+        $statuts = [];
+        foreach ($lignes as $ligne) {
+            $statuts[(int) $ligne['objetId']][] = $ligne['statut'];
+        }
+
+        return $statuts;
+    }
 }

@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% set objet = fiche.objet %}
+
+{% block title %}{{ objet.nom }}{% endblock %}
+{% block description %}{{ objet.description|length > 150 ? objet.description|slice(0, 149) ~ '…' : objet.description }}{% endblock %}
+
+{% block body %}
+    <nav aria-label="Fil d'Ariane" class="text-sm text-ink-muted">
+        <ol class="flex flex-wrap gap-2">
+            <li><a href="{{ path('app_catalogue') }}" class="hover:text-primary">Catalogue</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href="{{ path('app_catalogue', {categorie: objet.categorie.id}) }}" class="hover:text-primary">{{ objet.categorie.libelle }}</a></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" class="text-ink">{{ objet.nom }}</li>
+        </ol>
+    </nav>
+
+    <div class="mt-6 grid gap-8 lg:grid-cols-3">
+        <article class="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-ink-muted">{{ objet.categorie.libelle }}</span>
+                {{ include('catalogue/_badge_statut.html.twig', {statut: fiche.statut}) }}
+            </div>
+            <h1 class="mt-3 text-3xl font-bold">{{ objet.nom }}</h1>
+            <p class="mt-4 text-ink-muted">{{ objet.description }}</p>
+
+            {% if objet.caracteristiques %}
+                <h2 class="mt-6 font-semibold">Caractéristiques</h2>
+                {% set lignes = objet.caracteristiques|split("\n")|map(l => l|trim)|filter(l => l is not empty) %}
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                    {% for ligne in lignes %}
+                        <li>{{ ligne }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <h2 class="mt-6 font-semibold">Indisponibilités à venir</h2>
+            {% if fiche.periodesReservees is empty %}
+                <p class="mt-2 text-sm text-ink-muted">Aucune réservation à venir.</p>
+            {% else %}
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                    {% for periode in fiche.periodesReservees %}
+                        <li>du {{ periode.dateDebut|date('d/m/Y') }} au {{ periode.dateFin|date('d/m/Y') }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </article>
+
+        {# Réservation (US4) : le formulaire est ajouté à J5 avec ReservationService #}
+        <aside class="self-start rounded-lg border border-line bg-surface p-6" aria-labelledby="reserver-titre">
+            <h2 id="reserver-titre" class="text-xl font-semibold">Réserver cet objet</h2>
+
+            {% if not fiche.estReservable %}
+                <p class="mt-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service">
+                    Cet objet est hors service : il ne peut pas être réservé pour le moment.
+                </p>
+            {% elseif not app.user %}
+                <p class="mt-4 text-sm text-ink-muted">Connectez-vous pour réserver cet objet.</p>
+                <div class="mt-4 flex flex-col gap-3">
+                    <a href="{{ path('app_connexion') }}" class="rounded-md bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-primary-hover">Se connecter</a>
+                    <a href="{{ path('app_inscription') }}" class="rounded-md border border-line bg-surface px-4 py-2.5 text-center text-sm font-semibold text-ink hover:bg-page">Créer un compte</a>
+                </div>
+            {% else %}
+                <p class="mt-4 rounded-md border border-line bg-page px-4 py-3 text-sm text-ink-muted" role="status">
+                    La réservation en ligne sera disponible prochainement.
+                </p>
+            {% endif %}
+
+            <p class="mt-4 text-xs text-ink-muted">
+                14 jours maximum · 3 réservations actives maximum · annulation possible jusqu'à la veille du début
+            </p>
+        </aside>
+    </div>
+{% endblock %}
