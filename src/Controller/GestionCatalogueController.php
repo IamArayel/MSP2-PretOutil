@@ -107,7 +107,7 @@ final class GestionCatalogueController extends AbstractController
 
     #[Route('/{id}/supprimer', name: 'app_gestion_catalogue_supprimer', requirements: ['id' => '\d+'], methods: ['POST'])]
     #[IsGranted(ObjetVoter::SUPPRIMER, subject: 'objet', message: 'Cet objet a déjà été réservé : il ne peut pas être supprimé.')]
-    public function supprimer(Objet $objet, Request $request): Response
+    public function supprimer(Objet $objet, Request $request, #[CurrentUser] Utilisateur $gestionnaire): Response
     {
         if (!$this->jetonValide('supprimer-objet-'.$objet->getId(), $request)) {
             return $this->redirectToRoute('app_gestion_catalogue');
@@ -116,7 +116,7 @@ final class GestionCatalogueController extends AbstractController
         $nom = $objet->getNom();
 
         try {
-            $this->objetService->supprimer($objet);
+            $this->objetService->supprimer($objet, $gestionnaire);
             $this->addFlash('succes', \sprintf('« %s » a été supprimé définitivement.', $nom));
         } catch (ObjetDejaReserveException $e) {
             $this->addFlash('erreur', $e->getMessage());

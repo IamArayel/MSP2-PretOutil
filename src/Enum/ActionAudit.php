@@ -18,6 +18,7 @@ enum ActionAudit: string
     case ObjetCree = 'OBJET_CREE';
     case ObjetModifie = 'OBJET_MODIFIE';
     case ObjetDesactive = 'OBJET_DESACTIVE';
+    case ObjetSupprime = 'OBJET_SUPPRIME';
     case ReservationCreee = 'RESERVATION_CREEE';
     case ReservationAnnulee = 'RESERVATION_ANNULEE';
     case SortieValidee = 'SORTIE_VALIDEE';
