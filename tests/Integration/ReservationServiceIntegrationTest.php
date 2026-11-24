@@ -151,7 +151,7 @@ final class ReservationServiceIntegrationTest extends KernelTestCase
         return new ReservationService(
             $this->entityManager,
             $repository ?? self::getContainer()->get(ReservationRepository::class),
-            new AuditLogger(),
+            $this->createStub(AuditLogger::class), // le journal est testé à part (AuditLoggerIntegrationTest)
             new MockClock(self::MAINTENANT),
         );
     }
