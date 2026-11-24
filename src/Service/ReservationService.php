@@ -16,13 +16,16 @@ use App\Exception\ObjetNonReservableException;
 use App\Exception\PeriodeIndisponibleException;
 use App\Exception\PeriodeInvalideException;
 use App\Exception\QuotaAtteintException;
+use App\Exception\RetourImpossibleException;
+use App\Exception\SortieImpossibleException;
 use App\Repository\ReservationRepository;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
 /**
- * Règles de réservation (US4, RG1 à RG5) et d'annulation (US5), selon le diagramme
+ * Règles de réservation (US4, RG1 à RG5), d'annulation (US5), de sortie (US7) et de
+ * retour (US8, RG7), selon le diagramme
  * de séquence docs/diagrammes/sequence-reserver.md.
  *
  * Chaque refus lève une exception métier (App\Exception\ReservationRefuseeException)
@@ -123,6 +126,113 @@ class ReservationService
             'date_debut' => $reservation->getDateDebut()->format('Y-m-d'),
             'date_fin' => $reservation->getDateFin()->format('Y-m-d'),
         ]);
+    }
+
+    /**
+     * US7 : le gestionnaire remet l'objet à l'adhérent. Confirmée → en cours.
+     *
+     * @throws SortieImpossibleException si la réservation n'est plus confirmée, si sa période
+     *                                   n'a pas commencé, si l'objet est hors service ou
+     *                                   pas encore rendu par l'emprunteur précédent
+     */
+    public function validerSortie(Reservation $reservation, Utilisateur $gestionnaire): void
+    {
+        $this->dansUneTransaction(function () use ($reservation, $gestionnaire): void {
+            // Verrou : si un autre gestionnaire vient de valider cette sortie, on voit son statut.
+            $this->reservationRepository->verrouiller($reservation);
+
+            if (StatutReservation::Confirmee !== $reservation->getStatut()) {
+                throw new SortieImpossibleException('Cette sortie ne peut pas être validée : la réservation n\'est plus confirmée.');
+            }
+            if ($reservation->getDateDebut()->format('Y-m-d') > $this->aujourdhui()->format('Y-m-d')) {
+                throw new SortieImpossibleException(\sprintf(
+                    'La réservation commence le %s : la sortie ne peut pas encore être validée.',
+                    $reservation->getDateDebut()->format('d/m/Y'),
+                ));
+            }
+            if (EtatObjet::HorsService === $reservation->getObjet()->getEtat()) {
+                throw new SortieImpossibleException('Cet objet est hors service : il ne peut pas être remis à l\'adhérent.');
+            }
+            if ($this->reservationRepository->objetEstSorti($reservation->getObjet())) {
+                throw new SortieImpossibleException('Cet objet n\'a pas encore été rendu par l\'emprunteur précédent : enregistrez d\'abord son retour.');
+            }
+
+            $reservation
+                ->enregistrerSortie($gestionnaire, $this->horloge->now())
+                ->setStatut(StatutReservation::EnCours);
+        });
+
+        // Après le COMMIT (RG8)
+        $this->auditLogger->journaliser(ActionAudit::SortieValidee, $gestionnaire, 'reservation', $reservation->getId(), [
+            'objet' => $reservation->getObjet()->getNom(),
+            'adherent' => $reservation->getUtilisateur()->getEmail(),
+        ]);
+    }
+
+    /**
+     * US8 : l'objet est rendu. En cours → terminée, avec l'état constaté, que l'objet prend
+     * aussi (RG7 : « hors service » le rend non réservable).
+     *
+     * Les réservations confirmées de l'objet ne sont pas annulées automatiquement : si l'objet
+     * revient hors service, elles sont renvoyées pour que le gestionnaire prévienne les adhérents.
+     *
+     * @return list<Reservation> réservations à signaler (vide sauf retour hors service)
+     *
+     * @throws RetourImpossibleException si la réservation n'est pas en cours
+     */
+    public function enregistrerRetour(Reservation $reservation, Utilisateur $gestionnaire, EtatObjet $etat): array
+    {
+        $objet = $reservation->getObjet();
+        $etatAvant = $objet->getEtat();
+
+        $this->dansUneTransaction(function () use ($reservation, $gestionnaire, $etat, $objet): void {
+            $this->reservationRepository->verrouiller($reservation);
+
+            if (StatutReservation::EnCours !== $reservation->getStatut()) {
+                throw new RetourImpossibleException();
+            }
+
+            $reservation
+                ->enregistrerRetour($gestionnaire, $this->horloge->now(), $etat)
+                ->setStatut(StatutReservation::Terminee);
+            $objet->setEtat($etat);
+        });
+
+        $this->auditLogger->journaliser(ActionAudit::RetourEnregistre, $gestionnaire, 'reservation', $reservation->getId(), [
+            'objet' => $objet->getNom(),
+            'etat_retour' => $etat->value,
+            'etat_objet_avant' => $etatAvant->value,
+        ]);
+
+        if (EtatObjet::HorsService !== $etat) {
+            return [];
+        }
+
+        return $this->reservationRepository->confirmeesPourObjet($objet);
+    }
+
+    /**
+     * Exécute une transition dans une transaction : flush et COMMIT si tout passe,
+     * ROLLBACK et exception relancée sinon.
+     *
+     * @param \Closure(): void $transition
+     */
+    private function dansUneTransaction(\Closure $transition): void
+    {
+        $connexion = $this->entityManager->getConnection();
+        $connexion->beginTransaction();
+
+        try {
+            $transition();
+            $this->entityManager->flush();
+            $connexion->commit();
+        } catch (\Throwable $erreur) {
+            if ($connexion->isTransactionActive()) {
+                $connexion->rollBack();
+            }
+
+            throw $erreur;
+        }
     }
 
     /** RG1 : fin après début, début aujourd'hui au plus tôt. */

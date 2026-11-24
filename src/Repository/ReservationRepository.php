@@ -164,6 +164,92 @@ class ReservationRepository extends ServiceEntityRepository
         $this->getEntityManager()->lock($adherent, LockMode::PESSIMISTIC_WRITE);
     }
 
+    /**
+     * Recharge la réservation en verrouillant sa ligne (SELECT ... FOR UPDATE) jusqu'à la fin
+     * de la transaction : deux gestionnaires qui valident la même sortie ou le même retour
+     * passent l'un après l'autre, et le second voit le statut déjà modifié (US7, US8).
+     */
+    public function verrouiller(Reservation $reservation): void
+    {
+        $this->getEntityManager()->refresh($reservation, LockMode::PESSIMISTIC_WRITE);
+    }
+
+    /** Vrai si l'objet est actuellement sorti (une réservation en cours), donc pas dans les locaux. */
+    public function objetEstSorti(Objet $objet): bool
+    {
+        return null !== $this->createQueryBuilder('r')
+            ->select('1')
+            ->where('r.objet = :objet')
+            ->andWhere('r.statut = :enCours')
+            ->setParameter('objet', $objet)
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Écran E6 : réservations confirmées dont la période a commencé (sortie à valider),
+     * de la plus ancienne à la plus récente. Objet et adhérent chargés dans la même requête.
+     *
+     * @return list<Reservation>
+     */
+    public function sortiesAValider(\DateTimeImmutable $aujourdhui): array
+    {
+        return $this->createQueryBuilder('r')
+            ->addSelect('o', 'u')
+            ->innerJoin('r.objet', 'o')
+            ->innerJoin('r.utilisateur', 'u')
+            ->where('r.statut = :confirmee')
+            ->andWhere('r.dateDebut <= :aujourdhui')
+            ->setParameter('confirmee', StatutReservation::Confirmee->value)
+            ->setParameter('aujourdhui', $aujourdhui, Types::DATE_IMMUTABLE)
+            ->orderBy('r.dateDebut', 'ASC')
+            ->addOrderBy('r.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Écran E6 : objets sortis (réservations en cours), retours en retard en premier
+     * grâce au tri par date de fin (index partiel idx_reservation_en_cours).
+     *
+     * @return list<Reservation>
+     */
+    public function retoursAttendus(): array
+    {
+        return $this->createQueryBuilder('r')
+            ->addSelect('o', 'u')
+            ->innerJoin('r.objet', 'o')
+            ->innerJoin('r.utilisateur', 'u')
+            ->where('r.statut = :enCours')
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            // Tri sur date_fin seule : l'index partiel fournit déjà cet ordre (pas de tri en mémoire).
+            ->orderBy('r.dateFin', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Réservations confirmées d'un objet, pas encore sorties (RG7) : à signaler au
+     * gestionnaire quand l'objet revient hors service. Adhérent chargé dans la même requête.
+     *
+     * @return list<Reservation>
+     */
+    public function confirmeesPourObjet(Objet $objet): array
+    {
+        return $this->createQueryBuilder('r')
+            ->addSelect('u')
+            ->innerJoin('r.utilisateur', 'u')
+            ->where('r.objet = :objet')
+            ->andWhere('r.statut = :confirmee')
+            ->setParameter('objet', $objet)
+            ->setParameter('confirmee', StatutReservation::Confirmee->value)
+            ->orderBy('r.dateDebut', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /** Réservations actives (confirmées ou en cours) d'un adhérent (RG4). */
     public function compterActives(Utilisateur $adherent): int
     {
