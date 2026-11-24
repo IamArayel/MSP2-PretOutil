@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Api\DisponibiliteObjet;
+use App\Api\PeriodeDemandee;
 use App\Catalogue\FicheObjet;
 use App\Catalogue\PageCatalogue;
 use App\Dto\CriteresCatalogue;
@@ -11,6 +13,7 @@ use App\Entity\Objet;
 use App\Enum\EtatObjet;
 use App\Enum\StatutDuJour;
 use App\Enum\StatutReservation;
+use App\Exception\ReservationRefuseeException;
 use App\Repository\ObjetRepository;
 use App\Repository\ReservationRepository;
 use Symfony\Component\Clock\ClockInterface;
@@ -24,6 +27,7 @@ class CatalogueService
     public function __construct(
         private readonly ObjetRepository $objetRepository,
         private readonly ReservationRepository $reservationRepository,
+        private readonly ReservationService $reservationService,
         private readonly ClockInterface $horloge,
     ) {
     }
@@ -52,6 +56,27 @@ class CatalogueService
             $this->statutDuJour($objet, $reservations[$objet->getId()] ?? []),
             $this->reservationRepository->periodesReservees($objet, $aujourdhui),
         );
+    }
+
+    /**
+     * Réponse de l'API des disponibilités (US11) : fiche de l'objet et, si une période est
+     * demandée, sa disponibilité selon les règles de ReservationService (sans les recopier).
+     */
+    public function disponibilites(Objet $objet, ?\DateTimeImmutable $debut = null, ?\DateTimeImmutable $fin = null): DisponibiliteObjet
+    {
+        $fiche = $this->fiche($objet);
+        $periode = null;
+
+        if (null !== $debut && null !== $fin) {
+            try {
+                $this->reservationService->verifierDisponibilite($objet, $debut, $fin);
+                $periode = new PeriodeDemandee($debut, $fin);
+            } catch (ReservationRefuseeException $refus) {
+                $periode = new PeriodeDemandee($debut, $fin, $refus->getMessage());
+            }
+        }
+
+        return new DisponibiliteObjet($objet, $fiche->statut, $fiche->periodesReservees, $periode);
     }
 
     /**

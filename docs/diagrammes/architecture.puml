@@ -36,7 +36,7 @@ node "Hôte Docker (Docker Compose)" as hote {
 
   node "Conteneur php\nFrankenPHP (Caddy) · PHP 8.5 · Symfony 7.4 LTS" as php {
     rectangle "**Pare-feu Symfony**\nauthentification, login_throttling, UserChecker,\naccess_control, role_hierarchy\n----\n<color:#B45309>mots de passe hachés, message d'erreur générique</color>" as secu
-    rectangle "**Présentation**\nContrôleurs · Vues Twig + Tailwind\n----\n<color:#B45309>échappement Twig (XSS), aucune règle métier</color>" as presentation
+    rectangle "**Présentation**\nContrôleurs · Vues Twig + Tailwind\nAPI REST JSON des disponibilités (lecture seule)\n----\n<color:#B45309>échappement Twig (XSS), aucune règle métier,</color>\n<color:#B45309>API : GET seul, débit limité, sans donnée personnelle</color>" as presentation
     rectangle "**Formulaires / DTO**\nSymfony Form · Validator\n----\n<color:#B45309>jeton CSRF, contraintes (types, RG1)</color>" as forms
     rectangle "**Métier**\nServices (ReservationService…) · Voters\nAuditLogger · exceptions métier\n----\n<color:#B45309>RG1 à RG8, droits métier (Voters),</color>\n<color:#B45309>transaction et verrou (RG4)</color>" as metier
     rectangle "**Accès aux données**\nRepositories Doctrine ORM · DocumentManager ODM\n----\n<color:#B45309>requêtes préparées, aucun opérateur MongoDB</color>\n<color:#B45309>issu de la saisie</color>" as donnees
@@ -46,7 +46,7 @@ node "Hôte Docker (Docker Compose)" as hote {
   database "**mongodb**\nMongoDB 8.0\naudit_log\n----\n<color:#B45309>validateur $jsonSchema,</color>\n<color:#B45309>index TTL 1 an (RGPD),</color>\n<color:#B45309>rôle lecture + insertion</color>" as mongo
 }
 
-nav --> secu : HTTPS (TLS automatique Caddy)\nHTTP/2, HTTP/3
+nav --> secu : HTTPS (TLS automatique Caddy)\npages HTML et appels fetch (JSON)
 secu --> presentation
 presentation -right-> forms : valide la saisie
 presentation --> metier : délègue

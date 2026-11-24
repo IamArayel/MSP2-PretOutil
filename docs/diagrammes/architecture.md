@@ -21,6 +21,7 @@ Les dépendances vont dans un seul sens, de haut en bas : une couche n'appelle q
 |---|---|---|---|
 | Pare-feu | Security (`firewall`, `access_control`, `role_hierarchy`), `login_throttling`, `UserChecker` | Authentifier l'utilisateur et filtrer l'accès aux routes avant tout traitement | Mots de passe hachés (hasher `auto`), blocage après 5 échecs (US2), message d'erreur générique, compte désactivé refusé (RG9) |
 | Présentation | Contrôleurs, vues Twig, Tailwind | Recevoir la requête, déléguer, rendre la réponse | Échappement automatique Twig (XSS), aucune règle métier, aucun accès direct aux données |
+| Présentation (API) | `DisponibiliteController` (JSON), `ApiExceptionSubscriber`, module JavaScript de E4 | Répondre en JSON à un client qui appelle le service par HTTP (US11) | Méthode `GET` seule, débit limité par adresse IP, paramètres validés, aucune donnée personnelle, erreurs génériques ([api.md](../conception/api.md)) |
 | Formulaires / DTO | Symfony Form, Validator | Transporter et valider la saisie | Jeton CSRF, contraintes de type et de longueur, RG1 |
 | Métier | Services (`ReservationService`...), Voters, `AuditLogger` | Appliquer les règles de gestion et piloter les transactions | RG1 à RG8, droits métier par Voter (RG6), exceptions métier, verrou pour RG4, journalisation (RG8) |
 | Accès aux données | Repositories Doctrine ORM, `DocumentManager` Doctrine ODM | Lire et écrire les données | Requêtes préparées (DQL, QueryBuilder), aucun opérateur MongoDB construit à partir de la saisie |
