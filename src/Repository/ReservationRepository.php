@@ -90,6 +90,31 @@ class ReservationRepository extends ServiceEntityRepository
     }
 
     /**
+     * Parmi une liste d'objets, ceux qui ont au moins une réservation (tous statuts),
+     * en une seule requête : l'écran E7 n'affiche « Supprimer » que pour les autres.
+     * La suppression elle-même reste autorisée par ObjetVoter::SUPPRIMER.
+     *
+     * @param list<Objet> $objets
+     *
+     * @return array<int, true> identifiants des objets déjà réservés
+     */
+    public function objetsDejaReserves(array $objets): array
+    {
+        if ([] === $objets) {
+            return [];
+        }
+
+        $lignes = $this->createQueryBuilder('r')
+            ->select('DISTINCT IDENTITY(r.objet) AS objetId')
+            ->where('r.objet IN (:objets)')
+            ->setParameter('objets', $objets)
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_fill_keys(array_map(static fn (array $ligne): int => (int) $ligne['objetId'], $lignes), true);
+    }
+
+    /**
      * Vrai si l'objet a au moins une réservation, quel que soit son statut (annulée comprise).
      * Un tel objet ne peut pas être supprimé physiquement (US6) : la clé étrangère
      * fk_reservation_objet (ON DELETE RESTRICT) le refuserait.

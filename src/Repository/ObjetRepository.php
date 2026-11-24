@@ -56,6 +56,36 @@ class ObjetRepository extends ServiceEntityRepository
         );
     }
 
+    /**
+     * Écran E7 Gestion du catalogue (US6) : tous les objets, actifs puis désactivés,
+     * triés par nom, avec leur catégorie, paginés.
+     *
+     * @return Page<Objet>
+     */
+    public function listerPourGestion(int $numeroPage = 1): Page
+    {
+        $numeroPage = max(1, $numeroPage);
+
+        $requete = $this->createQueryBuilder('o')
+            ->addSelect('c')
+            ->innerJoin('o.categorie', 'c')
+            ->orderBy('o.actif', 'DESC')
+            ->addOrderBy('o.nom', 'ASC')
+            ->addOrderBy('o.id', 'ASC')
+            ->setFirstResult(($numeroPage - 1) * self::OBJETS_PAR_PAGE)
+            ->setMaxResults(self::OBJETS_PAR_PAGE)
+            ->getQuery();
+
+        $paginator = new Paginator($requete, fetchJoinCollection: false);
+
+        return new Page(
+            iterator_to_array($paginator, false),
+            \count($paginator),
+            $numeroPage,
+            self::OBJETS_PAR_PAGE,
+        );
+    }
+
     private function catalogue(CriteresCatalogue $criteres): QueryBuilder
     {
         $qb = $this->createQueryBuilder('o')
