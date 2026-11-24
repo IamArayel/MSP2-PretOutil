@@ -1,0 +1,27 @@
+# Hub Mercure, utilisé uniquement par le rechargement à chaud de FrankenPHP en
+# développement (FRANKENPHP_SITE_CONFIG: hot_reload). Importé dans le bloc du site
+# par frankenphp/Caddyfile ; jamais copié dans l'image de production.
+# Abonnés anonymes acceptés : le hub n'est joignable que depuis la machine (localhost).
+mercure {
+	# Share the hub between the addresses listed in SERVER_NAME (e.g. "localhost, php:80")
+	name default
+	# Trusted issuer: binds the iss claim access tokens must carry to its keys.
+	# In production, set MERCURE_TRUSTED_ISSUERS to the stable identifier of your token issuer
+	# (your app's URL for self-issued tokens).
+	issuer {$MERCURE_TRUSTED_ISSUERS:https://localhost} {
+		# Publisher JWT key
+		publisher {
+			jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
+		}
+		# Subscriber JWT key
+		subscriber {
+			jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} {env.MERCURE_SUBSCRIBER_JWT_ALG}
+		}
+	}
+	# Allow anonymous subscribers (double-check that it's what you want)
+	anonymous
+	# Enable the subscription API (double-check that it's what you want)
+	subscriptions
+	# Extra directives
+	{$MERCURE_EXTRA_DIRECTIVES}
+}
