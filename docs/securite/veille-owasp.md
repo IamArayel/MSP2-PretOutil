@@ -21,10 +21,10 @@ Consultées le 2026-11-24.
 | Risque OWASP 2025 | En bref | Concerne Prêt'Outil ? | Mesure en place | Preuve |
 |---|---|---|---|---|
 | **A01 Contrôle d'accès défaillant** | Un utilisateur agit hors de ses droits : page d'un autre rôle, ressource d'un autre utilisateur (IDOR), SSRF | Oui : 3 rôles, réservations personnelles | `access_control` par préfixe (`config/packages/security.yaml`), `IsGranted` sur chaque contrôleur, Voters `ObjetVoter` et `ReservationVoter` (propriétaire seul pour annuler), actions en POST uniquement. SSRF : non concerné, l'application n'appelle aucune URL externe | `ControleAccesTest` : 20 routes × 4 profils, route oubliée détectée, IDOR sur l'annulation, actions refusées en GET ; tests des Voters |
-| **A02 Mauvaise configuration de sécurité** | Réglages par défaut, services inutiles, messages d'erreur trop bavards, en-têtes manquants | Oui | Ports des bases publiés sur `127.0.0.1` seulement ; secrets dans `.env.local` non versionné ; compte applicatif aux droits minimaux (PostgreSQL et MongoDB) ; cookie de session `secure`, `httponly`, `samesite=lax` ; HTTP redirigé vers HTTPS (308) ; erreurs de l'API génériques (`ApiExceptionSubscriber`) | `ReservationServiceIntegrationTest::testCompteApplicatif`, `AuditLogIntegrationTest` (suppression refusée, code 13), `bin/console app:mongodb:check` ; en-têtes relevés le 2026-11-24 (section 5, constats) |
+| **A02 Mauvaise configuration de sécurité** | Réglages par défaut, services inutiles, messages d'erreur trop bavards, en-têtes manquants | Oui | Ports des bases publiés sur `127.0.0.1` seulement ; secrets dans `.env.local` non versionné ; compte applicatif aux droits minimaux (PostgreSQL et MongoDB) ; cookie de session `secure`, `httponly`, `samesite=lax` ; HTTP redirigé vers HTTPS (308) ; en-têtes de sécurité sur chaque réponse (`EntetesSecuriteSubscriber` : HSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) ; hub Mercure limité au développement (`frankenphp/dev.d/`) ; erreurs de l'API génériques (`ApiExceptionSubscriber`) | `EntetesSecuriteTest` ; `ReservationServiceIntegrationTest::testCompteApplicatif`, `AuditLogIntegrationTest` (suppression refusée, code 13), `bin/console app:mongodb:check` |
 | **A03 Défaillances de la chaîne d'approvisionnement** | Dépendance vulnérable, abandonnée ou piégée ; outils de build compromis | Oui : Composer, images Docker | `composer.lock` versionné ; Symfony 7.4 LTS ; `composer audit` et `importmap:audit` sans faille ; aucune dépendance JavaScript tierce (importmap limité à `app.js`) | Section 4 |
 | **A04 Défaillances cryptographiques** | Données sensibles en clair, algorithmes faibles | Oui : mots de passe, session | Hasher `auto` (bcrypt ou Argon2id, salé) conforme à la CNIL ; HTTPS par Caddy ; cookie de session `secure` | `SecuriteTest::testMotDePasseStockeSousFormeDEmpreinte` |
-| **A05 Injection** | SQL, NoSQL, XSS, commandes | Oui : PostgreSQL, MongoDB, pages Twig | Voir section 3 | `SecuriteTest` : injections SQL et NoSQL, XSS sur E3, E4, E7, E9 et l'API |
+| **A05 Injection** | SQL, NoSQL, XSS, commandes | Oui : PostgreSQL, MongoDB, pages Twig | Voir section 3 ; contre le XSS, en seconde barrière, une `Content-Security-Policy` n'exécute que les scripts qui portent le nonce de la requête | `SecuriteTest` : injections SQL et NoSQL, XSS sur E3, E4, E7, E9 et l'API ; `EntetesSecuriteTest` : CSP sans `unsafe-inline`, nonce sur chaque script |
 | **A06 Conception non sécurisée** | Faille dans la règle elle-même, que le code applique fidèlement | Oui : réservation concurrente, quota | Règles RG1 à RG7 centralisées dans `ReservationService` ; contrainte `EXCLUDE` en base contre la double réservation ; verrou sur l'adhérent pour le quota ; limitation de débit de l'API ; aucune donnée personnelle dans l'API | `ReservationServiceTest` (35 tests), `ReservationServiceIntegrationTest` (`EXCLUDE`, quota), `DisponibiliteControllerTest` (429, aucune donnée personnelle) |
 | **A07 Défaillances d'authentification** | Force brute, mots de passe faibles, session mal gérée | Oui | `login_throttling` (5 échecs en 15 minutes) ; mot de passe de 12 caractères minimum ; message d'échec générique ; jeton CSRF sur la connexion et la déconnexion ; compte désactivé refusé (`UtilisateurChecker`) ; identifiant de session renouvelé à la connexion (stratégie par défaut de Symfony) | `SecuriteTest` : blocage après 5 échecs, CSRF de la connexion ; `ControleAccesTest` : compte désactivé, déconnexion sans jeton refusée |
 | **A08 Défaillances d'intégrité des logiciels ou des données** | Code ou données modifiés sans contrôle, désérialisation non sûre | Peu | Aucun `unserialize` ni `exec` sur une donnée reçue ; schéma de la base modifié uniquement par des migrations versionnées ; journal d'audit en ajout seul (rôle `auditAppendOnly`) et validé par `$jsonSchema` | `AuditLogIntegrationTest` : documents invalides refusés (121), modification et suppression refusées (13) |
@@ -70,10 +70,10 @@ Mise à jour : `composer update "symfony/*"` dans la contrainte `7.4.*`, puis la
 
 ### Constats de la veille
 
-| Constat | Risque | Suite proposée |
+| Constat | Risque | Suite donnée |
 |---|---|---|
-| Aucun en-tête de sécurité HTTP : ni `Strict-Transport-Security`, ni `Content-Security-Policy`, ni `X-Frame-Options`, ni `X-Content-Type-Options`, ni `Referrer-Policy` (relevé sur `/connexion`) | A02 : clickjacking possible, pas de seconde barrière si un XSS passait | Ajouter ces en-têtes dans le `Caddyfile` (directive `header`) ; quelques lignes, sans effet sur le code. À décider en binôme |
-| Hub Mercure du squelette `symfony-docker` actif, avec abonnements anonymes, alors que l'application ne l'utilise pas ; secret par défaut en développement | A02 : service exposé inutilement | Retirer le bloc `mercure` du `Caddyfile` ; en production, le secret vient de `CADDY_MERCURE_JWT_SECRET` |
+| Aucun en-tête de sécurité HTTP : ni `Strict-Transport-Security`, ni `Content-Security-Policy`, ni `X-Frame-Options`, ni `X-Content-Type-Options`, ni `Referrer-Policy` (relevé sur `/connexion`) | A02 : clickjacking possible, pas de seconde barrière si un XSS passait | **Corrigé** (section 6) |
+| Hub Mercure du squelette `symfony-docker` actif, avec abonnements anonymes, alors que l'application ne l'utilise pas ; secret par défaut en développement | A02 : service exposé inutilement | **Corrigé** (section 6) |
 | L'inscription signale un email déjà utilisé, et n'a pas de limitation de débit | A07 : énumération des comptes, création de comptes en masse | Accepté pour le MVP (le message aide l'utilisateur ; la connexion, elle, reste générique) ; limiteur de débit sur `/inscription` en évolution |
 | Mot de passe : 12 caractères minimum, sans exigence de complexité | A07 | Conforme au cas « restriction d'accès » de la CNIL (au moins 50 bits d'entropie avec un nombre d'essais limité, assuré par `login_throttling`) ; liste de mots de passe courants refusés en évolution |
 
@@ -87,3 +87,33 @@ Mise à jour : `composer update "symfony/*"` dans la contrainte `7.4.*`, puis la
 | Chiffrement des échanges entre conteneurs (PostgreSQL, MongoDB) | Réseau Docker interne, ports publiés sur `127.0.0.1` seulement |
 | Analyse automatique dans une intégration continue (audit, SAST) | Pas de CI dans le MVP ; `composer audit` à lancer à la main avant chaque fusion de fin de journée (README, commandes utiles) |
 | Suppression automatique des comptes inactifs depuis 3 ans (RGPD) | Durée décrite et point de départ enregistré (`derniereActiviteLe`) ; purge non automatisée dans le MVP (cahier des charges, section 8) |
+
+## 6. Corrections après la veille
+
+Appliquées le 2026-11-24, sur la branche `chore/entetes-securite`.
+
+### En-têtes de sécurité HTTP
+
+Posés par `src/EventSubscriber/EntetesSecuriteSubscriber.php` sur chaque réponse de l'application (pages et API) :
+
+| En-tête | Valeur | Ce qu'il empêche |
+|---|---|---|
+| `Content-Security-Policy` | `default-src 'self'`, `script-src 'nonce-…' 'strict-dynamic'`, `style-src 'self'`, `img-src 'self' data:`, `connect-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | Un script injecté (XSS) ne s'exécute pas : il ne connaît pas le nonce, tiré au hasard à chaque requête. Formulaires envoyés vers un autre site, page affichée dans un cadre |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`, en HTTPS seulement | Retour forcé en HTTP (interception sur un réseau public). Désactivé en développement : sur `localhost`, il s'imposerait aux autres projets |
+| `X-Frame-Options` | `DENY` | Clickjacking, pour les navigateurs qui ignorent `frame-ancestors` |
+| `X-Content-Type-Options` | `nosniff` | Fichier interprété comme un script contre son type déclaré |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Adresse complète des pages transmise à un autre site |
+| `Permissions-Policy` | caméra, micro, géolocalisation, paiement désactivés | Usage de ces fonctions par un script injecté |
+
+Adaptations du code pour respecter la CSP :
+
+- le nonce est placé sur les balises `<script>` par la fonction Twig `csp_nonce()` (`src/Twig/CspExtension.php`), transmise à `importmap()` ;
+- les confirmations « Annuler la réservation » et « Supprimer définitivement » n'utilisent plus `onsubmit="…"`, que la CSP bloquerait, mais `data-confirmation` et `assets/confirmation.js` ;
+- la page d'erreur de débogage de Symfony (styles et scripts en ligne) n'a pas de CSP, en développement seulement.
+
+Preuve : `tests/Controller/EntetesSecuriteTest.php` (12 tests). En désactivant le subscriber, 11 échouent. Un test refuse aussi tout `on…=` ou `javascript:` dans les gabarits.
+
+### Hub Mercure
+
+Le bloc `mercure` quitte `frankenphp/Caddyfile` pour `frankenphp/dev.d/mercure.caddy`, monté par `compose.override.yaml` uniquement : le rechargement à chaud de FrankenPHP, en développement, en a besoin. L'image de production n'embarque pas ce dossier, le `Caddyfile` n'y déclare donc aucun hub (vérifié avec `frankenphp adapt`). Les variables `MERCURE_*` inutilisées sont retirées de `compose.yaml` et `compose.prod.yaml`.
+
