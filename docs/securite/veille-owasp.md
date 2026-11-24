@@ -62,7 +62,7 @@ Avis Symfony récents confrontés aux versions installées :
 |---|---|---|---|---|
 | CVE-2026-135802 ([GHSA-5mx8-mwrp-5693](https://symfony.com/blog/ghsa-5mx8-mwrp-5693-generated-urls-can-point-to-a-host-chosen-by-the-client)) : URL générées vers un hôte choisi par le client | `symfony/http-foundation` | 7.4.23 | 7.4.23 | Corrigé |
 | CVE-2026-135801 ([GHSA-3h27-hjv7-fqjx](https://symfony.com/blog/ghsa-3h27-hjv7-fqjx-path-rules-enforced-in-front-of-php-can-be-bypassed-by-appending-the-path-to-the-script-name)) : règles de chemin du serveur web contournables (`/index.phpadmin`) | `symfony/http-foundation` | 7.4.23 | 7.4.23 | Corrigé ; de plus, `/admin` est protégé par le pare-feu Symfony, que cette faille ne contourne pas |
-| Avis Symfony UX du 2026-11-24 (`ux-icons`, `ux-live-component`, `stimulus-bridge`) | Symfony UX | — | Non installé | Non concerné |
+| Avis Symfony UX du 2026-11-24 (`ux-icons`, `ux-live-component`, `stimulus-bridge`) | Symfony UX | Sans objet | Non installé | Non concerné |
 
 Mise à jour : `composer update "symfony/*"` dans la contrainte `7.4.*`, puis la suite de tests. Les versions 8.x sont disponibles ; le projet reste sur la LTS 7.4, maintenue pour les correctifs de sécurité.
 

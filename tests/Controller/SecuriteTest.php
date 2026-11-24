@@ -375,7 +375,7 @@ final class SecuriteTest extends WebTestCase
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
     }
 
-    /** API : les caractères < et > sont encodés en < >, la valeur décodée est intacte. */
+    /** API : les caractères < et > sont encodés en \u003C et \u003E, la valeur décodée est intacte. */
     public function testObjetPiegeEchappeDansLApi(): void
     {
         $id = $this->objetPiege();

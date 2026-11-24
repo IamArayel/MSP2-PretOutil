@@ -203,8 +203,8 @@ Schéma complet (couches, conteneurs Docker, sécurité, éco-conception) : [doc
 - [x] Diagramme de séquence « Réserver un objet »
 - [x] MCD, MPD, script de création de la BDD et fixtures du jeu d'essai
 - [x] Procédure de sauvegarde et de restauration de la BDD
-- [ ] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
-- [ ] Veille sécurité (OWASP Top 10, injections SQL et NoSQL)
+- [x] Plan de tests et jeu d'essai de la fonctionnalité « Réserver un objet »
+- [x] Veille sécurité (OWASP Top 10, injections SQL et NoSQL)
 - [ ] Dossier de projet (30 à 40 pages) et diaporama
 
 ### Maquettes et diagrammes
@@ -244,7 +244,7 @@ plantuml -tsvg -tpng docs/diagrammes/cas-utilisation.puml
 | J4     | Catalogue paginé et filtré (requête de disponibilité), CRUD des objets, Voters                                                                                           | Extraits des repositories ([notes J4](docs/dossier/notes-j4.md))                | ✅     |
 | J5     | `ReservationService` (RG1 à RG6), exceptions métier, formulaire de réservation                                                                                           | Code métier, cas d'exception ([notes J5](docs/dossier/notes-j5.md))             | ✅     |
 | J6     | Sortie, retour, annulation, mes réservations. API REST des disponibilités appelée par E4 (US11). Document `AuditLog` (ODM), `AuditLogger`, page du journal               | Extraits du code NoSQL ([notes J6](docs/dossier/notes-j6.md))                   | ✅     |
-| J7     | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai                                                                | Plan de tests, tableau entrée / attendu / obtenu, veille OWASP                  | 🟡     |
+| J7     | Tests unitaires des RG, tests fonctionnels de sécurité (accès, CSRF, injection), exécution du jeu d'essai                                                                | Plan de tests, jeu d'essai, veille OWASP ([notes J7](docs/dossier/notes-j7.md)) | ✅     |
 | J8     | Finitions Tailwind, accessibilité de base, corrections. **Gel du code le soir**                                                                                          | Captures d'écran                                                                | ⬜     |
 | J9     |                                                                                                                                                                          | Rédaction du dossier                                                            | ⬜     |
 | J10    |                                                                                                                                                                          | Fin du dossier et diaporama                                                     | ⬜     |
@@ -788,3 +788,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | En-têtes de sécurité posés par Symfony (`EntetesSecuriteSubscriber`) plutôt que par Caddy                                                                                                                                                  | La CSP repose sur un nonce tiré à chaque requête, que seule l'application connaît ; les en-têtes sont ainsi testés avec les autres tests fonctionnels                                                                                                                                 |
 | 2026-11-24 | Hub Mercure gardé en développement seulement (`frankenphp/dev.d/`)                                                                                                                                                                         | Le rechargement à chaud de FrankenPHP en dépend ; l'application ne l'utilise pas, la production n'expose donc plus de hub                                                                                                                                                             |
 | 2026-11-24 | Confirmations des actions irréversibles en `data-confirmation` au lieu de `onsubmit`                                                                                                                                                       | La CSP n'exécute aucun JavaScript écrit dans le HTML                                                                                                                                                                                                                                  |
+| 2026-11-24 | US9 (gestion des comptes, écran E8) placée au matin de J8, avant les finitions et le gel du code | Active les actions `COMPTE_DESACTIVE` et `ROLE_MODIFIE` du journal, prévues mais jamais écrites ; l'occasion d'ajouter `IsGranted('ROLE_ADMIN')` sur `/admin` |
+| 2026-11-24 | Clôture de J7 : suite complète relancée sur une base de test recréée (257 tests, 794 assertions), audits des dépendances sans faille | Preuve que la suite ne dépend pas d'un état laissé par un lancement précédent |

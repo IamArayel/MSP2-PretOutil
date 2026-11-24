@@ -142,7 +142,7 @@ Test : [tests/Controller/SecuriteTest.php](../../tests/Controller/SecuriteTest.p
 | | | Même test : `action=$ne`, `action={"$ne":null}` | 200, filtre ignoré avec le message « Type d'action inconnu » |
 | XSS | Échappement automatique de Twig ; `JsonResponse` encode `<` et `>` | `testObjetPiegeEchappeSurLesPages` : objet nommé `<script>alert(1)</script>`, description `<img src=x onerror=alert(2)>`, sur E3, E4 et E7 | Balises affichées comme du texte (`&lt;script&gt;`) |
 | | | `testObjetPiegeEchappeDansLeJournal` : même nom dans le détail de E9 | Échappé |
-| | | `testObjetPiegeEchappeDansLApi` | `<script>` dans le JSON, valeur décodée intacte |
+| | | `testObjetPiegeEchappeDansLApi` | `<` et `>` encodés en `\u003C` et `\u003E` dans le JSON, valeur décodée intacte |
 | Force brute sur la connexion (US2) | `login_throttling` : 5 échecs en 15 minutes | `testConnexionBloqueeApresCinqEchecs` : 5 échecs puis le bon mot de passe | « Trop de tentatives de connexion », aucune session |
 | | | `testConnexionPossibleSousLeSeuil` : témoin, 4 échecs puis le bon mot de passe | Session ouverte |
 | XSS (seconde barrière) | `Content-Security-Policy` avec nonce, sans `unsafe-inline` | `EntetesSecuriteTest::testChaqueScriptPorteLeNonceDeLaRequete`, `testAucunJavaScriptEnLigneDansLesGabarits` | Chaque script porte le nonce ; aucun `on…=` dans les gabarits |
