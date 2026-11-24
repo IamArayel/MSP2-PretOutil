@@ -72,16 +72,16 @@ Preuve : `AccessibiliteTest` (13 tests). En retirant le lien vers l'aide dans le
 
 ## 5. Vérifications manuelles
 
-Le certificat local bloque les navigateurs automatisés : ces contrôles se font dans un vrai navigateur. Ce que le code garantit déjà est indiqué ; le résultat reste à confirmer à la main.
+Le certificat local bloque les navigateurs automatisés : ces contrôles se font dans un vrai navigateur. Faits par Anthony le 2026-11-24, sur les fixtures.
 
 | Contrôle | Déjà garanti par le code | Résultat à la main |
 |---|---|---|
-| Parcours au clavier seul : se connecter, filtrer le catalogue, réserver, annuler | Ordre de tabulation = ordre du HTML, aucun `tabindex` positif, focus visible partout, confirmation d'annulation par `window.confirm` (accessible au clavier) | À faire |
-| Lien d'évitement : premier élément atteint par Tab, mène au contenu | Premier lien de la page, visible au focus | À faire |
-| VoiceOver sur E4 : message de l'API annoncé après la saisie des dates | Zone `role="status"` et `aria-live="polite"` toujours présente, texte inséré par `textContent` | À faire |
-| VoiceOver sur E2 en erreur : erreur et aide lues avec le champ | `aria-describedby` et `aria-invalid` (testés) | À faire |
-| Zoom à 200 % : aucun contenu coupé ni masqué | Mises en page en flex et grille qui passent à la ligne | À faire |
-| Mobile (375 px) : navigation, cartes du catalogue, formulaire de réservation, tableau de E5 | Balise `viewport`, colonnes empilées sous `sm`, tableau de E5 défilant seul (`overflow-x-auto`) | À faire |
+| Parcours au clavier seul : se connecter, filtrer le catalogue, réserver, annuler | Ordre de tabulation = ordre du HTML, aucun `tabindex` positif, focus visible partout, confirmation d'annulation par `window.confirm` (accessible au clavier) | Conforme |
+| Lien d'évitement : premier élément atteint par Tab, mène au contenu | Premier lien de la page, visible au focus | Conforme |
+| VoiceOver sur E4 : message de l'API annoncé après la saisie des dates | Zone `role="status"` et `aria-live="polite"` toujours présente, texte inséré par `textContent` | Conforme |
+| VoiceOver sur E2 en erreur : erreur et aide lues avec le champ | `aria-describedby` et `aria-invalid` (testés) | Conforme |
+| Zoom à 200 % : aucun contenu coupé ni masqué | Mises en page en flex et grille qui passent à la ligne | Conforme |
+| Mobile (375 px) : navigation, cartes du catalogue, formulaire de réservation, tableau de E5 | Balise `viewport`, colonnes empilées sous `sm`, tableau de E5 défilant seul (`overflow-x-auto`) | Conforme |
 
 ## 6. Écrans de gestion (E6 à E9)
 
