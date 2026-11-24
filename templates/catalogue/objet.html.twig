@@ -70,9 +70,13 @@
                 </div>
                 {{ regles }}
             {% else %}
-                {{ form_start(reservation, {attr: {class: 'mt-4', novalidate: 'novalidate'}}) }}
+                {# data-disponibilites-url : vérification des dates par l'API (US11, assets/disponibilites.js) #}
+                {{ form_start(reservation, {attr: {class: 'mt-4', novalidate: 'novalidate', 'data-disponibilites-url': path('api_objet_disponibilites', {id: objet.id})}}) }}
                     {{ form_row(reservation.debut) }}
                     {{ form_row(reservation.fin) }}
+
+                    {# Réponse de l'API, annoncée aux lecteurs d'écran : la zone reste dans la page, seul son contenu change #}
+                    <div data-disponibilites-resultat role="status" aria-live="polite"></div>
 
                     {# Refus d'une règle de gestion (ReservationService), affiché tel quel #}
                     {% for erreur in reservation.vars.errors %}
