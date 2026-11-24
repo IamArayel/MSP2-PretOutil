@@ -87,6 +87,9 @@ class ReservationRepository extends ServiceEntityRepository
         }
 
         return $statuts;
+    }
+
+    /**
      * Vrai si l'objet a au moins une réservation, quel que soit son statut (annulée comprise).
      * Un tel objet ne peut pas être supprimé physiquement (US6) : la clé étrangère
      * fk_reservation_objet (ON DELETE RESTRICT) le refuserait.
