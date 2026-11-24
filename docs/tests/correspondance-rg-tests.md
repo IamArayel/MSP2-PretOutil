@@ -1,6 +1,6 @@
 # Correspondance règles de gestion → tests
 
-Tickets : [#45 J5-A2 Tests de ReservationService (RG1 à RG6)](https://github.com/IamArayel/MSP2-PretOutil/issues/45), [#55 J6-B1 Sorties et retours](https://github.com/IamArayel/MSP2-PretOutil/issues/55)
+Tickets : [#45 J5-A2 Tests de ReservationService (RG1 à RG6)](https://github.com/IamArayel/MSP2-PretOutil/issues/45), [#55 J6-B1 Sorties et retours](https://github.com/IamArayel/MSP2-PretOutil/issues/55), [#56 J6-B2 Journal d'audit](https://github.com/IamArayel/MSP2-PretOutil/issues/56)
 
 Objectif O5 du cahier des charges : 100 % des règles RG1 à RG6 couvertes par au moins un test qui fait échouer la règle et un test qui la respecte.
 
@@ -36,6 +36,14 @@ Lancer les tests : `docker compose exec php bin/phpunit --testdox` (prérequis :
 | **US7** Valider une sortie | `testSortieRefusee` : période qui commence demain ; déjà en cours ; annulée ; objet hors service ; objet pas encore rendu par l'emprunteur précédent → `SortieImpossibleException`, statut inchangé | `testValiderSortie` (période commencée aujourd'hui, statut relu sous verrou), `testValiderSortieDUnePeriodeCommenceeLaVeille` |
 | **US8** Enregistrer un retour | `testRetourRefuse` : confirmée ; terminée ; annulée → `RetourImpossibleException`, état de l'objet inchangé | `testEnregistrerRetour` : bon ; abîmé ; objet abîmé rendu en bon état |
 | **RG7** Retour hors service | | `testRG7RetourHorsServiceSignaleLesReservationsAVenir` : objet hors service, réservations à venir renvoyées, pas annulées |
+
+## Journal d'audit (RG8, US10)
+
+| Règle | Cas refusé | Cas accepté |
+|---|---|---|
+| **RG8** Toute action sensible est journalisée | `AuditLogIntegrationTest::testDocumentInvalideRefuseParLeValidateur` : action inconnue, champ non prévu, acteur sans email → refusés par MongoDB (code 121)<br>`testModificationEtSuppressionInterdites` : le compte applicatif ne peut ni modifier ni supprimer (code 13) | `testDocumentEcritPuisRelu`, `testDetailsVidesEcritsCommeUnObjet`, `testConnexionEchoueeJournalisee`<br>`AuditLoggerTest::testDocumentConstruitDepuisLAction` |
+| **RG8** sans bloquer l'application | | `AuditLoggerTest::testMongoDbIndisponibleNeBloquePasLActionMetier` |
+| **US10** Consulter et filtrer le journal | | `testListeFiltreeParActionDuPlusRecentAuPlusAncien` |
 
 ## Autres vérifications
 
