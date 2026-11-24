@@ -544,6 +544,7 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | Arrêter les conteneurs | `docker compose down` |
 | Suivre les logs | `docker compose logs -f php` |
 | Console Symfony | `docker compose exec php bin/console <commande>` |
+| Vider le cache (gabarit Twig modifié mais pas pris en compte : FrankenPHP garde l'application en mémoire en mode worker) | `docker compose exec php bin/console cache:clear` |
 | Ajouter une dépendance | `docker compose exec php composer require <paquet>` |
 | Compiler les styles (minifiés) | `docker compose exec php bin/console tailwind:build --minify` |
 | Installer les dépendances (conteneur `php` arrêté) | `docker compose run --rm --no-deps php composer install` |
@@ -680,3 +681,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | J6 en 5 tickets GitHub (#49, #54 à #57) : écran E5 et annulation, API des disponibilités pour Anthony ; sorties et retours (E6), journal d'audit MongoDB et écran E9 pour Chloé ; relecture croisée ensemble | Anthony prolonge E4 et la réservation ; Chloé prolonge la gestion (E7) et MongoDB qu'elle a installé ; la relecture croisée couvre la partie NoSQL pour les deux |
 | 2026-11-24 | Remarques de relecture de J4 intégrées à J6 : action `OBJET_SUPPRIME` (#56), réservations à venir signalées lors d'un retour hors service (#55) | Elles dépendaient de l'`AuditLogger` réel et des retours, réalisés à J6 ; la réactivation d'un objet reste hors MVP |
 | 2026-11-24 | US9 (gestion des comptes, écran E8, « Should ») non planifiée à J6 | Les « Must » passent d'abord ; à placer en J8 ou dans la marge si le temps le permet |
+| 2026-11-24 | Écran E5 dans un contrôleur dédié (`MesReservationsController`), page provisoire retirée de `EspaceController` | Une responsabilité par contrôleur ; évite un conflit avec le remplacement de `/gestion` par l'écran E6 (#55) |
+| 2026-11-24 | Bouton « Annuler » affiché selon `ReservationVoter::ANNULER`, action protégée par le même Voter et un jeton CSRF propre à chaque réservation | La règle RG6 n'est écrite qu'à un endroit ; un jeton ne peut pas servir à annuler une autre réservation |
+| 2026-11-24 | Liste E5 non paginée | Un adhérent a au plus 3 réservations actives et peu d'historique dans le MVP ; une requête avec jointure suffit (3 requêtes par page) |
