@@ -105,7 +105,7 @@ final class SortiesRetoursController extends AbstractController
         $objet = $retour->getObjet()->getNom();
 
         if ([] === $aSignaler) {
-            return \sprintf('%s est maintenant hors service : il n\'est plus réservable. Aucune réservation à venir.', $objet);
+            return \sprintf('L\'objet « %s » est maintenant hors service : il n\'est plus réservable. Aucune réservation à venir.', $objet);
         }
 
         $lignes = array_map(
@@ -122,7 +122,7 @@ final class SortiesRetoursController extends AbstractController
         $nombre = \count($aSignaler);
 
         return \sprintf(
-            '%s est maintenant hors service : il n\'est plus réservable. %s, non %s automatiquement : %s.',
+            'L\'objet « %s » est maintenant hors service : il n\'est plus réservable. %s, non %s automatiquement : %s.',
             $objet,
             1 === $nombre
                 ? 'Prévenez l\'adhérent de sa réservation à venir'

@@ -122,12 +122,12 @@ Preuve : `AccessibiliteTest`, étendu aux écrans de gestion (69 tests). Trois v
 
 ## 8. Vérifications manuelles des écrans de gestion
 
-Même méthode que la section 5, dans un vrai navigateur.
+Même méthode que la section 5, dans le navigateur intégré de l'éditeur (Chromium), le 2026-11-24, sur les fixtures ([#79](https://github.com/IamArayel/MSP2-PretOutil/issues/79)). Les listes de choix natives ne reçoivent pas les touches simulées par l'outil : la valeur y est choisie par l'outil, la suite du parcours (Tab, Entrée) au clavier.
 
 | Parcours au clavier seul | Déjà garanti par le code | Résultat à la main |
 |---|---|---|
-| Valider une sortie (E6) | Bouton atteint par Tab dans l'ordre de la ligne ; message de succès en `role="status"` | À faire |
-| Enregistrer un retour hors service (E6) | Liste « État au retour » puis bouton de la même ligne ; avertissement RG7 en `role="alert"` | À faire |
-| Créer puis désactiver un objet (E7) | Formulaire du thème (étiquettes, erreurs reliées) ; « Désactiver » atteint dans la ligne de l'objet | À faire |
-| Filtrer le journal (E9) | Liste, puis « Filtrer » ; « Réinitialiser » apparaît ensuite | À faire |
-| Mobile (375 px) : E6 à E9 | Tableaux défilants dans leur cadre, page sans défilement horizontal | À faire |
+| Valider une sortie (E6) | Bouton atteint par Tab dans l'ordre de la ligne ; message de succès en `role="status"` | Conforme : Entrée sur « Valider la sortie : Brouette, Camille Martin », message « Sortie validée » |
+| Enregistrer un retour hors service (E6) | Liste « État au retour » puis bouton de la même ligne ; avertissement RG7 en `role="alert"` | Conforme : de la liste, Tab mène au bouton de la même ligne ; succès et avertissement RG7 affichés. Message corrigé à cette occasion (accord avec le nom de l'objet) |
+| Créer puis désactiver un objet (E7) | Formulaire du thème (étiquettes, erreurs reliées) ; « Désactiver » atteint dans la ligne de l'objet | Conforme : formulaire vide refusé (422, trois erreurs sous les champs), objet créé, puis désactivé au clavier |
+| Filtrer le journal (E9) | Liste, puis « Filtrer » ; « Réinitialiser » apparaît ensuite | Conforme : Tab de la liste à « Filtrer », Entrée, seules les entrées « SORTIE_VALIDEE » restent |
+| Mobile (375 px) : E6 à E9 | Tableaux défilants dans leur cadre, page sans défilement horizontal | Conforme : sur E6, E7, E8 et E9, chaque tableau défile dans son cadre et la page ne déborde pas (vérifié aussi sur E3 et E5) |
