@@ -6,9 +6,11 @@ namespace App\Repository;
 
 use App\Entity\Objet;
 use App\Entity\Reservation;
+use App\Entity\Utilisateur;
 use App\Enum\StatutReservation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\LockMode;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -130,5 +132,74 @@ class ReservationRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
 
         return null !== $resultat;
+    }
+
+    /**
+     * Verrouille la ligne de l'adhérent jusqu'à la fin de la transaction en cours
+     * (SELECT ... FOR UPDATE) : deux demandes simultanées du même adhérent passent
+     * l'une après l'autre et ne peuvent pas dépasser le quota (RG4).
+     */
+    public function verrouillerAdherent(Utilisateur $adherent): void
+    {
+        $this->getEntityManager()->lock($adherent, LockMode::PESSIMISTIC_WRITE);
+    }
+
+    /** Réservations actives (confirmées ou en cours) d'un adhérent (RG4). */
+    public function compterActives(Utilisateur $adherent): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->where('r.utilisateur = :adherent')
+            ->andWhere('r.statut IN (:statutsActifs)')
+            ->setParameter('adherent', $adherent)
+            ->setParameter('statutsActifs', $this->valeursActives(), ArrayParameterType::STRING)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Vrai si une réservation active de l'objet chevauche la période (RG2).
+     * Bornes incluses, comme la contrainte ex_reservation_chevauchement.
+     */
+    public function existeChevauchement(Objet $objet, \DateTimeImmutable $debut, \DateTimeImmutable $fin): bool
+    {
+        return null !== $this->createQueryBuilder('r')
+            ->select('1')
+            ->where('r.objet = :objet')
+            ->andWhere('r.statut IN (:statutsActifs)')
+            ->andWhere('r.dateDebut <= :fin')
+            ->andWhere('r.dateFin >= :debut')
+            ->setParameter('objet', $objet)
+            ->setParameter('statutsActifs', $this->valeursActives(), ArrayParameterType::STRING)
+            ->setParameter('debut', $debut, Types::DATE_IMMUTABLE)
+            ->setParameter('fin', $fin, Types::DATE_IMMUTABLE)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Vrai si l'objet est sorti et que sa date de retour est dépassée : il n'est pas
+     * réservable tant que le retour n'est pas enregistré (décision du 2026-11-24).
+     */
+    public function existeRetourEnRetard(Objet $objet, \DateTimeImmutable $aujourdhui): bool
+    {
+        return null !== $this->createQueryBuilder('r')
+            ->select('1')
+            ->where('r.objet = :objet')
+            ->andWhere('r.statut = :enCours')
+            ->andWhere('r.dateFin < :aujourdhui')
+            ->setParameter('objet', $objet)
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            ->setParameter('aujourdhui', $aujourdhui, Types::DATE_IMMUTABLE)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /** @return list<string> */
+    private function valeursActives(): array
+    {
+        return array_map(static fn (StatutReservation $statut): string => $statut->value, StatutReservation::actifs());
     }
 }

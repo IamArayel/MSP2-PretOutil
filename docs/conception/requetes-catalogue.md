@@ -28,6 +28,7 @@ Les requêtes sont construites avec le QueryBuilder de Doctrine : toutes les val
 | Tri stable | Par nom, puis par identifiant : deux objets de même nom gardent le même ordre d'une page à l'autre |
 | Pagination | `Paginator` de Doctrine, 20 objets par page ; un numéro de page inférieur à 1 est ramené à 1 |
 | Pas de requête par objet | La catégorie est chargée dans la même requête (`addSelect`) : une page coûte 2 requêtes (liste et comptage), quel que soit le nombre d'objets |
+| Retour en retard (décision du 2026-11-24, ticket #44) | Un objet sorti dont la date de fin est passée n'est disponible sur aucune période tant que son retour n'est pas enregistré : `o.id NOT IN (...)`, même règle que `ReservationService` |
 | Périodes réservées (E4) | Dates seules, sans donnée sur l'adhérent (minimisation RGPD) |
 
 Requête SQL produite par Doctrine pour le filtre de disponibilité (extrait du journal) :
@@ -39,12 +40,14 @@ WHERE o0_.actif = true AND o0_.etat <> ?
   AND (NOT (EXISTS (SELECT 1 FROM reservation r2_
                     WHERE r2_.objet_id = o0_.id AND r2_.statut IN (?, ?)
                       AND r2_.date_debut <= ? AND r2_.date_fin >= ?)))
+  AND o0_.id NOT IN (SELECT r3_.objet_id FROM reservation r3_
+                     WHERE r3_.statut = ? AND r3_.date_fin < ?)
 ORDER BY o0_.nom ASC, o0_.id ASC LIMIT 20
 ```
 
-## 3. Vérification sur les fixtures : 19 cas, 19 conformes
+## 3. Vérification sur les fixtures : 20 cas, 20 conformes
 
-Exécutée le 2026-11-24 avec [requetes_catalogue_tests.php](requetes_catalogue_tests.php), sur les fixtures chargées le jour même. J désigne le jour du chargement.
+Exécutée le 2026-11-24 avec [requetes_catalogue_tests.php](requetes_catalogue_tests.php), sur les fixtures chargées le jour même, après l'ajout de la règle du retour en retard (cas 8 à 11, 14 et 15 mis à jour). J désigne le jour du chargement.
 
 | N° | Cas | Attendu | Obtenu |
 |---|---|---|---|
@@ -55,18 +58,19 @@ Exécutée le 2026-11-24 avec [requetes_catalogue_tests.php](requetes_catalogue_
 | 5 | Page 3, au-delà de la dernière | Aucun objet, total 23 | Aucun objet, total 23 |
 | 6 | Page 0 ou négative | Ramenée à la page 1 | Ramenée à la page 1 |
 | 7 | Catégorie Outillage | 6 objets | 6 objets |
-| 8 | Période J+7 à J+9 | 21 objets : Tente (réservée) et Meuleuse (hors service) exclues | 21 objets, les deux exclues |
-| 9 | Période J+9 à J+10, bornes incluses | 20 objets : Tente (finit J+9) et Taille-haie (commence J+10) exclus | 20 objets, les deux exclus |
-| 10 | Période J+5 à J+6, aucune réservation | 22 objets (seule la Meuleuse est exclue) | 22 objets |
-| 11 | Période J+3 à J+4 : Scie réservée, Tondeuse annulée | 21 objets : Scie exclue, Tondeuse présente | Conforme |
+| 8 | Période J+7 à J+9 | 20 objets : Tente (réservée), Meuleuse (hors service) et Glacière (en retard) exclues | 20 objets, conforme |
+| 9 | Période J+9 à J+10, bornes incluses | 19 objets : Tente (finit J+9) et Taille-haie (commence J+10) exclus | 19 objets, les deux exclus |
+| 10 | Période J+5 à J+6, aucune réservation | 21 objets (Meuleuse et Glacière exclues) | 21 objets |
+| 11 | Période J+3 à J+4 : Scie réservée, Tondeuse annulée | 20 objets : Scie exclue, Tondeuse présente | Conforme |
 | 12 | Outillage et période J+3 à J+4 | 4 objets | 4 objets |
 | 13 | Période J à J+1 : Vidéoprojecteur en cours, Enceinte réservée | Les deux exclus | Les deux exclus |
-| 14 | Période J à J+1 : Glacière en retour en retard (fin J-1) | Présente (même règle que RG2, voir section 5) | Présente |
-| 15 | Une seule date fournie | Filtre de période ignoré : 23 objets | 23 objets |
-| 16 | Périodes réservées : Tente | J+7 à J+9 | J+7 à J+9 |
-| 17 | Périodes réservées : Vidéoprojecteur, en cours | J-2 à J+1 | J-2 à J+1 |
-| 18 | Périodes réservées : Tondeuse, annulée | Aucune | Aucune |
-| 19 | Périodes réservées : Perceuse, terminée | Aucune | Aucune |
+| 14 | Période J à J+1 : Glacière en retour en retard (fin J-1) | Exclue | Exclue |
+| 15 | Période J+20 à J+21 : Glacière toujours en retard | Exclue (le retard bloque toute période) | Exclue |
+| 16 | Une seule date fournie | Filtre de période ignoré : 23 objets | 23 objets |
+| 17 | Périodes réservées : Tente | J+7 à J+9 | J+7 à J+9 |
+| 18 | Périodes réservées : Vidéoprojecteur, en cours | J-2 à J+1 | J-2 à J+1 |
+| 19 | Périodes réservées : Tondeuse, annulée | Aucune | Aucune |
+| 20 | Périodes réservées : Perceuse, terminée | Aucune | Aucune |
 
 ## 4. Plan d'exécution et index
 
@@ -83,8 +87,22 @@ Comme pour la contrainte `EXCLUDE` (voir [mpd.md, section 10](mpd.md#10-base-cr�
 
 Il reste une lecture complète de `objet` (10 000 lignes, 1 ms) pour le tri par nom : négligeable à l'échelle d'une association, aucun index ajouté.
 
-## 5. Point ouvert : retour en retard
+### Ajout de la règle du retour en retard (ticket #44)
 
-Une réservation `en_cours` dont la date de fin est passée (objet pas encore rendu) ne bloque pas les périodes suivantes : le catalogue affiche l'objet comme disponible, et la contrainte `EXCLUDE` accepterait une nouvelle réservation (cas 14). C'est cohérent avec RG2, qui ne compare que les périodes. Mais l'objet n'est physiquement pas disponible tant qu'il n'est pas rendu.
+| Version de la requête | Temps | Plan |
+|---|---|---|
+| Sans la règle du retard (J4) | 6 ms | Index partiel `idx_reservation_dates_actives` |
+| Retard ajouté par `OR` dans le même `NOT EXISTS` | 16 ms | L'index partiel n'est plus utilisé |
+| Retard dans un second `NOT EXISTS` corrélé | 83 ms | Une recherche par objet (10 000 boucles) |
+| Retard en `NOT IN` non corrélé | 13 ms, instable | Lecture complète de `reservation` pour trouver les quelques réservations en cours |
+| **`NOT IN` non corrélé et index `idx_reservation_en_cours`** | **4,6 ms, stable** | Les deux index partiels |
 
-Décision à prendre à J5 (`ReservationService`) : soit refuser une réservation tant qu'un retour est en retard sur l'objet, soit l'accepter et laisser le gestionnaire gérer le retard sur l'écran E6. Le filtre du catalogue devra suivre la même règle.
+L'index partiel `idx_reservation_en_cours` sur `date_fin`, limité aux réservations en cours (les objets sortis, très peu nombreux), est ajouté par la migration `Version20261124054944`. Il sert aussi à `ReservationRepository::existeRetourEnRetard()` et servira à l'écran E6 pour lister les retours en retard (J6). La condition de l'index suit la même précaution que celle de `idx_reservation_dates_actives`.
+
+**Piège de mesure rencontré** : les insertions annulées du script laissent des lignes mortes jusqu'au prochain nettoyage. Après plusieurs passages, `reservation` en contenait 1,4 million, et même la requête de J4 était passée de 6 à 33 ms. Le script lance donc `VACUUM ANALYZE` avant et après la mesure.
+
+## 5. Retour en retard : décision du 2026-11-24
+
+Constat de J4 : une réservation `en_cours` dont la date de fin est passée (objet pas encore rendu) ne bloquait pas les périodes suivantes, ce qui est cohérent avec RG2 mais pas avec la réalité, puisque l'objet n'est pas là.
+
+Décision prise par le binôme au début de J5 (ticket #44) : **un objet dont le retour est en retard n'est pas réservable** tant que le gestionnaire n'a pas enregistré son retour. `ReservationService` refuse la réservation (`ObjetNonReservableException`) et le catalogue ne l'annonce disponible sur aucune période (cas 14 et 15). Son badge du jour reste « Sorti ».

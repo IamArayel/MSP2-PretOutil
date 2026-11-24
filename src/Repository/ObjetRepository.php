@@ -33,14 +33,15 @@ class ObjetRepository extends ServiceEntityRepository
 
     /**
      * Catalogue (US3) : objets actifs triés par nom, filtrés selon les critères, paginés.
+     * $aujourdhui sert à repérer les retours en retard (filtre de disponibilité).
      *
      * @return Page<Objet>
      */
-    public function rechercherCatalogue(CriteresCatalogue $criteres, int $numeroPage = 1): Page
+    public function rechercherCatalogue(CriteresCatalogue $criteres, \DateTimeImmutable $aujourdhui, int $numeroPage = 1): Page
     {
         $numeroPage = max(1, $numeroPage);
 
-        $requete = $this->catalogue($criteres)
+        $requete = $this->catalogue($criteres, $aujourdhui)
             ->setFirstResult(($numeroPage - 1) * self::OBJETS_PAR_PAGE)
             ->setMaxResults(self::OBJETS_PAR_PAGE)
             ->getQuery();
@@ -86,7 +87,7 @@ class ObjetRepository extends ServiceEntityRepository
         );
     }
 
-    private function catalogue(CriteresCatalogue $criteres): QueryBuilder
+    private function catalogue(CriteresCatalogue $criteres, \DateTimeImmutable $aujourdhui): QueryBuilder
     {
         $qb = $this->createQueryBuilder('o')
             ->addSelect('c')
@@ -101,17 +102,18 @@ class ObjetRepository extends ServiceEntityRepository
         }
 
         if ($criteres->aUnePeriode()) {
-            $this->filtrerDisponibles($qb, $criteres->debut, $criteres->fin);
+            $this->filtrerDisponibles($qb, $criteres->debut, $criteres->fin, $aujourdhui);
         }
 
         return $qb;
     }
 
     /**
-     * Objets réservables sur toute la période : pas hors service (RG5) et aucune réservation
-     * active qui la chevauche (RG2). Bornes incluses, comme la contrainte ex_reservation_chevauchement.
+     * Objets réservables sur toute la période, avec les mêmes règles que ReservationService :
+     * pas hors service (RG5), aucune réservation active qui la chevauche (RG2, bornes incluses
+     * comme la contrainte ex_reservation_chevauchement), pas de retour en retard.
      */
-    private function filtrerDisponibles(QueryBuilder $qb, \DateTimeImmutable $debut, \DateTimeImmutable $fin): void
+    private function filtrerDisponibles(QueryBuilder $qb, \DateTimeImmutable $debut, \DateTimeImmutable $fin, \DateTimeImmutable $aujourdhui): void
     {
         $chevauchement = $this->getEntityManager()->createQueryBuilder()
             ->select('1')
@@ -121,8 +123,17 @@ class ObjetRepository extends ServiceEntityRepository
             ->andWhere('r.dateDebut <= :fin')
             ->andWhere('r.dateFin >= :debut');
 
+        // Retours en retard : très peu de lignes, sous-requête calculée une seule fois
+        // (index idx_reservation_en_cours ; voir docs/conception/requetes-catalogue.md).
+        $retards = $this->getEntityManager()->createQueryBuilder()
+            ->select('IDENTITY(r2.objet)')
+            ->from(Reservation::class, 'r2')
+            ->where('r2.statut = :enCours')
+            ->andWhere('r2.dateFin < :aujourdhui');
+
         $qb->andWhere('o.etat <> :horsService')
             ->andWhere($qb->expr()->not($qb->expr()->exists($chevauchement->getDQL())))
+            ->andWhere($qb->expr()->notIn('o.id', $retards->getDQL()))
             ->setParameter('horsService', EtatObjet::HorsService->value)
             ->setParameter(
                 'statutsActifs',
@@ -130,6 +141,8 @@ class ObjetRepository extends ServiceEntityRepository
                 ArrayParameterType::STRING,
             )
             ->setParameter('debut', $debut, Types::DATE_IMMUTABLE)
-            ->setParameter('fin', $fin, Types::DATE_IMMUTABLE);
+            ->setParameter('fin', $fin, Types::DATE_IMMUTABLE)
+            ->setParameter('enCours', StatutReservation::EnCours->value)
+            ->setParameter('aujourdhui', $aujourdhui, Types::DATE_IMMUTABLE);
     }
 }

@@ -57,8 +57,17 @@ else formulaire valide
   C -> S : reserver(adherent, objet, debut, fin)
   activate S
 
+  S -> S : vérifier RG1 (début ≥ aujourd'hui, fin ≥ début),\nRG3 (14 jours max, premier et dernier jour compris)
   S -> PG : BEGIN
-  S -> S : vérifier RG1 (début ≥ aujourd'hui, fin ≥ début),\nRG3 (14 jours max), RG5 (objet actif, pas hors service)
+
+  S -> R : RG5 : objet actif et pas hors service,\npuis existeRetourEnRetard(objet)
+  activate R
+  R -> PG : SELECT 1 FROM reservation WHERE objet_id = :objet\nAND statut = 'en_cours' AND date_fin < :aujourdhui
+  deactivate R
+  note right of R
+    Décision du 2026-11-24 : un objet pas encore
+    rendu n'est pas réservable (ObjetNonReservableException).
+  end note
 
   S -> R : verrouillerAdherent(adherent)
   activate R
@@ -84,7 +93,7 @@ else formulaire valide
 
   S -> R : existeChevauchement(objet, debut, fin)
   activate R
-  R -> PG : SELECT 1 FROM reservation WHERE objet_id = :objet\nAND statut IN ('confirmee', 'en_cours')\nAND daterange(date_debut, date_fin, '[]') && daterange(:debut, :fin, '[]')
+  R -> PG : SELECT 1 FROM reservation WHERE objet_id = :objet\nAND statut IN ('confirmee', 'en_cours')\nAND date_debut <= :fin AND date_fin >= :debut (bornes incluses)
   PG --> R : résultat
   R --> S : vrai / faux
   deactivate R
@@ -95,10 +104,7 @@ else formulaire valide
     C --> A : 422, E4 : « Objet déjà réservé sur cette période »
   end
 
-  S -> R : enregistrer(reservation)
-  activate R
-  R -> PG : INSERT INTO reservation (statut = 'confirmee', ...)
-  deactivate R
+  S -> PG : INSERT INTO reservation (statut = 'confirmee', ...)\net derniere_activite_le de l'adhérent (flush Doctrine)
 
   break réservation concurrente insérée entre-temps : SQLSTATE 23P01 (ex_reservation_chevauchement)
     S -> PG : ROLLBACK

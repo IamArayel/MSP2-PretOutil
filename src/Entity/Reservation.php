@@ -28,6 +28,13 @@ use Doctrine\ORM\Mapping as ORM;
     columns: ['date_debut', 'date_fin'],
     options: ['where' => "((statut)::text = ANY ((ARRAY['confirmee'::character varying, 'en_cours'::character varying])::text[]))"],
 )]
+// Objets sortis (écran E6, retours en retard, filtre du catalogue) : index minuscule, limité
+// aux réservations en cours. Même précaution que ci-dessus sur la condition.
+#[ORM\Index(
+    name: 'idx_reservation_en_cours',
+    columns: ['date_fin'],
+    options: ['where' => "((statut)::text = 'en_cours'::text)"],
+)]
 class Reservation
 {
     #[ORM\Id]
