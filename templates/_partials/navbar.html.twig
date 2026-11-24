@@ -20,6 +20,8 @@
             {% endif %}
             {% if is_granted('ROLE_ADMIN') %}
                 <li><a href="{{ path('app_admin') }}" class="hover:text-primary">Administration</a></li>
+                {% set sur_journal = (app.request.attributes.get('_route') ?? '') == 'app_journal_audit' %}
+                <li><a href="{{ path('app_journal_audit') }}" class="hover:text-primary{{ sur_journal ? ' font-semibold text-primary' }}"{% if sur_journal %} aria-current="page"{% endif %}>Journal d'audit</a></li>
             {% endif %}
         </ul>
 

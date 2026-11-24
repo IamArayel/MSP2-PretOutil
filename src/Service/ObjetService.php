@@ -75,18 +75,23 @@ class ObjetService
 
     /**
      * Suppression physique, réservée à un objet jamais réservé (contrôlé par ObjetVoter::SUPPRIMER).
-     * Pas d'action d'audit dédiée dans le MVP (énumération de audit_log.mongodb.js).
      *
      * @throws ObjetDejaReserveException si une réservation existe malgré tout (accès simultanés)
      */
-    public function supprimer(Objet $objet): void
+    public function supprimer(Objet $objet, Utilisateur $gestionnaire): void
     {
+        // Relevés avant la suppression : l'identifiant n'existe plus après le flush.
+        $id = $objet->getId();
+        $details = ['nom' => $objet->getNom(), 'categorie' => $objet->getCategorie()->getLibelle()];
+
         try {
             $this->entityManager->remove($objet);
             $this->entityManager->flush();
         } catch (ForeignKeyConstraintViolationException $e) {
             throw new ObjetDejaReserveException($e);
         }
+
+        $this->auditLogger->journaliser(ActionAudit::ObjetSupprime, $gestionnaire, 'objet', $id, $details);
     }
 
     private function appliquer(Objet $objet, ObjetDto $dto): void

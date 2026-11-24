@@ -1,5 +1,7 @@
 // Prêt'Outil : collection MongoDB du journal d'audit (RG8, US10)
 // Ticket #2. Exécution : mongosh "<uri>/pretoutil" docs/conception/audit_log.mongodb.js
+// Script rejouable : sur une base existante, il met à jour le validateur (collMod)
+// sans toucher aux documents ; les index et le rôle ne sont créés qu'une fois.
 // Un document par action sensible. Le journal est en ajout seul :
 // l'application n'a ni droit de modification ni droit de suppression.
 
@@ -11,6 +13,7 @@ const ACTIONS = [
   'OBJET_CREE',
   'OBJET_MODIFIE',
   'OBJET_DESACTIVE',
+  'OBJET_SUPPRIME', // ajoutée à J6 (#56) : suppression physique d'un objet jamais réservé
   'RESERVATION_CREEE',
   'RESERVATION_ANNULEE',
   'SORTIE_VALIDEE',
@@ -19,7 +22,7 @@ const ACTIONS = [
 
 const CIBLES = ['utilisateur', 'objet', 'reservation'];
 
-db.createCollection('audit_log', {
+const validation = {
   validationLevel: 'strict',
   validationAction: 'error',
   validator: {
@@ -56,7 +59,13 @@ db.createCollection('audit_log', {
       },
     },
   },
-});
+};
+
+if (db.getCollectionNames().includes('audit_log')) {
+  db.runCommand({ collMod: 'audit_log', ...validation });
+} else {
+  db.createCollection('audit_log', validation);
+}
 
 // Liste paginée du plus récent au plus ancien (US10) ; index TTL :
 // MongoDB supprime automatiquement les entrées de plus d'un an (RGPD).

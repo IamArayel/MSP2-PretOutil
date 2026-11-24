@@ -85,6 +85,8 @@ services:
       # 1. collection audit_log (validateur, index) et rôle auditAppendOnly, 2. utilisateur pretoutil_app
       - ./docs/conception/audit_log.mongodb.js:/docker-entrypoint-initdb.d/01-audit_log.js:ro
       - ./docker/mongodb/initdb/02-utilisateur-app.js:/docker-entrypoint-initdb.d/02-utilisateur-app.js:ro
+      # 3. base de test pretoutil_test (mêmes validateur et droits)
+      - ./docker/mongodb/initdb/03-base-de-test.js:/docker-entrypoint-initdb.d/03-base-de-test.js:ro
 ###< doctrine/mongodb-odm-bundle ###
 
 volumes:

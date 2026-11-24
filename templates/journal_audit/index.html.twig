@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Journal d'audit{% endblock %}
+
+{# Écran E9, d'après la maquette e9-journal-audit.png #}
+{% block body %}
+    <h1 class="text-3xl font-bold">Journal d'audit</h1>
+    <p class="mt-1 text-ink-muted">Actions sensibles enregistrées dans MongoDB, en lecture seule</p>
+
+    <form method="get" action="{{ path('app_journal_audit') }}" role="search" aria-label="Filtrer le journal"
+          class="mt-6 flex flex-wrap items-end gap-4 rounded-lg border border-line bg-surface p-5">
+        <div class="w-full sm:w-72">
+            <label for="action" class="block text-sm font-medium">Type d'action</label>
+            <select id="action" name="action" class="mt-1.5 block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm">
+                <option value="">Toutes les actions</option>
+                {% for action in actions %}
+                    <option value="{{ action.value }}"{% if filtre == action %} selected{% endif %}>{{ action.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">Filtrer</button>
+        {% if filtre %}
+            <a href="{{ path('app_journal_audit') }}" class="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page">Réinitialiser</a>
+        {% endif %}
+    </form>
+
+    {% if filtre_inconnu %}
+        <p class="mt-4 text-sm text-statut-hors-service" role="alert">Type d'action inconnu : toutes les actions sont affichées.</p>
+    {% endif %}
+
+    {# Couleur du badge selon la famille d'action #}
+    {% set couleurs = {
+        RETOUR_ENREGISTRE: 'bg-statut-sorti-bg text-statut-sorti',
+        SORTIE_VALIDEE: 'bg-statut-sorti-bg text-statut-sorti',
+        RESERVATION_CREEE: 'bg-statut-reserve-bg text-statut-reserve',
+        RESERVATION_ANNULEE: 'bg-statut-reserve-bg text-statut-reserve',
+        CONNEXION_ECHOUEE: 'bg-statut-hors-service-bg text-statut-hors-service',
+        OBJET_SUPPRIME: 'bg-statut-hors-service-bg text-statut-hors-service',
+        OBJET_CREE: 'bg-statut-disponible-bg text-statut-disponible',
+        OBJET_MODIFIE: 'bg-statut-disponible-bg text-statut-disponible',
+        OBJET_DESACTIVE: 'bg-statut-disponible-bg text-statut-disponible',
+    } %}
+    {% set cellule_entete = 'px-4 py-3 font-medium uppercase tracking-wide' %}
+
+    <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
+        <table class="w-full text-left text-sm">
+            <caption class="sr-only">Journal d'audit{{ filtre ? ', action ' ~ filtre.value }}, page {{ page.numero }} sur {{ max(page.nombreDePages, 1) }}</caption>
+            <thead class="border-b border-line bg-page text-xs text-ink-muted">
+                <tr>
+                    <th scope="col" class="{{ cellule_entete }}">Date et heure</th>
+                    <th scope="col" class="{{ cellule_entete }}">Utilisateur</th>
+                    <th scope="col" class="{{ cellule_entete }}">Action</th>
+                    <th scope="col" class="{{ cellule_entete }}">Détail</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                {% for ligne in lignes %}
+                    <tr>
+                        {# Stocké en UTC, affiché dans le fuseau de l'application #}
+                        <td class="whitespace-nowrap px-4 py-3">{{ ligne.entree.horodatage|date('d/m/Y H:i') }}</td>
+                        <td class="px-4 py-3">{{ ligne.utilisateur }}</td>
+                        <td class="px-4 py-3">
+                            <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ couleurs[ligne.entree.action.value] ?? 'bg-page text-ink-muted' }}">{{ ligne.entree.action.value }}</span>
+                        </td>
+                        <td class="px-4 py-3">{{ ligne.detail }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" class="px-4 py-6 text-center text-ink-muted">Aucune action enregistrée.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page.nombreDePages > 1 %}
+        {% set parametres = filtre ? {action: filtre.value} : {} %}
+        <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
+            {% if page.aUnePagePrecedente %}
+                <a href="{{ path('app_journal_audit', parametres|merge({page: page.numero - 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
+            {% else %}
+                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
+            {% endif %}
+            <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
+            {% if page.aUnePageSuivante %}
+                <a href="{{ path('app_journal_audit', parametres|merge({page: page.numero + 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
+            {% else %}
+                <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

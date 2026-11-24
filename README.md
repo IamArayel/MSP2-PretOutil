@@ -361,6 +361,26 @@ Sur la fiche d'un objet (<https://localhost/catalogue/{id}>), un adhérent conne
 
 Le contrôleur ne connaît aucune règle : il affiche le message de l'exception. Un visiteur est invité à se connecter ; un objet hors service affiche un message à la place du formulaire. Pour essayer chaque refus : `adherent.quota@pretoutil.test` (quota atteint), « Tente 4 places » (période déjà réservée), « Glacière électrique » (retour en retard), une période de plus de 14 jours.
 
+### Journal d'audit (écran E9)
+
+Chaque action sensible écrit un document dans la collection MongoDB `audit_log` (RG8), via `AuditLogger`, après le `COMMIT` PostgreSQL. L'administrateur le consulte sur <https://localhost/admin/journal> (`access_control` sur `/admin` et `#[IsGranted('ROLE_ADMIN')]`), filtré par type d'action, 20 entrées par page, du plus récent au plus ancien.
+
+| Élément | Rôle |
+|---|---|
+| `App\Document\AuditLog` (+ `ActeurAudit`, `CibleAudit` embarqués) | Document ODM calqué sur le validateur `$jsonSchema` ; `details` de type `hash`, toujours écrit comme un objet BSON (`{}` même vide) |
+| `AuditLogger` | Écrit avec le compte `pretoutil_app` (rôle `auditAppendOnly` : `find` et `insert` seulement). MongoDB indisponible : erreur tracée dans les logs, action métier conservée |
+| `ConnexionEchoueeListener` | `CONNEXION_ECHOUEE` à chaque échec : email saisi, acteur sans identifiant, motif « échec » ou « blocage » ; ni IP ni indication sur l'existence du compte |
+| `AuditLogRepository::lister()` | Filtre reçu sous forme d'`ActionAudit` (`tryFrom`) : aucun opérateur MongoDB ne peut venir de la requête (injection NoSQL) |
+| `JournalAuditController` | Noms des acteurs lus dans PostgreSQL en une requête par page ; email recopié si le compte n'existe plus, « Système » pour une action anonyme |
+
+Actions journalisées : `COMPTE_CREE`, `CONNEXION_ECHOUEE`, `OBJET_CREE`, `OBJET_MODIFIE`, `OBJET_DESACTIVE`, `OBJET_SUPPRIME`, `RESERVATION_CREEE`, `RESERVATION_ANNULEE`, `SORTIE_VALIDEE`, `RETOUR_ENREGISTRE`. `COMPTE_DESACTIVE` et `ROLE_MODIFIE` sont prévues pour l'écran E8.
+
+`docs/conception/audit_log.mongodb.js` est rejouable : sur une base existante, il met à jour le validateur (`collMod`) sans toucher aux documents. À relancer quand la liste des actions change (ajout de `OBJET_SUPPRIME` à J6) :
+
+```bash
+docker compose exec -T mongodb sh -c 'mongosh --quiet -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin pretoutil' < docs/conception/audit_log.mongodb.js
+```
+
 ### Sorties et retours (écran E6)
 
 <https://localhost/gestion/sorties-retours>, réservé au gestionnaire et à l'administrateur (`access_control` sur `/gestion` et `#[IsGranted('ROLE_MANAGER')]`).
@@ -521,6 +541,14 @@ docker compose exec -e APP_ENV=test php bin/console doctrine:migrations:migrate 
 
 Elle a les mêmes comptes que la base de développement : créée et migrée par le propriétaire, utilisée par les tests avec `pretoutil_app`. Elle reste vide : chaque test d'intégration s'exécute dans une transaction annulée à la fin. Elle disparaît avec `docker compose down -v`.
 
+Le journal d'audit des tests est dans une base MongoDB à part, `pretoutil_test` (`.env.test`), avec le même validateur et le même compte `pretoutil_app`. Elle est créée avec les volumes ; sur un volume plus ancien, la créer une fois :
+
+```bash
+docker compose exec mongodb sh -c 'mongosh --quiet -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin "$MONGO_INITDB_DATABASE" /docker-entrypoint-initdb.d/03-base-de-test.js'
+```
+
+Le compte de l'application ne peut rien supprimer : les documents écrits par les tests restent dans `pretoutil_test`, retrouvés par un marqueur unique, et l'index TTL les efface au bout d'un an.
+
 ```bash
 docker compose exec php bin/phpunit --testdox
 ```
@@ -529,6 +557,8 @@ docker compose exec php bin/phpunit --testdox
 |---|---|
 | `tests/Security/Voter/ObjetVoterTest.php` | `OBJET_GERER` : gestionnaire et administrateur autorisés, adhérent et visiteur refusés ; `OBJET_SUPPRIMER` : refusé pour un objet déjà réservé (US6) |
 | `tests/Service/ReservationServiceTest.php` | Règles RG1 à RG5 de `ReservationService` et annulation : une méthode par branche du diagramme de séquence, cas limites (14 et 15 jours, aujourd'hui, hier, 3e et 4e réservation) ; base simulée |
+| `tests/Service/AuditLoggerTest.php` | Document construit depuis l'action ; MongoDB indisponible : erreur tracée, aucune exception vers le service métier ; connexion échouée sans identifiant |
+| `tests/Integration/AuditLogIntegrationTest.php` | Sur MongoDB `pretoutil_test` : document écrit puis relu (types BSON), `details` vide écrit comme objet, 3 documents invalides refusés par le validateur (code 121), suppression et modification refusées au compte applicatif (code 13), filtre et tri du journal, `CONNEXION_ECHOUEE` après un vrai échec de connexion |
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Sur `pretoutil_test` : contrainte `EXCLUDE` (SQLSTATE 23P01) traduite en `PeriodeIndisponibleException`, réservation annulée qui ne bloque ni la période ni le quota |
 | `tests/Security/Voter/ReservationVoterTest.php` | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6) |
 
@@ -721,3 +751,9 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Appel de l'API depuis E4 en amélioration progressive, zone `aria-live` toujours présente, message inséré avec `textContent` | Le formulaire marche sans JavaScript ; les lecteurs d'écran annoncent la réponse ; aucun risque d'injection HTML |
 | 2026-11-24 | US11 servie aux adhérents sur E4 ; les visiteurs vérifient une période avec le filtre du catalogue | Un visiteur n'a pas de formulaire de réservation sur E4 ; le filtre de E3 applique déjà les mêmes règles |
 | 2026-11-24 | Compteurs de la limitation de débit dans un cache sur disque vidé au début de chaque test | Symfony vide les services en mémoire entre deux requêtes d'un test : le test du 429 ne pouvait pas passer avec un cache en mémoire |
+| 2026-11-24 | Document ODM `AuditLog` en lecture seule (`readOnly`), `acteur` et `cible` en documents embarqués, `details` en `hash` | Calqué sur le validateur `$jsonSchema` ; le type `hash` écrit toujours un objet BSON, que le validateur exige même vide |
+| 2026-11-24 | `AuditLogger` n'interrompt jamais l'action métier : erreur MongoDB tracée dans les logs | L'action est déjà validée dans PostgreSQL ; le journal ne doit pas rendre l'application indisponible |
+| 2026-11-24 | `CONNEXION_ECHOUEE` sans identifiant, motif réduit à « échec » ou « blocage », sans adresse IP | Le journal ne révèle pas quels emails ont un compte ; minimisation des données (RGPD) |
+| 2026-11-24 | `audit_log.mongodb.js` rejouable (`collMod` si la collection existe) | Une seule source pour le validateur ; ajouter une action (`OBJET_SUPPRIME`) ne demande pas de script de migration séparé |
+| 2026-11-24 | Base MongoDB de test `pretoutil_test`, créée par le même script, mêmes droits | Les tests vérifient le vrai validateur et les vrais droits ; documents de test non supprimables, retrouvés par marqueur |
+| 2026-11-24 | Filtre de E9 converti en `ActionAudit` avant la requête | Protection contre l'injection NoSQL : `?action[$ne]=x` est refusé (404), une valeur inconnue est ignorée |
