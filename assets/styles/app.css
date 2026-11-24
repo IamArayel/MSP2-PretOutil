@@ -17,6 +17,9 @@
     --color-page: var(--color-slate-50);
     --color-surface: var(--color-white);
     --color-line: var(--color-slate-200);
+    /* Contour des champs de formulaire : 3:1 minimum sur fond blanc (RGAA 3.3, WCAG 1.4.11) ;
+       slate-200 (1,23:1) suffit pour séparer des blocs, pas pour repérer un champ. */
+    --color-champ: var(--color-slate-500);
     --color-ink: var(--color-slate-900);
     --color-ink-muted: var(--color-slate-600);
 
