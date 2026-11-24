@@ -563,6 +563,7 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Security/Voter/ReservationVoterTest.php` | `RESERVATION_VOIR` : propriétaire et gestionnaire autorisés, autre adhérent refusé (O4) ; `RESERVATION_ANNULER` : propriétaire seulement, réservation confirmée, jusqu'à la veille du début (RG6) |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | API des disponibilités : réponses JSON, absence de donnée personnelle, mêmes règles que la réservation, erreurs 400, 404 et 405, limite de débit (429) |
 | `tests/Controller/ControleAccesTest.php` | Contrôle d'accès des 20 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu |
+| `tests/Controller/SecuriteTest.php` | Tests de sécurité (#66) : CSRF des 10 formulaires en POST (jeton absent ou faux refusé, vrai jeton accepté), injection SQL (filtres du catalogue, paramètres d'URL, saisies de l'inscription), injection NoSQL (filtre de E9), XSS (E3, E4, E7, E9, API), blocage après 5 échecs de connexion, mot de passe stocké en empreinte |
 
 Plan de tests (objectifs, niveaux, matrice du contrôle d'accès, critères de réussite) : [docs/tests/plan-de-tests.md](docs/tests/plan-de-tests.md).
 
@@ -775,3 +776,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-24 | Compteurs de limitation (API et tentatives de connexion) remis à zéro au début des tests qui les utilisent | Stockés sur disque en test, ils faisaient échouer le lancement suivant ou le test suivant |
 | 2026-11-24 | Jeu d'essai de la réservation rejoué par un script HTTP versionné, avec un verdict par cas (code HTTP et document du journal) | Résultats reproductibles par le jury ou le binôme ; 20 cas conformes le 2026-11-24 |
 | 2026-11-24 | Accès simultanés du jeu d'essai renvoyés aux tests automatisés | Par HTTP, on ne peut pas forcer deux transactions à se croiser ; les tests le simulent (contrainte `EXCLUDE`, verrou du quota) |
+| 2026-11-24 | Chaque test de refus CSRF a un témoin : le même envoi avec le vrai jeton aboutit | Prouve que le refus vient du jeton, et non d'une donnée invalide ou d'un droit manquant |
+| 2026-11-24 | Tests de sécurité validés en retirant chaque protection une à une (8 essais, code restauré ensuite) | Critère de #66 : chaque test doit échouer si sa protection disparaît |

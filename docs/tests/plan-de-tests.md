@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-24
 
-190 tests, 481 assertions, tous verts, en 10 secondes environ.
+245 tests, 679 assertions, tous verts, en 40 secondes environ.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -49,6 +49,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
 | `tests/Controller/ControleAccesTest.php` | Fonctionnel | 92 | Section 5 ci-dessous |
+| `tests/Controller/SecuriteTest.php` | Fonctionnel | 55 | Section 6 ci-dessous |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 80 cas.
 
@@ -119,7 +120,58 @@ Vérification du 2026-11-24, code restauré ensuite :
 | Le gestionnaire et l'administrateur ne peuvent pas annuler la réservation d'un adhérent (403) | Conforme à RG6 : seul l'adhérent annule ; le gestionnaire n'a pas d'écran pour cela dans le MVP |
 | Le test du 429 de l'API et le test du compte désactivé laissaient leurs compteurs sur disque, ce qui faisait échouer le lancement suivant | Compteurs de l'API et des tentatives de connexion remis à zéro au début des tests concernés |
 
-## 6. Critères de réussite
+## 6. Tests de sécurité
+
+Test : [tests/Controller/SecuriteTest.php](../../tests/Controller/SecuriteTest.php), ticket [#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66).
+
+### Risque → test
+
+| Risque | Protection | Test | Attendu |
+|---|---|---|---|
+| Requête forgée depuis un autre site (CSRF) | Jeton CSRF propre à chaque formulaire, et à chaque réservation ou objet pour les boutons | `testJetonCsrfAbsentOuFauxRefuse` : 10 formulaires (réserver, annuler, sortie, retour, désactiver, supprimer, créer et modifier un objet, inscription, connexion), jeton absent puis faux | Aucune erreur serveur, état inchangé en base (ou aucune session ouverte) |
+| | | `testJetonCsrfValideAccepte` : témoin, même envoi avec le vrai jeton | Action effectuée : le refus vient bien du jeton |
+| | Jeton sur le lien de déconnexion | `ControleAccesTest::testDeconnexionAvecJeton`, matrice (`/deconnexion` sans jeton → 403) | Section 5 |
+| Injection SQL | Requêtes Doctrine paramétrées, filtres convertis par le formulaire (catégorie en entité, dates en objets date), paramètres d'URL typés | `testFiltreDuCatalogueInjecteRefuse` : `' OR 1=1 --`, `{id} OR 1=1`, `{id}; DROP TABLE objet; --`, `%`, `_` dans la catégorie ; `%`, `' OR '1'='1` dans la date | 422, message d'erreur du filtre, aucune erreur SQL, table `objet` intacte |
+| | | `testDateSuivieDeSqlLueCommeUneDateSeule` : `2026-12-14' OR '1'='1` | Seule la date est lue : mêmes résultats que la date seule |
+| | | `testFiltreDuCatalogueValideRestreintLesResultats` : témoin | Seuls les objets de la catégorie choisie |
+| | | `testParametreDUrlInjecteRefuse` : numéro de page (E3, E7) et identifiant d'objet | 404 avant toute requête |
+| | | `testParametreDeLApiInjecteRefuse` | 400, aucune erreur SQL |
+| | | `testSaisieContenantDuSqlEnregistreeTelleQuelle` : prénom `Robert'); DROP TABLE utilisateur; --` | Compte créé, saisie stockée telle quelle |
+| Injection NoSQL | Filtre de E9 lu comme une chaîne (`MapQueryParameter`) puis converti en `ActionAudit` : aucune valeur saisie n'atteint MongoDB | `testFiltreDuJournalInjecteRefuse` : `action[$ne]=x`, `action[$gt]=`, `action[$regex]=.*` | 404 |
+| | | Même test : `action=$ne`, `action={"$ne":null}` | 200, filtre ignoré avec le message « Type d'action inconnu » |
+| XSS | Échappement automatique de Twig ; `JsonResponse` encode `<` et `>` | `testObjetPiegeEchappeSurLesPages` : objet nommé `<script>alert(1)</script>`, description `<img src=x onerror=alert(2)>`, sur E3, E4 et E7 | Balises affichées comme du texte (`&lt;script&gt;`) |
+| | | `testObjetPiegeEchappeDansLeJournal` : même nom dans le détail de E9 | Échappé |
+| | | `testObjetPiegeEchappeDansLApi` | `<script>` dans le JSON, valeur décodée intacte |
+| Force brute sur la connexion (US2) | `login_throttling` : 5 échecs en 15 minutes | `testConnexionBloqueeApresCinqEchecs` : 5 échecs puis le bon mot de passe | « Trop de tentatives de connexion », aucune session |
+| | | `testConnexionPossibleSousLeSeuil` : témoin, 4 échecs puis le bon mot de passe | Session ouverte |
+| Vol de la base | Mot de passe haché (`auto` : bcrypt ou Argon2, salé) | `testMotDePasseStockeSousFormeDEmpreinte` : inscription par le formulaire, colonne lue en SQL | Mot de passe absent de la colonne, empreinte `$2y$` ou `$argon2`, vérifiée par `password_verify` |
+
+### Le test détecte-t-il vraiment une faille ?
+
+Vérification du 2026-11-24 : chaque protection a été retirée seule, puis le code restauré.
+
+| Protection retirée | Résultat |
+|---|---|
+| `csrf_protection: false` sur les formulaires Symfony (réservation, objet, inscription) | 8 échecs : les 4 formulaires acceptent un jeton absent ou n'en ont plus |
+| Contrôle du jeton supprimé dans les boutons (annuler, sortie, retour, désactiver, supprimer) | 10 échecs |
+| `enable_csrf: false` dans le pare-feu | 2 échecs : connexion avec un jeton absent ou faux |
+| Filtre `\|raw` sur le nom de l'objet (E4) | `testObjetPiegeEchappeSurLesPages` échoue |
+| Filtre `\|raw` sur le détail du journal (E9) | `testObjetPiegeEchappeDansLeJournal` échoue |
+| Mot de passe enregistré sans `hashPassword()` | `testMotDePasseStockeSousFormeDEmpreinte` échoue |
+| Bloc `login_throttling` retiré | `testConnexionBloqueeApresCinqEchecs` échoue : le bon mot de passe ouvre la session au 6e essai |
+| Filtre de E9 lu brut dans la requête et transmis tel quel au repository | 3 échecs : `action[$ne]=x`, `[$gt]` et `[$regex]` renvoient 200 avec tout le journal, l'injection fonctionne |
+
+Injection SQL : la protection est portée par Doctrine (paramètres liés) et par le typage des filtres. La retirer reviendrait à réécrire les requêtes en concaténation : cela n'a pas été simulé. `testSaisieContenantDuSqlEnregistreeTelleQuelle` échouerait alors avec une erreur de syntaxe (500).
+
+### Constats
+
+| Constat | Suite donnée |
+|---|---|
+| E3 n'a pas de recherche par texte : les saisies de la carte (`' OR 1=1 --`, `%`, `_`) sont testées sur les filtres catégorie et date, les paramètres d'URL et les champs de l'inscription | `%` et `_` ne seraient un risque que dans un `LIKE` : à tester si une recherche par texte est ajoutée |
+| Une date suivie de texte (`2026-12-14' OR '1'='1`) est acceptée : le formulaire ne lit que la date | Sans risque, le texte n'atteint pas la requête ; test ajouté pour le garantir |
+| Le message de blocage indique « 16 minutes » juste après le 6e essai, pour une fenêtre de 15 minutes | Arrondi supérieur de Symfony sur le temps restant ; sans incidence sur la sécurité |
+
+## 7. Critères de réussite
 
 | Critère | Seuil |
 |---|---|
@@ -129,7 +181,7 @@ Vérification du 2026-11-24, code restauré ensuite :
 | Jeu d'essai | Résultat obtenu identique à l'attendu pour chaque cas, ou écart expliqué ([#65](https://github.com/IamArayel/MSP2-PretOutil/issues/65)) |
 | Sécurité | Chaque protection a un test ([#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66)) |
 
-## 7. Hors du périmètre
+## 8. Hors du périmètre
 
 | Non testé automatiquement | Raison, et ce qui le remplace |
 |---|---|
