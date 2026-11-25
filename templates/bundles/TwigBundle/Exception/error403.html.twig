@@ -1,0 +1,26 @@
+{#
+    403 : personne connectée sans les droits de la page (un adhérent sur la gestion, une
+    réservation d'un autre adhérent). Un visiteur, lui, est redirigé vers la connexion.
+    Le message ne dit pas ce que contient la page.
+#}
+{% extends 'bundles/TwigBundle/Exception/_page_erreur.html.twig' %}
+
+{% block titre_page %}Accès refusé{% endblock %}
+
+{% block illustration %}{{ include('bundles/TwigBundle/Exception/_illustration.html.twig', {motif: 'cadenas'}) }}{% endblock %}
+
+{% block titre %}Accès refusé{% endblock %}
+
+{% block explication %}
+    <p>Votre compte n'a pas les droits nécessaires pour cette page ou cette action.</p>
+    <p class="mt-2">Si vous pensez qu'il s'agit d'une erreur, adressez-vous à un administrateur de l'association.</p>
+{% endblock %}
+
+{% block actions %}
+    <a href="{{ path('app_accueil') }}" class="bouton bouton-primaire">Retour à l'accueil</a>
+    {% if is_granted('ROLE_USER') %}
+        <a href="{{ path('app_mes_reservations') }}" class="bouton bouton-secondaire">Mes réservations</a>
+    {% else %}
+        <a href="{{ path('app_connexion') }}" class="bouton bouton-secondaire">Se connecter</a>
+    {% endif %}
+{% endblock %}

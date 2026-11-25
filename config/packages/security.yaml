@@ -25,6 +25,8 @@ security:
             provider: app_user_provider
             # Refuse les comptes désactivés (RG9)
             user_checker: App\Security\UtilisateurChecker
+            # Visiteur sur une page réservée : connexion avec un message, puis retour à la page (#101)
+            entry_point: App\Security\ConnexionRequiseEntryPoint
 
             form_login:
                 login_path: app_connexion

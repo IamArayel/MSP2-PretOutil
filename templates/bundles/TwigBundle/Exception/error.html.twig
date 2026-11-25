@@ -1,0 +1,10 @@
+{# Page d'erreur générique : tout code sans page dédiée (400, 410…). #}
+{% extends 'bundles/TwigBundle/Exception/_page_erreur.html.twig' %}
+
+{% block titre_page %}Erreur {{ status_code }}{% endblock %}
+
+{% block titre %}Cette demande n'a pas pu aboutir{% endblock %}
+
+{% block explication %}
+    <p>Le site a refusé la demande ({{ status_text }}). Vérifiez l'adresse ou revenez à l'accueil.</p>
+{% endblock %}

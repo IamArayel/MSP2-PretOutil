@@ -55,6 +55,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
+| `tests/Controller/PagesErreurTest.php` | Fonctionnel | 11 | Pages d'erreur sans le mode débogage, API en JSON, redirection vers la connexion puis retour à la page (#101) |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.
 

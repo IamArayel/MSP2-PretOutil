@@ -1,0 +1,46 @@
+{#
+    Illustrations des pages d'erreur, aux couleurs du logo. Décoratives : la page qui les inclut
+    les masque aux lecteurs d'écran (aria-hidden), le titre et le texte portent l'information.
+    Paramètre : motif ('boite', 'loupe', 'cadenas', 'sablier', 'cle').
+#}
+<svg viewBox="0 0 160 120" class="w-full" focusable="false">
+    <ellipse cx="80" cy="112" rx="56" ry="6" class="fill-line"/>
+    {% if motif == 'loupe' %}
+        {# Boîte à outils ouverte, vide, et loupe : rien trouvé #}
+        <path d="M44 46v-8a6 6 0 0 1 6-6h28a6 6 0 0 1 6 6v8" fill="none" stroke-width="6" stroke-linecap="round" class="stroke-ink"/>
+        <rect x="16" y="46" width="96" height="56" rx="10" class="fill-primary"/>
+        <rect x="16" y="46" width="96" height="16" rx="8" class="fill-primary-hover"/>
+        <circle cx="116" cy="54" r="22" stroke-width="8" class="fill-primary-soft stroke-accent"/>
+        <path d="M132 70l16 16" stroke-width="10" stroke-linecap="round" class="stroke-ink"/>
+        <path d="M108 50a10 10 0 0 1 12-6" fill="none" stroke-width="4" stroke-linecap="round" class="stroke-surface"/>
+    {% elseif motif == 'cadenas' %}
+        {# Cadenas fermé : accès réservé #}
+        <path d="M56 54V40a24 24 0 0 1 48 0v14" fill="none" stroke-width="10" stroke-linecap="round" class="stroke-ink"/>
+        <rect x="40" y="52" width="80" height="54" rx="12" class="fill-primary"/>
+        <circle cx="80" cy="74" r="8" class="fill-accent"/>
+        <rect x="76" y="78" width="8" height="16" rx="3" class="fill-accent"/>
+    {% elseif motif == 'sablier' %}
+        {# Sablier : réessayer plus tard #}
+        <rect x="48" y="14" width="64" height="10" rx="5" class="fill-ink"/>
+        <rect x="48" y="96" width="64" height="10" rx="5" class="fill-ink"/>
+        <path d="M56 24h48c0 22-16 28-16 36s16 14 16 36H56c0-22 16-28 16-36s-16-14-16-36Z" class="fill-primary-soft stroke-primary" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M66 92c4-10 10-14 14-14s10 4 14 14Z" class="fill-accent"/>
+        <path d="M70 36h20c-3 8-10 10-10 14-0-4-7-6-10-14Z" class="fill-accent"/>
+    {% elseif motif == 'cle' %}
+        {# Clé à molette cassée : erreur du serveur #}
+        <g transform="rotate(-35 80 60)">
+            <rect x="26" y="52" width="46" height="16" rx="8" class="fill-primary"/>
+            <rect x="84" y="52" width="40" height="16" rx="8" class="fill-primary"/>
+            <path d="M124 44a18 18 0 1 0 0 32l-6-10h-8l-4-6 4-6h8Z" class="fill-ink"/>
+        </g>
+        <path d="M74 34l6 10-8 6 10 10" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="stroke-danger"/>
+        <circle cx="46" cy="30" r="5" class="fill-accent"/>
+        <circle cx="120" cy="96" r="4" class="fill-accent"/>
+    {% else %}
+        {# Boîte à outils, comme l'état vide #}
+        <path d="M60 40v-8a6 6 0 0 1 6-6h28a6 6 0 0 1 6 6v8" fill="none" stroke-width="6" stroke-linecap="round" class="stroke-ink"/>
+        <rect x="28" y="40" width="104" height="62" rx="10" class="fill-primary"/>
+        <rect x="28" y="40" width="104" height="18" rx="8" class="fill-primary-hover"/>
+        <rect x="70" y="52" width="20" height="12" rx="3" class="fill-accent"/>
+    {% endif %}
+</svg>

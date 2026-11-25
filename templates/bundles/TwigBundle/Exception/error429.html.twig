@@ -1,0 +1,12 @@
+{# 429 : trop de requêtes en peu de temps (limitation de débit). #}
+{% extends 'bundles/TwigBundle/Exception/_page_erreur.html.twig' %}
+
+{% block titre_page %}Trop de requêtes{% endblock %}
+
+{% block illustration %}{{ include('bundles/TwigBundle/Exception/_illustration.html.twig', {motif: 'sablier'}) }}{% endblock %}
+
+{% block titre %}Un peu de patience{% endblock %}
+
+{% block explication %}
+    <p>Trop de demandes ont été envoyées en peu de temps. Réessayez dans quelques instants.</p>
+{% endblock %}

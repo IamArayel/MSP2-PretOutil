@@ -1,0 +1,18 @@
+{# 404 : adresse inconnue, objet inexistant ou retiré du catalogue. #}
+{% extends 'bundles/TwigBundle/Exception/_page_erreur.html.twig' %}
+
+{% block titre_page %}Page introuvable{% endblock %}
+
+{% block illustration %}{{ include('bundles/TwigBundle/Exception/_illustration.html.twig', {motif: 'loupe'}) }}{% endblock %}
+
+{% block titre %}Page introuvable{% endblock %}
+
+{% block explication %}
+    <p>Cette page n'existe pas, ou l'objet a été retiré du catalogue.</p>
+    <p class="mt-2">Vérifiez l'adresse, ou cherchez l'objet dans le catalogue.</p>
+{% endblock %}
+
+{% block actions %}
+    <a href="{{ path('app_catalogue') }}" class="bouton bouton-primaire">Voir le catalogue</a>
+    <a href="{{ path('app_accueil') }}" class="bouton bouton-secondaire">Retour à l'accueil</a>
+{% endblock %}
