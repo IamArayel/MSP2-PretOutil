@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Politique de confidentialité{% endblock %}
+{% block description %}Données personnelles traitées par Prêt'Outil, durées de conservation, droits et cookies.{% endblock %}
+
+{# Contenu éditorial (#106) : reprend le dictionnaire de données, section 3 (docs/conception/dictionnaire-donnees.md). #}
+{% block body %}
+    <article class="panneau mx-auto max-w-3xl p-6 sm:p-10">
+        {{ include('_partials/entete_page.html.twig', {titre: 'Politique de confidentialité', sous_titre: 'En vigueur au 25 novembre 2026'}) }}
+
+        <div class="texte-legal">
+            <h2>1. Responsable du traitement</h2>
+            <p>
+                L'association Prêt'Outil est responsable des données traitées par le site. Pour toute question :
+                <a href="mailto:contact@pretoutil.test" class="lien">contact@pretoutil.test</a>.
+            </p>
+
+            <h2>2. Données collectées et finalités</h2>
+            <div class="cadre-tableau">
+                <table class="tableau">
+                    <caption class="sr-only">Données personnelles, finalité et base légale</caption>
+                    <thead class="tableau-entete">
+                        <tr>
+                            <th scope="col" class="cellule-entete">Donnée</th>
+                            <th scope="col" class="cellule-entete">Finalité</th>
+                            <th scope="col" class="cellule-entete">Base légale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Nom, prénom</th>
+                            <td class="cellule">Identifier l'emprunteur</td>
+                            <td class="cellule">Exécution de l'adhésion</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Email</th>
+                            <td class="cellule">Connexion, contact</td>
+                            <td class="cellule">Exécution de l'adhésion</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Téléphone (facultatif)</th>
+                            <td class="cellule">Contact en cas de retard</td>
+                            <td class="cellule">Intérêt légitime : récupérer le matériel</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Mot de passe</th>
+                            <td class="cellule">Authentification ; seule une empreinte non réversible est conservée</td>
+                            <td class="cellule">Exécution de l'adhésion</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Réservations</th>
+                            <td class="cellule">Gestion des prêts, suivi de l'usure du matériel</td>
+                            <td class="cellule">Exécution de l'adhésion</td>
+                        </tr>
+                        <tr>
+                            <th scope="row" class="cellule font-medium">Journal des actions sensibles</th>
+                            <td class="cellule">Traçabilité et sécurité (connexions, réservations, gestion)</td>
+                            <td class="cellule">Intérêt légitime : sécurité</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>
+                Aucune adresse IP n'est enregistrée. Elle sert seulement, dans un cache effacé après 15 minutes, à
+                bloquer les essais répétés de mot de passe.
+            </p>
+
+            <h2>3. Durées de conservation</h2>
+            <ul>
+                <li>Compte : 3 ans après la dernière connexion ou réservation, puis anonymisation (nom et prénom remplacés par « Anonyme », email remplacé, téléphone effacé).</li>
+                <li>Réservations : conservées, rattachées au compte anonymisé, pour l'historique du matériel.</li>
+                <li>Journal des actions sensibles : 1 an, puis suppression automatique.</li>
+            </ul>
+
+            <h2>4. Destinataires</h2>
+            <p>
+                Les données ne sont ni vendues ni transmises à des tiers. Les gestionnaires voient le nom des emprunteurs
+                pour les sorties et les retours ; l'administrateur voit les comptes et le journal. Les disponibilités
+                affichées publiquement ne contiennent que des dates, jamais l'identité de l'emprunteur.
+            </p>
+
+            <h2>5. Vos droits</h2>
+            <p>
+                Vous pouvez demander l'accès à vos données, leur rectification, leur effacement, leur portabilité, ou
+                vous opposer à un traitement fondé sur l'intérêt légitime, en écrivant à
+                <a href="mailto:contact@pretoutil.test" class="lien">contact@pretoutil.test</a>. Une réponse est donnée
+                dans un délai d'un mois. Vous pouvez aussi saisir la CNIL (<a href="https://www.cnil.fr" class="lien">cnil.fr</a>).
+            </p>
+
+            <h2 id="cookies">6. Cookies</h2>
+            <p>
+                Le site dépose un seul cookie, le cookie de session, au moment où il est nécessaire : connexion ou envoi
+                d'un formulaire. Il garde votre connexion ouverte et porte la protection des formulaires contre la
+                falsification de requêtes. Il est supprimé à la fermeture du navigateur.
+            </p>
+            <p>
+                Ce cookie est strictement nécessaire au service demandé : il est dispensé de consentement. Le site
+                n'utilise ni mesure d'audience, ni publicité, ni service tiers ; la police de caractères est servie par
+                le site lui-même. Le choix « Compris » du bandeau d'information est gardé dans votre navigateur, sans cookie.
+            </p>
+        </div>
+    </article>
+{% endblock %}

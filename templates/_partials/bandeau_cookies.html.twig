@@ -1,0 +1,15 @@
+{#
+    Bandeau d'information sur les cookies (#106). Le site ne dépose que le cookie de session, strictement
+    nécessaire et dispensé de consentement : le bandeau informe, il ne demande pas de choix.
+    Masqué par défaut ; assets/bandeau-cookies.js l'affiche tant que « Compris » n'a pas été choisi.
+#}
+<section id="bandeau-cookies" class="bandeau-cookies" aria-labelledby="bandeau-cookies-titre" hidden>
+    <div>
+        <h2 id="bandeau-cookies-titre" class="font-bold">Cookies</h2>
+        <p class="mt-1 text-ink-muted">
+            Ce site n'utilise qu'un cookie, nécessaire à la connexion. Aucun suivi, aucune publicité.
+            <a href="{{ path('app_confidentialite') }}#cookies" class="lien">En savoir plus</a>
+        </p>
+    </div>
+    <button type="button" class="bouton bouton-primaire" data-fermer-bandeau>Compris</button>
+</section>

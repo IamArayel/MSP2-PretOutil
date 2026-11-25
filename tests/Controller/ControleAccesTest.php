@@ -53,6 +53,8 @@ final class ControleAccesTest extends WebTestCase
         'app_catalogue' => ['GET', '/catalogue', 200, 200, 200, 200],
         'app_catalogue_objet' => ['GET', '/catalogue/{objet}', 200, 200, 200, 200],
         'api_objet_disponibilites' => ['GET', '/api/objets/{objet}/disponibilites', 200, 200, 200, 200],
+        'app_cgu' => ['GET', '/cgu', 200, 200, 200, 200],
+        'app_confidentialite' => ['GET', '/confidentialite', 200, 200, 200, 200],
         // Connexion et inscription : un utilisateur déjà connecté est renvoyé à l'accueil
         'app_connexion' => ['GET', '/connexion', 200, 302, 302, 302],
         'app_inscription' => ['GET', '/inscription', 200, 302, 302, 302],

@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Dto\InscriptionDto;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
@@ -43,6 +44,10 @@ final class InscriptionType extends AbstractType
                 'label' => 'Mot de passe',
                 'help' => '12 caractères minimum.',
                 'attr' => ['autocomplete' => 'new-password', 'minlength' => 12],
+            ])
+            // Libellé affiché par le gabarit inscription/index.html.twig, avec les liens vers les CGU et la politique (#106)
+            ->add('accepteCgu', CheckboxType::class, [
+                'label' => 'J\'accepte les conditions générales d\'utilisation',
             ])
         ;
     }

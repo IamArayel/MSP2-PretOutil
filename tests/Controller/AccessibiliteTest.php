@@ -90,6 +90,8 @@ final class AccessibiliteTest extends WebTestCase
         yield 'E4 Fiche, adhérent' => ['GET', '/catalogue/{objet}', 'adherent', []];
         yield 'E4 Réservation, erreurs' => ['POST', '/catalogue/{objet}/reserver', 'adherent', self::RESERVATION_VIDE];
         yield 'E5 Mes réservations' => ['GET', '/mes-reservations', 'adherent', []];
+        yield 'Conditions générales d\'utilisation' => ['GET', '/cgu', null, []];
+        yield 'Politique de confidentialité' => ['GET', '/confidentialite', null, []];
         yield from self::ecransDeGestion();
     }
 

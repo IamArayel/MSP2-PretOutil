@@ -43,4 +43,8 @@ final class InscriptionDto
         minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
     )]
     public ?string $motDePasse = null;
+
+    /** Acceptation des conditions générales d'utilisation (#106) : obligatoire, non enregistrée. */
+    #[Assert\IsTrue(message: 'Vous devez accepter les conditions générales d\'utilisation pour créer un compte.')]
+    public bool $accepteCgu = false;
 }
