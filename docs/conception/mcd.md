@@ -90,7 +90,7 @@ Sa structure est décrite avec le MPD (ticket [#2](https://github.com/IamArayel/
 Le MLD généré par Mocodo (`mocodo --input mcd.mcd -t mld`) donne :
 
 - **CATEGORIE** (<u>id_categorie</u>, libelle)
-- **OBJET** (<u>id_objet</u>, nom, description, caracteristiques, etat, actif, cree_le, _#id_categorie_)
+- **OBJET** (<u>id_objet</u>, nom, description, caracteristiques, image, etat, actif, cree_le, _#id_categorie_)
 - **RESERVATION** (<u>id_reservation</u>, date_debut, date_fin, statut, cree_le, sortie_le, retour_le, etat_retour, _#id_utilisateur adhérent_, _#id_objet_, _#id_utilisateur gestionnaire 1_, _#id_utilisateur gestionnaire 2_)
 - **UTILISATEUR** (<u>id_utilisateur</u>, email, mot_de_passe, nom, prenom, telephone, roles, actif, cree_le, derniere_activite_le)
 

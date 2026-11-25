@@ -3,8 +3,9 @@
 {% block title %}Connexion{% endblock %}
 
 {% block body %}
-    <div class="mx-auto mt-6 max-w-md rounded-lg border border-line bg-surface p-6">
-        <h1 class="text-3xl font-bold">Connexion</h1>
+    <div class="mx-auto mt-6 max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
+        <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="56" height="56" class="size-14">
+        <h1 class="mt-4 text-3xl font-extrabold">Connexion</h1>
         <p class="mt-1 text-sm text-ink-muted">Accédez à votre espace pour réserver du matériel.</p>
 
         {% if erreur %}

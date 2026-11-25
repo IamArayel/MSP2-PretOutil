@@ -1,18 +1,37 @@
 @import "tailwindcss";
 
 /*
- * Charte de la maquette Figma (variables reprises de la palette Tailwind) :
- * - couleur principale : teal-700 (boutons, logo, liens actifs)
- * - neutres : palette slate (textes, bordures, fonds)
+ * Charte tirée du logo (assets/images/logo.svg), contrastes calculés par
+ * docs/tests/contrastes_charte.py :
+ * - couleur principale : bleu pétrole du logo (boutons, liens, focus)
+ * - encre du logo pour le texte, neutres slate pour les fonds et les bordures
+ * - orange et vert d'eau : fonds et décor seulement, jamais en couleur de texte
  * - statuts : badges Disponible, Réservé, Sorti, Hors service
  * Les couleurs sont exposées sous forme d'utilitaires : bg-primary, text-primary, etc.
  */
-@theme {
-    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-    --color-primary: var(--color-teal-700);
-    --color-primary-hover: var(--color-teal-800);
-    --color-primary-soft: var(--color-teal-50);
+/* Nunito, police arrondie proche de celle du logo, servie depuis le dépôt (licence OFL :
+   assets/fonts/OFL.txt) : aucun appel à un service tiers, la CSP reste à 'self'. */
+@font-face {
+    font-family: "Nunito";
+    src: url("../fonts/nunito-variable.woff2") format("woff2");
+    font-weight: 200 1000;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans: "Nunito", ui-rounded, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --color-primary: #1b6e91; /* bleu pétrole du logo : 5,70:1 avec le blanc */
+    --color-primary-hover: #175062; /* bleu foncé du logo : 8,90:1 avec le blanc */
+    --color-primary-soft: #e8f3f7; /* fond clair : texte primary à 5,04:1 */
+
+    --color-accent: #f4a120; /* orange du logo : 2,11:1 sur blanc, texte posé dessus en ink (5,71:1) */
+    --color-accent-hover: #e98c23; /* texte ink : 4,72:1 */
+    --color-accent-soft: #fef3dc; /* fond clair : texte ink à 10,93:1 */
+    --color-secondaire: #24948e; /* vert d'eau du logo : 3,68:1, décor et grands titres seulement */
+    --color-danger: #c04822; /* rouille du logo : 5,01:1 avec le blanc */
 
     --color-page: var(--color-slate-50);
     --color-surface: var(--color-white);
@@ -20,7 +39,7 @@
     /* Contour des champs de formulaire : 3:1 minimum sur fond blanc (RGAA 3.3, WCAG 1.4.11) ;
        slate-200 (1,23:1) suffit pour séparer des blocs, pas pour repérer un champ. */
     --color-champ: var(--color-slate-500);
-    --color-ink: var(--color-slate-900);
+    --color-ink: #0f3b4a; /* encre du logo : 12,04:1 sur blanc */
     --color-ink-muted: var(--color-slate-600);
 
     --color-statut-disponible: var(--color-green-700);
@@ -42,6 +61,12 @@
     :focus-visible {
         @apply outline-2 outline-offset-2 outline-primary;
     }
+}
+
+/* Bandeau aux couleurs des flèches du logo, en haut de l'en-tête et en bas du pied de page. */
+@utility bandeau-logo {
+    @apply h-1;
+    background-image: linear-gradient(90deg, var(--color-primary), var(--color-secondaire), var(--color-accent), var(--color-danger));
 }
 
 /*

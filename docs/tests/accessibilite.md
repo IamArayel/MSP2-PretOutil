@@ -37,21 +37,39 @@ Vérifiée le 2026-11-24. ✅ conforme · 🔧 corrigé à J8 · ➖ sans objet.
 
 ## 3. Contrastes de la charte
 
-Calculés le 2026-11-24 par [contrastes_charte.py](contrastes_charte.py). Seuils : 4,5:1 pour un texte, 3:1 pour un élément d'interface et le focus.
+Recalculés le 2026-11-25 par [contrastes_charte.py](contrastes_charte.py) avec la charte tirée du logo (#94). Seuils : 4,5:1 pour un texte, 3:1 pour un élément d'interface et le focus. Les deux lignes non conformes sont attendues : l'orange et le vert d'eau du logo ne servent jamais de couleur de texte, seulement de fond (texte encre posé dessus) ou de décor (bandeau, icône).
 
 | Couleur | Couple | Rapport | Seuil | Résultat |
 |---|---|---|---|---|
-| Texte principal | `slate-900` sur blanc | 17,84:1 | 4,5:1 | Conforme |
-| Texte secondaire | `slate-600` sur blanc | 7,56:1 | 4,5:1 | Conforme |
+| Texte principal (ink) | `#0f3b4a` sur `white` | 12,04:1 | 4,5:1 | Conforme |
+| Texte principal sur le fond de page | `#0f3b4a` sur `slate-50` | 11,50:1 | 4,5:1 | Conforme |
+| Texte secondaire (ink-muted) | `slate-600` sur `white` | 7,56:1 | 4,5:1 | Conforme |
 | Texte secondaire sur le fond de page | `slate-600` sur `slate-50` | 7,23:1 | 4,5:1 | Conforme |
-| Lien, bouton principal | `teal-700` et blanc | 5,39:1 | 4,5:1 | Conforme |
+| Texte secondaire, badge « Annulée » | `slate-600` sur `slate-100` | 6,90:1 | 4,5:1 | Conforme |
+| Lien et texte principal (primary) | `#1b6e91` sur `white` | 5,70:1 | 4,5:1 | Conforme |
+| Lien sur le fond de page | `#1b6e91` sur `slate-50` | 5,44:1 | 4,5:1 | Conforme |
+| Bouton principal : texte blanc | `white` sur `#1b6e91` | 5,70:1 | 4,5:1 | Conforme |
+| Bouton principal survolé | `white` sur `#175062` | 8,90:1 | 4,5:1 | Conforme |
+| Texte principal sur fond primary-soft | `#1b6e91` sur `#e8f3f7` | 5,04:1 | 4,5:1 | Conforme |
+| Bouton accent : texte encre sur orange | `#0f3b4a` sur `#f4a120` | 5,71:1 | 4,5:1 | Conforme |
+| Bouton accent survolé | `#0f3b4a` sur `#e98c23` | 4,72:1 | 4,5:1 | Conforme |
+| Texte encre sur fond accent-soft | `#0f3b4a` sur `#fef3dc` | 10,93:1 | 4,5:1 | Conforme |
+| Orange en texte (interdit) | `#f4a120` sur `white` | 2,11:1 | 4,5:1 | **Non conforme** |
+| Vert d'eau en texte (réservé au décor) | `#24948e` sur `white` | 3,68:1 | 4,5:1 | **Non conforme** |
+| Danger : texte rouille | `#c04822` sur `white` | 5,01:1 | 4,5:1 | Conforme |
+| Bouton danger : texte blanc | `white` sur `#c04822` | 5,01:1 | 4,5:1 | Conforme |
 | Badge Disponible, message de succès | `green-700` sur `green-50` | 4,72:1 | 4,5:1 | Conforme |
 | Badge Réservé | `blue-700` sur `blue-50` | 6,26:1 | 4,5:1 | Conforme |
 | Badge Sorti, avertissement | `amber-700` sur `amber-50` | 4,87:1 | 4,5:1 | Conforme |
-| Badge Hors service, erreur | `red-700` sur `red-50` | 5,88:1 | 4,5:1 | Conforme |
-| Texte indicatif des champs, avant | `slate-400` sur blanc | 2,63:1 | 4,5:1 | **Corrigé** : `slate-500`, 4,77:1 |
-| Contour des champs, avant | `slate-200` sur blanc | 1,23:1 | 3:1 | **Corrigé** : couleur `champ` (`slate-500`), 4,77:1 |
-| Focus clavier | `teal-700` sur blanc | 5,39:1 | 3:1 | Conforme |
+| Badge Hors service, message d'erreur | `red-700` sur `red-50` | 5,88:1 | 4,5:1 | Conforme |
+| Erreur sous un champ | `red-700` sur `white` | 6,42:1 | 4,5:1 | Conforme |
+| Texte indicatif (placeholder) | `slate-500` sur `white` | 4,77:1 | 4,5:1 | Conforme |
+| Contour de champ | `slate-500` sur `white` | 4,77:1 | 3:1 | Conforme |
+| Contour de champ en erreur | `red-700` sur `white` | 6,42:1 | 3:1 | Conforme |
+| Indicateur de focus (contour) | `#1b6e91` sur `white` | 5,70:1 | 3:1 | Conforme |
+| Indicateur de focus sur le fond de page | `#1b6e91` sur `slate-50` | 5,44:1 | 3:1 | Conforme |
+
+Avant la charte du logo (2026-11-24) : texte principal `slate-900` (17,84:1), lien et bouton `teal-700` (5,39:1) ; le texte indicatif (`slate-400`, 2,63:1) et le contour des champs (`slate-200`, 1,23:1) avaient été corrigés en `slate-500` (4,77:1).
 
 Les boutons « Précédent » et « Suivant » désactivés (`slate-400`) ne sont pas soumis au contraste : ce sont des éléments inactifs (WCAG 1.4.3).
 

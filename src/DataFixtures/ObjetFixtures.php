@@ -45,6 +45,15 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
         'paddle' => ['Sport', 'Paddle gonflable', 'Pagaie, pompe et leash fournis.', EtatObjet::Bon, true],
     ];
 
+    /** Clé de référence => photo de assets/images/objets/ ; les autres objets ont la vignette de remplacement. */
+    private const array IMAGES = [
+        'perceuse' => 'perceuse.webp', 'scie-sauteuse' => 'scie-sauteuse.webp', 'ponceuse' => 'ponceuse.webp', 'meuleuse' => 'meuleuse.webp',
+        'taille-haie' => 'taille-haie.webp', 'brouette' => 'brouette.webp', 'tente' => 'tente.webp',
+        'rechaud' => 'rechaud.webp', 'glaciere' => 'glaciere.webp', 'lampe-frontale' => 'lampe-frontale.webp',
+        'appareil-raclette' => 'appareil-raclette.webp', 'machine-pates' => 'machine-pates.webp',
+        'videoprojecteur' => 'videoprojecteur.webp', 'enceinte' => 'enceinte.webp',
+    ];
+
     public function load(ObjectManager $manager): void
     {
         foreach (self::OBJETS as $cle => [$categorie, $nom, $description, $etat, $actif]) {
@@ -53,7 +62,8 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
                 ->setNom($nom)
                 ->setDescription($description)
                 ->setEtat($etat)
-                ->setActif($actif);
+                ->setActif($actif)
+                ->setImage(self::IMAGES[$cle] ?? null);
             $manager->persist($objet);
             $this->addReference(self::reference($cle), $objet);
         }

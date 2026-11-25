@@ -621,9 +621,12 @@ Tailwind CSS 4 est intégré via `symfonycasts/tailwind-bundle` et AssetMapper :
 
 | Fichier                      | Rôle                                                                                                                                          |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `assets/styles/app.css`      | Source : import de Tailwind et charte de la maquette dans le bloc `@theme` (couleur principale teal-700, neutres slate, couleurs des statuts) |
+| `assets/styles/app.css`      | Source : import de Tailwind, police Nunito et charte tirée du logo dans le bloc `@theme` (bleu pétrole, encre, orange, vert d'eau, rouille, neutres slate, couleurs des statuts) |
 | `var/tailwind/app.built.css` | CSS compilé, non versionné, servi à la place de `app.css`                                                                                     |
-| `templates/base.html.twig`   | Gabarit commun, avec la barre de navigation (`templates/_partials/navbar.html.twig`)                                                          |
+| `templates/base.html.twig`   | Gabarit commun : favicons, barre de navigation (`templates/_partials/navbar.html.twig`) et pied de page (`templates/_partials/pied_de_page.html.twig`) |
+| `assets/images/`             | Logo complet (`logo.svg`), icône seule (`logo-icone.svg`), favicons PNG ; SVG sans feuille de styles interne, couleurs en attributs |
+| `assets/images/objets/`      | Photos des objets du jeu d'essai : WebP 960 × 720 (4:3), de 23 à 180 Ko ; nom enregistré dans `objet.image` |
+| `assets/fonts/`              | Police Nunito variable (WOFF2, caractères latins, 39 Ko) et sa licence OFL ; aucun appel à un service de polices tiers |
 
 En développement, le service `tailwind` de `compose.override.yaml` lance `tailwind:build --watch` : le CSS est recompilé à chaque modification de `assets/` ou `templates/`. Le résultat est stocké dans le volume `tailwind_build`, partagé avec le conteneur `php` (son `var/` n'est pas lié à la machine hôte). Pour suivre la compilation :
 
@@ -631,7 +634,7 @@ En développement, le service `tailwind` de `compose.override.yaml` lance `tailw
 docker compose logs -f tailwind
 ```
 
-Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `text-primary`, `border-line`, `text-ink-muted`, `bg-statut-disponible-bg`, etc.
+Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `text-primary`, `bg-accent`, `text-danger`, `border-line`, `text-ink-muted`, `bg-statut-disponible-bg`, etc. L'orange (`accent`) et le vert d'eau (`secondaire`) du logo n'ont pas le contraste d'un texte : ils servent de fond, avec un texte `ink`, ou de décor. Contrastes : [docs/tests/accessibilite.md](docs/tests/accessibilite.md), section 3.
 
 ### Variables d'environnement
 
@@ -847,3 +850,10 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | Couleurs du logo classées par contraste calculé : bleu pétrole `#1b6e91` (5,7:1) en couleur principale, encre `#0f3b4a` (12:1) pour le texte, rouille `#c04822` (5,0:1) pour le danger ; orange `#f4a120` (2,1:1) et vert d'eau `#24948e` (3,7:1) réservés aux fonds et au décor | Garder le niveau d'accessibilité atteint à J8 : aucun texte sous 4,5:1 ; les noms sémantiques de `@theme` sont gardés, aucun gabarit ne change de classe |
 | 2026-11-25 | Police servie depuis le dépôt par AssetMapper, sans Google Fonts | La CSP n'autorise que `'self'` ; aucune adresse IP de visiteur transmise à un tiers (RGPD) |
 | 2026-11-25 | Style en 3 tickets GitHub (#94 à #96) : charte, logo et écrans adhérent pour Anthony le matin ; composants communs et écrans de gestion pour Chloé ensuite ; relecture croisée, captures refaites et tag ensemble le soir | La charte passe en premier car les composants en dépendent ; chacun garde les écrans qu'il a construits |
+| 2026-11-25 | Logo et icône seule tirés du SVG fourni : fond blanc retiré, feuille de styles interne remplacée par des attributs `fill`, slogan rendu visible comme sur la version WEBP | Une feuille de styles interne pourrait être bloquée par une CSP ; l'icône seule sert au favicon, à l'en-tête et au pied de page |
+| 2026-11-25 | `symfony/asset` ajouté | Fonction Twig `asset()` pour référencer logo, favicons et police par AssetMapper, avec un nom versionné qui permet une mise en cache longue |
+| 2026-11-25 | Icône de l'en-tête décorative (`alt` vide), logo de l'accueil avec une alternative qui reprend son texte ; « Prêt' » et « Outil » écrits en bleu pétrole et en rouille | Le nom n'est pas lu deux fois par un lecteur d'écran (RGAA 1.2, 1.3) ; les deux couleurs du logo retenues dépassent 4,5:1 |
+| 2026-11-25 | Photo des objets : colonne `objet.image` facultative (nom d'un fichier de `assets/images/objets/`), renseignée par les fixtures ; sans photo, vignette avec l'icône du logo | Un objet ajouté par un gestionnaire reste affichable sans photo ; l'envoi de photos depuis E7 (taille, type, stockage) est renvoyé à une évolution |
+| 2026-11-25 | Contrainte `ck_objet_image` : nom simple en `.webp` seulement | Le nom est concaténé au chemin du dossier des photos : la base refuse tout chemin (`../`), même si une future saisie oubliait de le contrôler |
+| 2026-11-25 | Photos recadrées en 4:3 et converties en WebP de 960 px (14 photos, moins de 1 Mo en tout, contre 75 Mo de sources) ; chargées à l'approche dans le catalogue, en priorité sur la fiche | Éco-conception et temps d'affichage |
+| 2026-11-25 | Maquette Figma alignée sur la charte du logo : variables de couleur mises à jour (`primary`, `ink`) et ajoutées (`accent`, `accent-hover`, `accent-soft`, `secondaire`, `danger`), police Nunito, composant `Logo` dans la barre de navigation, zone photo 4:3 dans `CarteObjet`, photos sur E3 et E4 | Le dossier montre la même charte en maquette et dans l'application ; les noms des variables reprennent ceux du bloc `@theme` |

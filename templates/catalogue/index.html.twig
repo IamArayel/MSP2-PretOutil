@@ -47,18 +47,21 @@
     {% else %}
         <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {% for objet in page.elements %}
-                <li class="flex flex-col rounded-lg border border-line bg-surface p-5">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs text-ink-muted">{{ objet.categorie.libelle }}</span>
-                        {{ include('catalogue/_badge_statut.html.twig', {statut: catalogue.statut(objet)}) }}
+                <li class="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
+                    {{ include('catalogue/_photo.html.twig', {objet: objet}) }}
+                    <div class="flex flex-1 flex-col p-5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs text-ink-muted">{{ objet.categorie.libelle }}</span>
+                            {{ include('catalogue/_badge_statut.html.twig', {statut: catalogue.statut(objet)}) }}
+                        </div>
+                        <h2 class="mt-3 text-lg font-semibold">{{ objet.nom }}</h2>
+                        <p class="mt-2 line-clamp-2 text-sm text-ink-muted">{{ objet.description }}</p>
+                        <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}"
+                           class="mt-4 self-start rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page"
+                           aria-label="Voir le détail : {{ objet.nom }}">
+                            Voir le détail
+                        </a>
                     </div>
-                    <h2 class="mt-3 text-lg font-semibold">{{ objet.nom }}</h2>
-                    <p class="mt-2 line-clamp-2 text-sm text-ink-muted">{{ objet.description }}</p>
-                    <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}"
-                       class="mt-4 self-start rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page"
-                       aria-label="Voir le détail : {{ objet.nom }}">
-                        Voir le détail
-                    </a>
                 </li>
             {% endfor %}
         </ul>
