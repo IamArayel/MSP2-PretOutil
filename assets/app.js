@@ -6,3 +6,4 @@
 import './styles/app.css';
 import './disponibilites.js';
 import './confirmation.js';
+import './bandeau-cookies.js';
