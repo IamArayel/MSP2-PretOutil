@@ -174,3 +174,16 @@ Vérifié le 2026-11-25. Les composants communs (README, section Styles) remplac
 | RGAA 3.3 Contour des listes de choix | `AccessibiliteTest` accepte désormais les composants `champ` et `liste-choix` (même couleur `champ`, 4,77:1) au lieu des classes écrites à la main |
 | Couleurs hors charte | `AccessibiliteTest::testAucuneCouleurTailwindBruteDansLesGabarits` : aucun `teal-700`, `red-200`, `text-white`… dans `templates/` ni dans les scripts `assets/*.js` ; échoue sur l'ancien `base.html.twig` |
 
+
+## 10. Vérification après le style (#96)
+
+Faite le 2026-11-25 sur les fixtures, avec chaque profil (visiteur, adhérent, gestionnaire, administrateur), dans Google Chrome piloté par son protocole de débogage : la page est réellement affichée, les mesures portent sur les styles calculés. Pages parcourues : accueil, E1 à E9 et la page des composants.
+
+| Contrôle | Méthode | Résultat |
+|---|---|---|
+| Contraste de chaque texte affiché | Couleur du texte et premier fond opaque de ses ancêtres, convertis en sRGB, rapport WCAG calculé pour chaque nœud de texte visible ; seuil de 4,5:1, 3:1 pour un grand texte | Conforme : aucun texte sous le seuil sur les 13 pages |
+| Console sans erreur ni violation de CSP | Erreurs du journal, de la console et des scripts relevées pendant tout le parcours des captures | Conforme : seules les réponses voulues (422 sur un formulaire invalide, 400 sur une date d'API invalide) |
+| Mobile (375 px) | Largeur de la page comparée à celle de la fenêtre | Conforme après correction : E6 et E8 débordaient (voir ci-dessous) |
+| Zoom à 200 % | Fenêtre de 1 280 px zoomée à 200 %, soit 640 px de largeur utile | Conforme après la même correction : E8 débordait |
+
+Défaut trouvé et corrigé : sur E6 et E8, les libellés masqués des listes de choix (`sr-only`, en position absolue) se plaçaient par rapport à la page et non au cadre du tableau ; ils l'élargissaient de 160 à 430 px alors que le tableau, lui, défilait bien dans son cadre. Le composant `cadre-tableau` est désormais `relative` : les libellés restent dans le cadre. Le défaut existait déjà au gel de J8 (`v1.0.0`, même composant sans `relative`) : la vérification de la section 8, faite à l'œil, a vu le tableau défiler dans son cadre mais pas la page s'élargir ; la mesure de la largeur de la page l'a trouvé.

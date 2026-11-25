@@ -35,9 +35,9 @@ docker compose exec php bin/phpunit --testdox
 
 Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/ControleAccesTest.php`.
 
-## 4. Inventaire au 2026-11-24
+## 4. Inventaire au 2026-11-25
 
-370 tests, 1 538 assertions, tous verts, identiques sur deux lancements, en 30 secondes environ (mis à jour avec la charte tirée du logo, #94 : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image`). Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
+372 tests, 1 576 assertions, tous verts, en 30 secondes environ, au gel du style (`v1.1.0`, #96). Le style a ajouté 9 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95). Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -50,8 +50,8 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Integration/ObjetImageIntegrationTest.php` | Intégration | 5 | Contrainte `ck_objet_image` : nom de photo accepté, chemin ou autre format refusé |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
-| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 111 | Section 5 ci-dessous |
-| `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 71 | Structure accessible de E1 à E9, alternative des images, logo et favicon, photos des objets ([accessibilite.md](accessibilite.md)) |
+| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 112 | Section 5 ci-dessous |
+| `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 72 | Structure accessible de E1 à E9, alternative des images, logo et favicon, photos des objets, aucune couleur hors charte ([accessibilite.md](accessibilite.md)) |
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
