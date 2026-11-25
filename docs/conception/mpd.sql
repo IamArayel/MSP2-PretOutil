@@ -10,6 +10,9 @@ BEGIN;
 -- de périodes (gist) dans une même contrainte d'exclusion (RG2).
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
+-- Recherche par nom sans tenir compte des accents (#109) : unaccent(objet.nom).
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
 -- ---------------------------------------------------------------------------
 -- utilisateur
 -- ---------------------------------------------------------------------------
