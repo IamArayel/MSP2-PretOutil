@@ -34,6 +34,7 @@ entity "objet" as objet {
   * nom : VARCHAR(120)
   * description : TEXT
   caracteristiques : TEXT
+  image : VARCHAR(100)
   * etat : VARCHAR(20) = 'bon'
   * actif : BOOLEAN = true
   * cree_le : TIMESTAMP(0)

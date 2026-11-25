@@ -16,7 +16,7 @@ Règles de passage appliquées : une association (1,1) devient une clé étrang�
 
 - **utilisateur** (<u>id</u>, email, mot_de_passe, nom, prenom, telephone, roles, actif, cree_le, derniere_activite_le)
 - **categorie** (<u>id</u>, libelle)
-- **objet** (<u>id</u>, nom, description, caracteristiques, etat, actif, cree_le, _#categorie_id_)
+- **objet** (<u>id</u>, nom, description, caracteristiques, image, etat, actif, cree_le, _#categorie_id_)
 - **reservation** (<u>id</u>, date_debut, date_fin, statut, cree_le, sortie_le, retour_le, etat_retour, _#utilisateur_id_, _#objet_id_, _#sortie_par_id_, _#retour_par_id_)
 
 | Association du MCD | Clé étrangère | Obligatoire |

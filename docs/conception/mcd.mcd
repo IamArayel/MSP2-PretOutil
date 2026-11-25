@@ -5,7 +5,7 @@
 
 CATEGORIE: id_categorie, libelle
 APPARTENIR, 0N CATEGORIE, 11 OBJET
-OBJET: id_objet, nom, description, caracteristiques, etat, actif, cree_le
+OBJET: id_objet, nom, description, caracteristiques, image, etat, actif, cree_le
 
 VALIDER LA SORTIE, 0N [gestionnaire] UTILISATEUR, 01 RESERVATION
 :

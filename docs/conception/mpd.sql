@@ -53,13 +53,16 @@ CREATE TABLE objet (
     nom               VARCHAR(120) NOT NULL,
     description       TEXT         NOT NULL,
     caracteristiques  TEXT,
+    image             VARCHAR(100),
     etat              VARCHAR(20)  NOT NULL DEFAULT 'bon',
     actif             BOOLEAN      NOT NULL DEFAULT TRUE,
     cree_le           TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_objet PRIMARY KEY (id),
     CONSTRAINT fk_objet_categorie FOREIGN KEY (categorie_id)
         REFERENCES categorie (id) ON DELETE RESTRICT,
-    CONSTRAINT ck_objet_etat CHECK (etat IN ('bon', 'abime', 'hors_service'))
+    CONSTRAINT ck_objet_etat CHECK (etat IN ('bon', 'abime', 'hors_service')),
+    -- Nom simple d'une photo de assets/images/objets/ : aucun chemin ne peut être enregistré
+    CONSTRAINT ck_objet_image CHECK (image ~ '^[a-z0-9-]+\.webp$')
 );
 
 CREATE INDEX idx_objet_categorie ON objet (categorie_id);
