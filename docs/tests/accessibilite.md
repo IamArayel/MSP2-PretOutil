@@ -163,7 +163,7 @@ Vérifié le 2026-11-25. Les composants communs (README, section Styles) remplac
 | Badge neutre : `slate-600` sur `slate-50` | 7,23:1 | 4,5:1 | Conforme |
 | Erreur sous un champ : rouille sur blanc | 5,01:1 | 4,5:1 | Conforme |
 | Contour d'un champ en erreur : rouille | 5,01:1 | 3:1 | Conforme |
-| Pagination désactivée (opacité 50 %) | — | — | Élément inactif, non soumis au contraste (WCAG 1.4.3) |
+| Pagination désactivée (opacité 50 %) | - | - | Élément inactif, non soumis au contraste (WCAG 1.4.3) |
 
 | Critère | Mesure |
 |---|---|
@@ -172,5 +172,5 @@ Vérifié le 2026-11-25. Les composants communs (README, section Styles) remplac
 | RGAA 1.2 Images décoratives | Icônes des messages, illustration de l'état vide et flèche « Voir le détail » en `aria-hidden` ; le texte porte l'information |
 | RGAA 7.5 Messages de statut | Composant message : `role="status"` (succès, information), `role="alert"` (erreur, avertissement) |
 | RGAA 3.3 Contour des listes de choix | `AccessibiliteTest` accepte désormais les composants `champ` et `liste-choix` (même couleur `champ`, 4,77:1) au lieu des classes écrites à la main |
-| Couleurs hors charte | `AccessibiliteTest::testAucuneCouleurTailwindBruteDansLesGabarits` : aucun `teal-700`, `red-200`, `text-white`… dans `templates/` ; échoue sur l'ancien `base.html.twig` |
+| Couleurs hors charte | `AccessibiliteTest::testAucuneCouleurTailwindBruteDansLesGabarits` : aucun `teal-700`, `red-200`, `text-white`… dans `templates/` ni dans les scripts `assets/*.js` ; échoue sur l'ancien `base.html.twig` |
 

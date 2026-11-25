@@ -286,7 +286,7 @@ final class AccessibiliteTest extends WebTestCase
     }
 
     /**
-     * Charte (#95) : les gabarits n'emploient que les couleurs nommées de la charte (primary, ink,
+     * Charte (#95) : les gabarits et les scripts de assets/ n'emploient que les couleurs nommées de la charte (primary, ink,
      * danger, statut-*…), dont les contrastes sont calculés ; aucune couleur Tailwind brute
      * (teal-700, red-200, text-white…) qui échapperait à ce calcul.
      */
@@ -294,7 +294,8 @@ final class AccessibiliteTest extends WebTestCase
     {
         $palette = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
         $motif = '/\b(?:bg|text|border|ring|outline|fill|stroke|from|via|to|divide|decoration|shadow|accent|caret)-(?:(?:'.$palette.')-\d{2,3}|white|black)\b/';
-        $gabarits = (new \Symfony\Component\Finder\Finder())->files()->in(\dirname(__DIR__, 2).'/templates')->name('*.twig');
+        $racine = \dirname(__DIR__, 2);
+        $gabarits = (new \Symfony\Component\Finder\Finder())->files()->in([$racine.'/templates', $racine.'/assets'])->name(['*.twig', '*.js']);
 
         foreach ($gabarits as $gabarit) {
             preg_match_all($motif, $gabarit->getContents(), $trouvees);
