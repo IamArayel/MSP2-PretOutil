@@ -10,7 +10,7 @@ Requêtes de l'US3 (consulter et filtrer le catalogue) et de l'écran E4 (pério
 |---|---|
 | `ObjetRepository::rechercherCatalogue()` | Objets actifs triés par nom, filtrés, paginés par 20 |
 | `ReservationRepository::periodesReservees()` | Périodes déjà réservées d'un objet, à partir d'une date |
-| `App\Dto\CriteresCatalogue` | Filtres facultatifs : catégorie, date de début, date de fin |
+| `App\Dto\CriteresCatalogue` | Filtres facultatifs : texte cherché dans le nom (#109), catégorie, date de début, date de fin |
 | `App\Pagination\Page` | Une page de résultats (éléments, total, numéro), sans dépendance à Doctrine pour les contrôleurs et les vues |
 | `StatutReservation::actifs()` | Statuts qui bloquent un objet (`confirmee`, `en_cours`), définis à un seul endroit |
 
@@ -21,6 +21,7 @@ Les requêtes sont construites avec le QueryBuilder de Doctrine : toutes les val
 | Règle | Mise en œuvre |
 |---|---|
 | Catalogue = objets actifs (US6, RG5) | `o.actif = true` ; un objet désactivé n'apparaît jamais |
+| Recherche par nom (#109), aussi sur E7 (`listerPourGestion()`) | `LOWER(UNACCENT(o.nom)) LIKE LOWER(UNACCENT(:recherche))`, motif `%texte%` dont les `%`, `_` et `\` saisis sont échappés ; « echelle » trouve « Échelle ». Pas d'index : `unaccent()` n'est pas immuable, et le parcours d'une table de quelques centaines d'objets reste négligeable |
 | Objet hors service visible sans filtre de période | Affiché avec son état, pour informer ; exclu dès qu'une période est demandée (RG5 : non réservable) |
 | Disponible sur une période (RG2) | Aucune réservation active dont la période chevauche celle demandée, `NOT EXISTS` sur `reservation` |
 | Bornes incluses | `r.dateDebut <= :fin AND r.dateFin >= :debut` : même règle que la contrainte `EXCLUDE` (`daterange '[]'`) ; un objet rendu le 20 n'est pas disponible le 20 |
