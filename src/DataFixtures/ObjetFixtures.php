@@ -47,7 +47,7 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
 
     /** Clé de référence => photo de assets/images/objets/ ; les autres objets ont la vignette de remplacement. */
     private const array IMAGES = [
-        'perceuse' => 'perceuse.webp', 'ponceuse' => 'ponceuse.webp', 'meuleuse' => 'meuleuse.webp',
+        'perceuse' => 'perceuse.webp', 'scie-sauteuse' => 'scie-sauteuse.webp', 'ponceuse' => 'ponceuse.webp', 'meuleuse' => 'meuleuse.webp',
         'taille-haie' => 'taille-haie.webp', 'brouette' => 'brouette.webp', 'tente' => 'tente.webp',
         'rechaud' => 'rechaud.webp', 'glaciere' => 'glaciere.webp', 'lampe-frontale' => 'lampe-frontale.webp',
         'appareil-raclette' => 'appareil-raclette.webp', 'machine-pates' => 'machine-pates.webp',
