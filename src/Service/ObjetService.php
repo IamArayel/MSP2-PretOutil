@@ -9,28 +9,39 @@ use App\Entity\Objet;
 use App\Entity\Utilisateur;
 use App\Enum\ActionAudit;
 use App\Exception\ObjetDejaReserveException;
+use App\Exception\PhotoIllisibleException;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Gestion du catalogue (US6, écran E7). Le contrôleur vérifie les droits (ObjetVoter)
  * et transmet un DTO validé ; les règles de création et de retrait sont ici.
+ *
+ * Photos (#106) : la nouvelle photo est écrite avant l'enregistrement en base, effacée si celui-ci
+ * échoue ; l'ancienne n'est effacée qu'après l'enregistrement réussi. Aucun objet ne pointe vers
+ * une photo absente.
  */
 class ObjetService
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AuditLogger $auditLogger,
+        private readonly StockagePhotoObjet $stockagePhoto,
     ) {
     }
 
+    /**
+     * @throws PhotoIllisibleException si la photo envoyée ne peut pas être décodée
+     */
     public function creer(ObjetDto $dto, Utilisateur $gestionnaire): Objet
     {
         $objet = new Objet();
+        // Photo d'abord : si elle est illisible, l'objet n'a pas été touché
+        $photo = $this->appliquerPhoto($objet, $dto);
         $this->appliquer($objet, $dto);
 
         $this->entityManager->persist($objet);
-        $this->entityManager->flush();
+        $this->enregistrer($photo);
 
         $this->auditLogger->journaliser(ActionAudit::ObjetCree, $gestionnaire, 'objet', $objet->getId(), [
             'nom' => $objet->getNom(),
@@ -41,15 +52,28 @@ class ObjetService
         return $objet;
     }
 
+    /**
+     * @throws PhotoIllisibleException si la photo envoyée ne peut pas être décodée
+     */
     public function modifier(Objet $objet, ObjetDto $dto, Utilisateur $gestionnaire): void
     {
         $etatAvant = $objet->getEtat();
+        $photoAvant = $objet->getImage();
+        // Photo d'abord : si elle est illisible, l'objet n'a pas été touché
+        $photo = $this->appliquerPhoto($objet, $dto);
         $this->appliquer($objet, $dto);
-        $this->entityManager->flush();
+
+        $this->enregistrer($photo);
+        if ($photoAvant !== $objet->getImage()) {
+            $this->stockagePhoto->supprimer($photoAvant);
+        }
 
         $details = ['nom' => $objet->getNom()];
         if ($etatAvant !== $objet->getEtat()) {
             $details['etat'] = ['avant' => $etatAvant->value, 'apres' => $objet->getEtat()->value];
+        }
+        if ($photoAvant !== $objet->getImage()) {
+            $details['photo'] = null === $objet->getImage() ? 'retirée' : (null === $photoAvant ? 'ajoutée' : 'remplacée');
         }
 
         $this->auditLogger->journaliser(ActionAudit::ObjetModifie, $gestionnaire, 'objet', $objet->getId(), $details);
@@ -82,6 +106,7 @@ class ObjetService
     {
         // Relevés avant la suppression : l'identifiant n'existe plus après le flush.
         $id = $objet->getId();
+        $photo = $objet->getImage();
         $details = ['nom' => $objet->getNom(), 'categorie' => $objet->getCategorie()->getLibelle()];
 
         try {
@@ -91,7 +116,41 @@ class ObjetService
             throw new ObjetDejaReserveException($e);
         }
 
+        $this->stockagePhoto->supprimer($photo);
+
         $this->auditLogger->journaliser(ActionAudit::ObjetSupprime, $gestionnaire, 'objet', $id, $details);
+    }
+
+    /**
+     * Nouvelle photo écrite dans le dossier, ou photo retirée. Renvoie le nom de la photo écrite,
+     * à effacer si l'enregistrement en base échoue.
+     */
+    private function appliquerPhoto(Objet $objet, ObjetDto $dto): ?string
+    {
+        if (null !== $dto->photo) {
+            $nom = $this->stockagePhoto->enregistrer($dto->photo);
+            $objet->setImage($nom);
+
+            return $nom;
+        }
+
+        if ($dto->supprimerPhoto) {
+            $objet->setImage(null);
+        }
+
+        return null;
+    }
+
+    /** Enregistre en base ; en cas d'échec, la photo qui vient d'être écrite est effacée. */
+    private function enregistrer(?string $photoEcrite): void
+    {
+        try {
+            $this->entityManager->flush();
+        } catch (\Throwable $e) {
+            $this->stockagePhoto->supprimer($photoEcrite);
+
+            throw $e;
+        }
     }
 
     private function appliquer(Objet $objet, ObjetDto $dto): void

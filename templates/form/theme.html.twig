@@ -62,6 +62,18 @@
     {{ parent() }}
 {% endblock %}
 
+{# Case à cocher : la case puis son libellé, sur la même ligne (#106) #}
+{% block checkbox_row %}
+    <div class="mb-4">
+        <div class="flex items-start gap-3">
+            {{ form_widget(form, {attr: {class: 'mt-0.5 size-5 shrink-0 accent-primary'}}) }}
+            {{ form_label(form) }}
+        </div>
+        {{ form_help(form) }}
+        {{ form_errors(form) }}
+    </div>
+{% endblock %}
+
 {% block form_help %}
     {% if help is not empty %}
         <p id="{{ id }}_help" class="mt-1 text-xs text-ink-muted">{{ help }}</p>
