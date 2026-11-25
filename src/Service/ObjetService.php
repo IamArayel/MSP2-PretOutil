@@ -98,6 +98,24 @@ class ObjetService
     }
 
     /**
+     * Remise au catalogue d'un objet désactivé (#111) : il redevient réservable, avec les règles
+     * habituelles de ReservationService. Sans effet, et sans écriture, sur un objet déjà actif.
+     */
+    public function reactiver(Objet $objet, Utilisateur $gestionnaire): void
+    {
+        if ($objet->isActif()) {
+            return;
+        }
+
+        $objet->setActif(true);
+        $this->entityManager->flush();
+
+        $this->auditLogger->journaliser(ActionAudit::ObjetReactive, $gestionnaire, 'objet', $objet->getId(), [
+            'nom' => $objet->getNom(),
+        ]);
+    }
+
+    /**
      * Suppression physique, réservée à un objet jamais réservé (contrôlé par ObjetVoter::SUPPRIMER).
      *
      * @throws ObjetDejaReserveException si une réservation existe malgré tout (accès simultanés)

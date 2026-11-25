@@ -14,6 +14,7 @@ const ACTIONS = [
   'OBJET_CREE',
   'OBJET_MODIFIE',
   'OBJET_DESACTIVE',
+  'OBJET_REACTIVE', // ajoutée après v1.3.0 (#111) : objet remis au catalogue depuis l'écran E7
   'OBJET_SUPPRIME', // ajoutée à J6 (#56) : suppression physique d'un objet jamais réservé
   'RESERVATION_CREEE',
   'RESERVATION_ANNULEE',

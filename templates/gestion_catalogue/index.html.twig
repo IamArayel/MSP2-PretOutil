@@ -63,6 +63,13 @@
                                         <button type="submit" class="bouton-ligne bouton-secondaire"
                                                 aria-label="Désactiver : {{ objet.nom }} (retirer du catalogue)">Désactiver</button>
                                     </form>
+                                {% else %}
+                                    {# Remise au catalogue (#111) : sans confirmation, « Désactiver » l'annule en un clic #}
+                                    <form method="post" action="{{ path('app_gestion_catalogue_reactiver', {id: objet.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('reactiver-objet-' ~ objet.id) }}">
+                                        <button type="submit" class="bouton-ligne bouton-secondaire"
+                                                aria-label="Réactiver : {{ objet.nom }} (remettre au catalogue)">Réactiver</button>
+                                    </form>
                                 {% endif %}
 
                                 {# Suppression physique : seulement pour un objet jamais réservé (US6) #}

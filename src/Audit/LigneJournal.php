@@ -51,6 +51,7 @@ final readonly class LigneJournal
                 ? \sprintf(', état : %s → %s', self::etat($d['etat']['avant']), self::etat($d['etat']['apres']))
                 : ''),
             ActionAudit::ObjetDesactive => \sprintf('%s, retiré du catalogue', $d['nom'] ?? '?'),
+            ActionAudit::ObjetReactive => \sprintf('%s, remis au catalogue', $d['nom'] ?? '?'),
             ActionAudit::ObjetSupprime => \sprintf('%s (%s), supprimé définitivement', $d['nom'] ?? '?', $d['categorie'] ?? '?'),
             ActionAudit::ReservationCreee, ActionAudit::ReservationAnnulee => ($d['objet'] ?? '?').$periode(),
             ActionAudit::SortieValidee => \sprintf('%s, réservation n° %d', $d['objet'] ?? '?', $entree->getCible()->getId() ?? 0),

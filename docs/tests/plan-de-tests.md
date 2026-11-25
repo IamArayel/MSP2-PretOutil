@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-25
 
-435 tests, 2 048 assertions, tous verts, en 40 secondes environ, avec la barre de recherche (#109, 10 tests dans `RechercheCatalogueTest.php` et 3 pages de recherche dans les contrôles d'accessibilité). Sur le tag `v1.2.0` : 415 tests, 1 918 assertions, avec #106 : pages légales (19 tests, dont 5 dans `PagesLegalesTest.php` et les deux nouvelles pages dans la matrice d'accès et les contrôles d'accessibilité) et photos depuis E7 (13 tests). Sur le tag `v1.1.0` : 383 tests, 1 701 assertions. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
+447 tests, 2 091 assertions, tous verts, en 43 secondes environ, avec la réactivation d'un objet (#111, 12 tests : 2 dans `ObjetServiceTest.php`, 2 dans `ReactivationObjetTest.php`, la nouvelle route dans la matrice d'accès et le nouveau formulaire dans les tests CSRF). Sur le tag `v1.3.0` : 435 tests, 2 048 assertions, avec la barre de recherche (#109, 10 tests dans `RechercheCatalogueTest.php` et 3 pages de recherche dans les contrôles d'accessibilité). Sur le tag `v1.2.0` : 415 tests, 1 918 assertions, avec #106 : pages légales (19 tests, dont 5 dans `PagesLegalesTest.php` et les deux nouvelles pages dans la matrice d'accès et les contrôles d'accessibilité) et photos depuis E7 (13 tests). Sur le tag `v1.1.0` : 383 tests, 1 701 assertions. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -46,22 +46,24 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Security/Voter/ObjetVoterTest.php` | Unitaire | 15 | Gestion et suppression des objets |
 | `tests/Service/AuditLoggerTest.php` | Unitaire | 3 | RG8 sans bloquer l'action métier |
 | `tests/Service/PhotoObjetTest.php` | Unitaire | 6 | Photo réencodée en WebP 960 × 720, PNG transparent, EXIF et script ajouté effacés, orientation EXIF, fichier illisible, nom hors du dossier ignoré (#106) |
+| `tests/Service/ObjetServiceTest.php` | Unitaire | 2 | Réactivation d'un objet : remis au catalogue et journalisé, sans écriture s'il est déjà actif (#111) |
 | `tests/Service/CompteServiceTest.php` | Unitaire | 8 | Écran E8 : rôle, désactivation, réactivation, refus sur son propre compte |
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Intégration | 6 | `EXCLUDE`, quota sur données réelles |
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Integration/ObjetImageIntegrationTest.php` | Intégration | 5 | Contrainte `ck_objet_image` : nom de photo accepté, chemin ou autre format refusé |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
-| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 120 | Section 5 ci-dessous |
+| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 125 | Section 5 ci-dessous |
 | `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 81 | Structure accessible de E1 à E9, avec et sans recherche, et des pages légales, alternative des images, logo et favicon, photos des objets, aucune couleur hors charte ([accessibilite.md](accessibilite.md)) |
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
-| `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
+| `tests/Controller/SecuriteTest.php` | Fonctionnel | 59 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 | `tests/Controller/PagesErreurTest.php` | Fonctionnel | 11 | Pages d'erreur sans le mode débogage, API en JSON, redirection vers la connexion puis retour à la page (#101) |
 | `tests/Controller/GestionCataloguePhotoTest.php` | Fonctionnel | 7 | Photo depuis E7 : ajout, remplacement et retrait avec effacement du fichier, fichier texte et photo trop petite refusés, photo effacée avec l'objet (#106) |
 | `tests/Controller/RechercheCatalogueTest.php` | Fonctionnel | 10 | Recherche par nom sur E3 et E7 : sans casse ni accents, combinée à la catégorie, `%` et `_` cherchés tels quels, injection SQL et XSS sans effet, objet retiré visible seulement sur E7, saisie trop longue signalée, bouton Rechercher sans JavaScript, recherche conservée dans la pagination (#109) |
+| `tests/Controller/ReactivationObjetTest.php` | Fonctionnel | 2 | Bouton « Réactiver » seulement sur un objet retiré ; objet réactivé de retour dans E3 et E4, entrée `OBJET_REACTIVE` dans le journal (#111) |
 | `tests/Controller/PagesLegalesTest.php` | Fonctionnel | 5 | Liens vers les pages légales, inscription refusée sans les CGU, bandeau d'information, aucun cookie pour consulter le site (#106) |
 
-Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.
+Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 108 cas.
 
 ## 5. Contrôle d'accès de chaque route
 
@@ -69,7 +71,7 @@ Test : [tests/Controller/ControleAccesTest.php](../../tests/Controller/ControleA
 
 ### Méthode
 
-- La matrice `ROUTES` du test donne, pour chacune des 24 routes, la réponse attendue pour chaque profil. Un fournisseur de données en tire 96 cas, un par route et par profil.
+- La matrice `ROUTES` du test donne, pour chacune des 27 routes, la réponse attendue pour chaque profil. Un fournisseur de données en tire 108 cas, un par route et par profil.
 - `testMatriceCouvreToutesLesRoutes` compare la matrice à la liste des routes de l'application : une route ajoutée sans être placée dans la matrice fait échouer la suite.
 - Les requêtes en POST partent sans jeton CSRF : on vérifie qui passe le contrôle d'accès, pas l'action elle-même (le CSRF est testé par [#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66)).
 - Une redirection vers une autre page que la connexion compte comme un accès autorisé : l'action a répondu, par exemple en refusant le jeton absent.
@@ -81,6 +83,8 @@ Test : [tests/Controller/ControleAccesTest.php](../../tests/Controller/ControleA
 | Route | Méthode et chemin | Visiteur | Adhérent | Gestionnaire | Administrateur |
 |---|---|---|---|---|---|
 | `app_accueil` | GET `/` | 200 | 200 | 200 | 200 |
+| `app_cgu` | GET `/cgu` | 200 | 200 | 200 | 200 |
+| `app_confidentialite` | GET `/confidentialite` | 200 | 200 | 200 | 200 |
 | `app_catalogue` | GET `/catalogue` | 200 | 200 | 200 | 200 |
 | `app_catalogue_objet` | GET `/catalogue/{id}` | 200 | 200 | 200 | 200 |
 | `api_objet_disponibilites` | GET `/api/objets/{id}/disponibilites` | 200 | 200 | 200 | 200 |
@@ -95,6 +99,7 @@ Test : [tests/Controller/ControleAccesTest.php](../../tests/Controller/ControleA
 | `app_gestion_catalogue_modifier` | GET `/gestion/catalogue/{id}/modifier` | Connexion | 403 | 200 | 200 |
 | `app_gestion_catalogue_desactiver` | POST `/gestion/catalogue/{id}/desactiver` | Connexion | 403 | 302 | 302 |
 | `app_gestion_catalogue_supprimer` | POST `/gestion/catalogue/{id}/supprimer` | Connexion | 403 | 302 | 302 |
+| `app_gestion_catalogue_reactiver` | POST `/gestion/catalogue/{id}/reactiver` | Connexion | 403 | 302 | 302 |
 | `app_sorties_retours` | GET `/gestion/sorties-retours` | Connexion | 403 | 200 | 200 |
 | `app_sorties_retours_sortie` | POST `/gestion/sorties-retours/{id}/sortie` | Connexion | 403 | 303 | 303 |
 | `app_sorties_retours_retour` | POST `/gestion/sorties-retours/{id}/retour` | Connexion | 403 | 303 | 303 |
@@ -142,7 +147,7 @@ Test : [tests/Controller/SecuriteTest.php](../../tests/Controller/SecuriteTest.p
 
 | Risque | Protection | Test | Attendu |
 |---|---|---|---|
-| Requête forgée depuis un autre site (CSRF) | Jeton CSRF propre à chaque formulaire, et à chaque réservation ou objet pour les boutons | `testJetonCsrfAbsentOuFauxRefuse` : 10 formulaires (réserver, annuler, sortie, retour, désactiver, supprimer, créer et modifier un objet, inscription, connexion), jeton absent puis faux | Aucune erreur serveur, état inchangé en base (ou aucune session ouverte) |
+| Requête forgée depuis un autre site (CSRF) | Jeton CSRF propre à chaque formulaire, et à chaque réservation ou objet pour les boutons | `testJetonCsrfAbsentOuFauxRefuse` : 11 formulaires (réserver, annuler, sortie, retour, désactiver, réactiver, supprimer, créer et modifier un objet, inscription, connexion), jeton absent puis faux | Aucune erreur serveur, état inchangé en base (ou aucune session ouverte) |
 | | | `testJetonCsrfValideAccepte` : témoin, même envoi avec le vrai jeton | Action effectuée : le refus vient bien du jeton |
 | | Jeton sur le lien de déconnexion | `ControleAccesTest::testDeconnexionAvecJeton`, matrice (`/deconnexion` sans jeton → 403) | Section 5 |
 | Injection SQL | Requêtes Doctrine paramétrées, filtres convertis par le formulaire (catégorie en entité, dates en objets date), paramètres d'URL typés | `testFiltreDuCatalogueInjecteRefuse` : `' OR 1=1 --`, `{id} OR 1=1`, `{id}; DROP TABLE objet; --`, `%`, `_` dans la catégorie ; `%`, `' OR '1'='1` dans la date | 422, message d'erreur du filtre, aucune erreur SQL, table `objet` intacte |
@@ -194,7 +199,7 @@ Injection SQL : la protection est portée par Doctrine (paramètres liés) et pa
 |---|---|
 | Suite automatisée | 100 % des tests verts sur une base de test recréée |
 | Règles de gestion | Chaque règle de RG1 à RG6 a un cas refusé et un cas accepté ([correspondance-rg-tests.md](correspondance-rg-tests.md)) |
-| Contrôle d'accès | 24 routes sur 24 dans la matrice, 4 profils chacune |
+| Contrôle d'accès | 27 routes sur 27 dans la matrice, 4 profils chacune |
 | Jeu d'essai | Résultat obtenu identique à l'attendu pour chaque cas, ou écart expliqué ([#65](https://github.com/IamArayel/MSP2-PretOutil/issues/65)) |
 | Sécurité | Chaque protection a un test ([#66](https://github.com/IamArayel/MSP2-PretOutil/issues/66)) |
 

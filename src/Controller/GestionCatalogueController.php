@@ -125,6 +125,20 @@ final class GestionCatalogueController extends AbstractController
         return $this->redirectToRoute('app_gestion_catalogue');
     }
 
+    #[Route('/{id}/reactiver', name: 'app_gestion_catalogue_reactiver', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted(ObjetVoter::GERER, subject: 'objet')]
+    public function reactiver(Objet $objet, Request $request, #[CurrentUser] Utilisateur $gestionnaire): Response
+    {
+        if (!$this->jetonValide('reactiver-objet-'.$objet->getId(), $request)) {
+            return $this->redirectToRoute('app_gestion_catalogue');
+        }
+
+        $this->objetService->reactiver($objet, $gestionnaire);
+        $this->addFlash('succes', \sprintf('« %s » est de retour dans le catalogue.', $objet->getNom()));
+
+        return $this->redirectToRoute('app_gestion_catalogue');
+    }
+
     #[Route('/{id}/supprimer', name: 'app_gestion_catalogue_supprimer', requirements: ['id' => '\d+'], methods: ['POST'])]
     #[IsGranted(ObjetVoter::SUPPRIMER, subject: 'objet', message: 'Cet objet a déjà été réservé : il ne peut pas être supprimé.')]
     public function supprimer(Objet $objet, Request $request, #[CurrentUser] Utilisateur $gestionnaire): Response
