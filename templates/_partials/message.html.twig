@@ -1,11 +1,12 @@
 {#
     Message à l'utilisateur : flash après une action, refus, information.
-    Paramètres : type ('succes', 'erreur', 'avertissement', 'information'), texte, classes (facultatif).
+    Paramètres : type ('succes', 'erreur', 'avertissement', 'information'), texte, classes (facultatif),
+    role (facultatif, false pour un avis affiché dès le chargement, qui n'a pas à être annoncé).
     Succès et information sont annoncés poliment (role="status") ; erreur et avertissement
     interrompent la lecture (role="alert"). L'icône est décorative, le texte suffit.
 #}
 {% set type = type ?? 'information' %}
-{% set role = type in ['erreur', 'avertissement'] ? 'alert' : 'status' %}
+{% set role = role ?? (type in ['erreur', 'avertissement'] ? 'alert' : 'status') %}
 {# Noms de classes écrits en entier : Tailwind ne génère que les classes qu'il lit dans les gabarits. #}
 {% set variantes = {
     succes: 'message-succes',
@@ -13,7 +14,7 @@
     avertissement: 'message-avertissement',
     information: 'message-information',
 } %}
-<div class="message {{ variantes[type] }} {{ classes ?? '' }}" role="{{ role }}">
+<div class="message {{ variantes[type] }} {{ classes ?? '' }}"{% if role %} role="{{ role }}"{% endif %}>
     <svg class="mt-0.5 size-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
         {% if type == 'succes' %}
             <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.86-9.86a.75.75 0 0 0-1.22-.88l-3.24 4.5-1.65-1.65a.75.75 0 1 0-1.06 1.06l2.27 2.27a.75.75 0 0 0 1.14-.09l3.76-5.21Z" clip-rule="evenodd"/>
