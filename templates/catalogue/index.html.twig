@@ -5,18 +5,21 @@
 {% block body %}
     {% set page = catalogue.page %}
 
-    <h1 class="text-3xl font-bold">Catalogue</h1>
-    <p class="mt-1 text-ink-muted">
-        {% if criteres.aUnePeriode %}
-            {{ page.total }} objet{{ page.total > 1 ? 's' }} disponible{{ page.total > 1 ? 's' }}
-            du {{ criteres.debut|date('d/m/Y') }} au {{ criteres.fin|date('d/m/Y') }}
-        {% else %}
-            {{ page.total }} objet{{ page.total > 1 ? 's' }} à emprunter
-        {% endif %}
-    </p>
+    {% embed '_partials/entete_page.html.twig' with {titre: 'Catalogue'} %}
+        {% block sous_titre %}
+            <p class="sous-titre-page">
+                {% if criteres.aUnePeriode %}
+                    {{ page.total }} objet{{ page.total > 1 ? 's' }} disponible{{ page.total > 1 ? 's' }}
+                    du {{ criteres.debut|date('d/m/Y') }} au {{ criteres.fin|date('d/m/Y') }}
+                {% else %}
+                    {{ page.total }} objet{{ page.total > 1 ? 's' }} à emprunter
+                {% endif %}
+            </p>
+        {% endblock %}
+    {% endembed %}
 
     {# Filtres (US3) : envoyés en GET, conservés dans les liens de pagination #}
-    {{ form_start(filtres, {action: path('app_catalogue'), attr: {class: 'mt-6 rounded-lg border border-line bg-surface p-5', 'aria-label': 'Filtrer le catalogue', role: 'search'}}) }}
+    {{ form_start(filtres, {action: path('app_catalogue'), attr: {class: 'panneau mt-6 p-5', 'aria-label': 'Filtrer le catalogue', role: 'search'}}) }}
         <div class="flex flex-wrap items-start gap-4">
             <div class="w-full sm:w-64">
                 {{ form_label(filtres.categorie) }}
@@ -34,53 +37,24 @@
                 {{ form_errors(filtres.fin) }}
             </div>
             <div class="flex gap-3 sm:mt-6.5">
-                <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">Filtrer</button>
-                <a href="{{ path('app_catalogue') }}" class="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page">Réinitialiser</a>
+                <button type="submit" class="bouton bouton-primaire">Filtrer</button>
+                <a href="{{ path('app_catalogue') }}" class="bouton bouton-secondaire">Réinitialiser</a>
             </div>
         </div>
     {{ form_end(filtres, {render_rest: false}) }}
 
     {% if page.elements is empty %}
-        <p class="mt-8 rounded-lg border border-line bg-surface p-6 text-center text-ink-muted" role="status">
-            Aucun objet ne correspond à ces critères.
-        </p>
+        {{ include('_partials/etat_vide.html.twig', {
+            message: 'Aucun objet ne correspond à ces critères. Essayez une autre catégorie ou d\'autres dates.',
+            lien: {url: path('app_catalogue'), texte: 'Voir tout le catalogue'},
+        }) }}
     {% else %}
-        <ul class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ul class="grille-cartes mt-6">
             {% for objet in page.elements %}
-                <li class="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
-                    {{ include('catalogue/_photo.html.twig', {objet: objet}) }}
-                    <div class="flex flex-1 flex-col p-5">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-xs text-ink-muted">{{ objet.categorie.libelle }}</span>
-                            {{ include('catalogue/_badge_statut.html.twig', {statut: catalogue.statut(objet)}) }}
-                        </div>
-                        <h2 class="mt-3 text-lg font-semibold">{{ objet.nom }}</h2>
-                        <p class="mt-2 line-clamp-2 text-sm text-ink-muted">{{ objet.description }}</p>
-                        <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}"
-                           class="mt-4 self-start rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page"
-                           aria-label="Voir le détail : {{ objet.nom }}">
-                            Voir le détail
-                        </a>
-                    </div>
-                </li>
+                {{ include('_partials/carte_objet.html.twig', {objet: objet, statut: catalogue.statut(objet)}) }}
             {% endfor %}
         </ul>
 
-        {% if page.nombreDePages > 1 %}
-            {% set parametres = app.request.query.all %}
-            <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
-                {% if page.aUnePagePrecedente %}
-                    <a href="{{ path('app_catalogue', parametres|merge({page: page.numero - 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
-                {% else %}
-                    <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
-                {% endif %}
-                <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
-                {% if page.aUnePageSuivante %}
-                    <a href="{{ path('app_catalogue', parametres|merge({page: page.numero + 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
-                {% else %}
-                    <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
-                {% endif %}
-            </nav>
-        {% endif %}
+        {{ include('_partials/pagination.html.twig', {route: 'app_catalogue', parametres: app.request.query.all}) }}
     {% endif %}
 {% endblock %}

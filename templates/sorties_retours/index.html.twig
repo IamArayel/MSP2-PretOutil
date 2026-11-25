@@ -7,10 +7,10 @@
     {% set jours = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'] %}
     {% set mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
 
-    <h1 class="text-3xl font-bold">Sorties et retours</h1>
-    <p class="mt-1 text-ink-muted">
-        {{ jours[aujourdhui|date('w')]|capitalize }} {{ aujourdhui|date('j') }} {{ mois[aujourdhui|date('n') - 1] }} {{ aujourdhui|date('Y') }}
-    </p>
+    {{ include('_partials/entete_page.html.twig', {
+        titre: 'Sorties et retours',
+        sous_titre: jours[aujourdhui|date('w')]|capitalize ~ ' ' ~ aujourdhui|date('j') ~ ' ' ~ mois[aujourdhui|date('n') - 1] ~ ' ' ~ aujourdhui|date('Y'),
+    }) }}
 
     {# US7 : sorties à valider #}
     <section class="mt-8" aria-labelledby="sorties-titre">
@@ -36,7 +36,7 @@
                             <th scope="row" class="cellule font-normal">{{ reservation.objet.nom }}</th>
                             <td class="cellule">{{ adherent }}</td>
                             <td class="cellule whitespace-nowrap">{{ reservation.dateDebut|date('d/m') }} au {{ reservation.dateFin|date('d/m/Y') }}</td>
-                            <td class="cellule"><span class="badge bg-statut-reserve-bg text-statut-reserve">{{ reservation.statut.libelle }}</span></td>
+                            <td class="cellule"><span class="badge badge-reserve">{{ reservation.statut.libelle }}</span></td>
                             <td class="cellule">
                                 <form method="post" action="{{ path('app_sorties_retours_sortie', {id: reservation.id}) }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('sortie-reservation-' ~ reservation.id) }}">
@@ -82,9 +82,9 @@
                             <td class="cellule whitespace-nowrap">{{ reservation.dateDebut|date('d/m') }} au {{ reservation.dateFin|date('d/m/Y') }}</td>
                             <td class="cellule">
                                 {% if reservation.estEnRetardLe(aujourdhui) %}
-                                    <span class="badge bg-statut-hors-service-bg text-statut-hors-service">En retard</span>
+                                    <span class="badge badge-hors-service">En retard</span>
                                 {% else %}
-                                    <span class="badge bg-statut-sorti-bg text-statut-sorti">{{ reservation.statut.libelle }}</span>
+                                    <span class="badge badge-sorti">{{ reservation.statut.libelle }}</span>
                                 {% endif %}
                             </td>
                             <td class="cellule">

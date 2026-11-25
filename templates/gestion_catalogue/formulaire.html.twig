@@ -7,12 +7,12 @@
 {# Formulaire d'ajout et de modification (E7), même structure que E1 et E2 #}
 {% block body %}
     <div class="mx-auto max-w-2xl">
-        <a href="{{ path('app_gestion_catalogue') }}" class="text-sm font-semibold text-primary hover:underline">← Gestion du catalogue</a>
+        <a href="{{ path('app_gestion_catalogue') }}" class="lien text-sm">← Gestion du catalogue</a>
 
-        <div class="mt-4 rounded-lg border border-line bg-surface p-6">
-            <h1 class="text-2xl font-bold">{{ titre }}</h1>
+        <div class="panneau mt-4 p-6 sm:p-8">
+            <h1 class="titre-page text-2xl">{{ titre }}</h1>
             {% if objet and not objet.actif %}
-                <p class="mt-1 text-sm text-ink-muted">Cet objet est retiré du catalogue.</p>
+                <p class="mt-2"><span class="badge badge-neutre">Retiré du catalogue</span></p>
             {% endif %}
 
             <p class="mt-2 text-sm text-ink-muted">Tous les champs sont obligatoires, sauf mention contraire.</p>
@@ -28,10 +28,10 @@
                 {{ form_row(form.caracteristiques) }}
 
                 <div class="mt-2 flex gap-3">
-                    <button type="submit" class="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                    <button type="submit" class="bouton bouton-primaire">
                         {{ objet ? 'Enregistrer les modifications' : 'Ajouter au catalogue' }}
                     </button>
-                    <a href="{{ path('app_gestion_catalogue') }}" class="rounded-md border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:bg-page">Annuler</a>
+                    <a href="{{ path('app_gestion_catalogue') }}" class="bouton bouton-secondaire">Annuler</a>
                 </div>
             {{ form_end(form) }}
         </div>

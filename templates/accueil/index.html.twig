@@ -3,38 +3,41 @@
 {% block title %}Accueil{% endblock %}
 
 {% block body %}
-    <section class="grid items-center gap-10 rounded-2xl border border-line bg-surface p-8 shadow-sm sm:p-12 md:grid-cols-[1fr_auto]">
-        <div class="max-w-2xl">
-            <h1 class="text-4xl font-extrabold">Empruntez le matériel de l'association</h1>
+    <section class="panneau relative grid items-center gap-10 overflow-hidden rounded-2xl p-8 sm:p-12 md:grid-cols-[1fr_auto]">
+        {# Halo décoratif aux couleurs du logo, derrière le contenu #}
+        <div class="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-accent-soft blur-2xl" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute -bottom-28 -left-20 size-72 rounded-full bg-primary-soft blur-2xl" aria-hidden="true"></div>
+        <div class="relative max-w-2xl">
+            <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl">Empruntez le matériel de l'association</h1>
             <p class="mt-4 text-lg text-ink-muted">
                 Outillage, matériel de camping, audiovisuel : consultez le catalogue,
                 vérifiez les disponibilités et réservez en ligne.
             </p>
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ path('app_catalogue') }}" class="inline-block rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                <a href="{{ path('app_catalogue') }}" class="bouton bouton-primaire">
                     Voir le catalogue
                 </a>
                 {% if not app.user %}
                     {# Orange du logo en fond, texte encre : 5,71:1 #}
-                    <a href="{{ path('app_inscription') }}" class="inline-block rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-ink hover:bg-accent-hover">
+                    <a href="{{ path('app_inscription') }}" class="bouton bouton-accent">
                         Créer un compte
                     </a>
                 {% endif %}
             </div>
         </div>
         {# Logo informatif : son texte est repris dans l'alternative (RGAA 1.3) #}
-        <img src="{{ asset('images/logo.svg') }}" alt="Prêt'Outil, le prêt d'outils partagé" width="288" height="248" class="mx-auto w-56 md:w-72">
+        <img src="{{ asset('images/logo.svg') }}" alt="Prêt'Outil, le prêt d'outils partagé" width="288" height="248" class="relative mx-auto w-56 animate-rebond md:w-72">
     </section>
 
     <section class="mt-12" aria-labelledby="etapes-titre">
         <h2 id="etapes-titre" class="text-2xl font-bold">Comment ça marche</h2>
-        <ol class="mt-6 grid gap-4 sm:grid-cols-3">
+        <ol class="grille-cartes mt-6 lg:grid-cols-3">
             {% for etape in [
                 {titre: 'Choisissez', texte: 'Parcourez le catalogue et filtrez par catégorie ou par dates.'},
                 {titre: 'Réservez', texte: 'Indiquez vos dates : la disponibilité est vérifiée avant de confirmer.'},
                 {titre: 'Retirez et rapportez', texte: 'Le gestionnaire enregistre la sortie puis le retour du matériel.'},
             ] %}
-                <li class="rounded-xl border border-line bg-surface p-5">
+                <li class="carte p-5">
                     <span class="flex size-9 items-center justify-center rounded-full bg-primary-soft font-extrabold text-primary" aria-hidden="true">{{ loop.index }}</span>
                     <h3 class="mt-3 font-bold">{{ etape.titre }}</h3>
                     <p class="mt-1 text-sm text-ink-muted">{{ etape.texte }}</p>
