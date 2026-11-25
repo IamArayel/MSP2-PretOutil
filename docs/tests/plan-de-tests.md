@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-25
 
-372 tests, 1 576 assertions, tous verts, en 30 secondes environ, au gel du style (`v1.1.0`, #96). Le style a ajouté 9 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95). Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
+383 tests, 1 701 assertions, tous verts, en 35 secondes environ, sur le tag `v1.1.0`. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|

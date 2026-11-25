@@ -25,7 +25,7 @@ Chacun relit le ticket de l'autre : remarques notées ici, avec la suite donnée
 
 | Point | Résultat |
 |---|---|
-| Suite de tests | 372 tests, 1 576 assertions, tous verts ([plan-de-tests.md](../tests/plan-de-tests.md)) |
+| Suite de tests | 372 tests, 1 576 assertions, tous verts ; 383 tests et 1 701 assertions sur le tag `v1.1.0`, avec les pages d'erreur (#101) ([plan-de-tests.md](../tests/plan-de-tests.md)) |
 | Contraste de chaque texte affiché, 13 pages, 4 profils | Aucun texte sous le seuil |
 | Console et CSP pendant tout le parcours | Aucune erreur de l'application, seules les réponses 422 et 400 voulues |
 | Mobile (375 px) et zoom à 200 % | Conforme après correction du composant `cadre-tableau` (E6 et E8 élargissaient la page, défaut présent depuis J8) |
