@@ -8,3 +8,9 @@ services:
       target: frankenphp_prod
     environment:
       APP_SECRET: ${APP_SECRET}
+    volumes:
+      # Photos des objets envoyées depuis E7 (#106) : gardées d'une mise à jour de l'image à l'autre
+      - photos_objets:/app/public/uploads/objets
+
+volumes:
+  photos_objets:
