@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-25
 
-383 tests, 1 701 assertions, tous verts, en 35 secondes environ, sur le tag `v1.1.0`. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
+402 tests, 1 857 assertions, tous verts, en 35 secondes environ, avec les pages légales (#106) : 19 tests de plus, dont 5 dans `PagesLegalesTest.php` et les deux nouvelles pages dans la matrice d'accès et les contrôles d'accessibilité. Sur le tag `v1.1.0` : 383 tests, 1 701 assertions. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -50,12 +50,13 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
 | `tests/Integration/ObjetImageIntegrationTest.php` | Intégration | 5 | Contrainte `ck_objet_image` : nom de photo accepté, chemin ou autre format refusé |
 | `tests/Controller/Api/DisponibiliteControllerTest.php` | Fonctionnel | 14 | [api.md](../conception/api.md), section 6 |
-| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 112 | Section 5 ci-dessous |
-| `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 72 | Structure accessible de E1 à E9, alternative des images, logo et favicon, photos des objets, aucune couleur hors charte ([accessibilite.md](accessibilite.md)) |
+| `tests/Controller/ControleAccesTest.php` | Fonctionnel | 120 | Section 5 ci-dessous |
+| `tests/Controller/AccessibiliteTest.php` | Fonctionnel | 78 | Structure accessible de E1 à E9 et des pages légales, alternative des images, logo et favicon, photos des objets, aucune couleur hors charte ([accessibilite.md](accessibilite.md)) |
 | `tests/Controller/GestionComptesControllerTest.php` | Fonctionnel | 9 | Écran E8 par HTTP, session fermée d'un compte désactivé (RG9) |
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 | `tests/Controller/PagesErreurTest.php` | Fonctionnel | 11 | Pages d'erreur sans le mode débogage, API en JSON, redirection vers la connexion puis retour à la page (#101) |
+| `tests/Controller/PagesLegalesTest.php` | Fonctionnel | 5 | Liens vers les pages légales, inscription refusée sans les CGU, bandeau d'information, aucun cookie pour consulter le site (#106) |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.
 
