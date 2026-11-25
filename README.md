@@ -335,7 +335,7 @@ La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compt
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Utilisateurs           | Chargés depuis la table `utilisateur` par leur email ; mots de passe hachés (hasher `auto`)                                                                                                            |
 | Rôles                  | `role_hierarchy` : `ROLE_ADMIN` > `ROLE_MANAGER` > `ROLE_USER`                                                                                                                                         |
-| Accès                  | `access_control` : `/mes-reservations` (adhérent), `/gestion` (gestionnaire), `/admin` (administrateur) ; un visiteur est redirigé vers E1, un rôle insuffisant reçoit un 403                          |
+| Accès                  | `access_control` : `/mes-reservations` (adhérent), `/gestion` (gestionnaire), `/admin` (administrateur) ; un visiteur est redirigé vers E1 avec le message « Connectez-vous pour accéder à cette page… » (`App\Security\ConnexionRequiseEntryPoint`), puis ramené à la page demandée une fois connecté ; un rôle insuffisant reçoit la page 403 |
 | Échecs                 | Message générique « Email ou mot de passe incorrect. », que l'email existe ou non                                                                                                                      |
 | Blocage (US2)          | `login_throttling` : 5 échecs par email et adresse IP, blocage de 15 minutes                                                                                                                           |
 | Compte désactivé (RG9) | `App\Security\UtilisateurChecker`, appliqué après la vérification du mot de passe                                                                                                                      |
@@ -343,6 +343,23 @@ La connexion se fait sur <https://localhost/connexion> (écran E1) avec un compt
 | Inscription (US1)      | DTO `InscriptionDto` validé (email valide et unique, mot de passe de 12 caractères minimum), compte créé par `InscriptionService` : email en minuscules, mot de passe haché, `ROLE_USER`, compte actif |
 
 La page `/admin` est provisoire : elle sera remplacée par l'écran E8. `/mes-reservations` est l'écran E5 et `/gestion/sorties-retours` l'écran E6.
+
+#### Pages d'erreur
+
+Pages de la charte, dans `templates/bundles/TwigBundle/Exception/` (#101). Symfony les affiche quand le mode débogage est désactivé, comme en production ; en développement, il montre sa page de débogage, et les pages se prévisualisent sur `https://localhost/_error/{code}`.
+
+| Code | Gabarit | Cas |
+|---|---|---|
+| 404 | `error404.html.twig` | Adresse inconnue, objet inexistant ou retiré du catalogue |
+| 403 | `error403.html.twig` | Personne connectée sans les droits (un visiteur est redirigé vers la connexion) |
+| 405 | `error405.html.twig` | Action appelée par un lien au lieu de son bouton |
+| 429 | `error429.html.twig` | Trop de requêtes |
+| 500 | `error500.html.twig` | Erreur du serveur : page autonome, sans barre de navigation, pour s'afficher même si la base ne répond pas |
+| Autres | `error.html.twig` | Page générique |
+
+Mise en page commune : `_page_erreur.html.twig` ; illustrations : `_illustration.html.twig`. Aucun détail technique n'est affiché : il reste dans les logs du serveur. L'API garde ses erreurs en JSON (`ApiExceptionSubscriber`).
+
+`assets/styles/app.css` déclare `@source "../../templates"` : la détection automatique de Tailwind ignore les dossiers nommés `bundles`, et les classes des pages d'erreur ne seraient pas générées.
 
 Pour débloquer un compte pendant les tests, vider le compteur de tentatives :
 
@@ -597,6 +614,7 @@ docker compose exec php bin/phpunit --testdox
 | `tests/Controller/AccessibiliteTest.php` | Accessibilité de E1 à E9, états d'erreur compris : langue, titre de page, titres sans saut, étiquette de chaque champ, aide et erreurs reliées au champ, tableaux, lien d'évitement, page en cours dans la navigation, nom accessible qui contient le texte visible, contour des listes de choix, tableaux défilants dans leur cadre |
 | `tests/Controller/ControleAccesTest.php`                  | Contrôle d'accès des 24 routes pour les 4 profils (O5), liste des routes complète, actions refusées en GET, déconnexion avec jeton, compte désactivé (RG9), réservation d'un autre adhérent (IDOR), objet retiré ou inconnu                                                                                                     |
 | `tests/Controller/SecuriteTest.php`                       | Tests de sécurité (#66) : CSRF des 10 formulaires en POST (jeton absent ou faux refusé, vrai jeton accepté), injection SQL (filtres du catalogue, paramètres d'URL, saisies de l'inscription), injection NoSQL (filtre de E9), XSS (E3, E4, E7, E9, API), blocage après 5 échecs de connexion, mot de passe stocké en empreinte |
+| `tests/Controller/PagesErreurTest.php` | Pages d'erreur sans le mode débogage (404, 403, 405, 429, 500, générique) : code conservé, titres, structure accessible, aucun détail technique ; API toujours en JSON ; redirection vers la connexion avec un message, puis retour à la page demandée |
 | `tests/Controller/EntetesSecuriteTest.php`                | En-têtes de sécurité HTTP sur les pages et l'API (CSP, HSTS en HTTPS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`), nonce sur chaque script et différent à chaque requête, aucun JavaScript en ligne dans les gabarits                                                                                                      |
 
 Veille sécurité (OWASP Top 10:2025, chaque risque avec sa mesure et sa preuve, audit des dépendances) : [docs/securite/veille-owasp.md](docs/securite/veille-owasp.md).
@@ -886,3 +904,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | Composant `cadre-tableau` en `relative` | Les libellés masqués des listes de choix de E6 et E8 élargissaient la page sur mobile et au zoom à 200 % ; défaut présent depuis J8, trouvé par la mesure de la largeur |
 | 2026-11-25 | Captures refaites sous les mêmes noms, plus l'accueil, le logo et la page des composants ; captures de terminal sans écran de l'application gardées de J8 ; photos des captures réduites à 256 couleurs (21 Mo de captures ramenés à 15 Mo) | Les liens des notes restent valables ; le style ne change pas une sortie de terminal |
 | 2026-11-25 | Gel du style marqué par le tag `v1.1.0` sur `main`, `v1.0.0` conservé | Version présentée au jury identifiable ; l'état du premier gel reste consultable |
+| 2026-11-25 | Pages d'erreur de la charte (404, 403, 405, 429, 500, générique), la 500 sans barre de navigation | Message clair et liens pour continuer au lieu de la page brute ; la 500 s'affiche même si la base de données ne répond pas |
+| 2026-11-25 | Point d'entrée du pare-feu qui ajoute un message avant la redirection vers la connexion | Le visiteur sait pourquoi il arrive sur E1 ; il retrouve ensuite la page demandée |
+| 2026-11-25 | `@source "../../templates"` dans `app.css` | Tailwind ignorait `templates/bundles/` : les classes des pages d'erreur n'étaient pas générées |
