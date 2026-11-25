@@ -16,7 +16,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  */
 final class CriteresCatalogue
 {
+    public const int LONGUEUR_MAX_RECHERCHE = 100;
+
     public function __construct(
+        /** Partie du nom de l'objet, sans tenir compte de la casse ni des accents (#109). */
+        public ?string $recherche = null,
         public ?Categorie $categorie = null,
         #[Assert\GreaterThanOrEqual('today', message: 'La date de début ne peut pas être dans le passé.')]
         public ?\DateTimeImmutable $debut = null,

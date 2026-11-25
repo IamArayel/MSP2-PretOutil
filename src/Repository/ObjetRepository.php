@@ -59,20 +59,23 @@ class ObjetRepository extends ServiceEntityRepository
 
     /**
      * Écran E7 Gestion du catalogue (US6) : tous les objets, actifs puis désactivés,
-     * triés par nom, avec leur catégorie, paginés.
+     * triés par nom, avec leur catégorie, paginés. $recherche filtre sur le nom (#109).
      *
      * @return Page<Objet>
      */
-    public function listerPourGestion(int $numeroPage = 1): Page
+    public function listerPourGestion(int $numeroPage = 1, ?string $recherche = null): Page
     {
         $numeroPage = max(1, $numeroPage);
 
-        $requete = $this->createQueryBuilder('o')
+        $qb = $this->createQueryBuilder('o')
             ->addSelect('c')
             ->innerJoin('o.categorie', 'c')
             ->orderBy('o.actif', 'DESC')
             ->addOrderBy('o.nom', 'ASC')
-            ->addOrderBy('o.id', 'ASC')
+            ->addOrderBy('o.id', 'ASC');
+        $this->filtrerParNom($qb, $recherche);
+
+        $requete = $qb
             ->setFirstResult(($numeroPage - 1) * self::OBJETS_PAR_PAGE)
             ->setMaxResults(self::OBJETS_PAR_PAGE)
             ->getQuery();
@@ -96,6 +99,8 @@ class ObjetRepository extends ServiceEntityRepository
             ->orderBy('o.nom', 'ASC')
             ->addOrderBy('o.id', 'ASC');
 
+        $this->filtrerParNom($qb, $criteres->recherche);
+
         if (null !== $criteres->categorie) {
             $qb->andWhere('o.categorie = :categorie')
                 ->setParameter('categorie', $criteres->categorie);
@@ -106,6 +111,21 @@ class ObjetRepository extends ServiceEntityRepository
         }
 
         return $qb;
+    }
+
+    /**
+     * Objets dont le nom contient le texte cherché, sans tenir compte de la casse ni des accents
+     * (« echelle » trouve « Échelle »). Les caractères % et _ saisis sont cherchés tels quels.
+     */
+    private function filtrerParNom(QueryBuilder $qb, ?string $recherche): void
+    {
+        $recherche = mb_substr(trim($recherche ?? ''), 0, CriteresCatalogue::LONGUEUR_MAX_RECHERCHE);
+        if ('' === $recherche) {
+            return;
+        }
+
+        $qb->andWhere('LOWER(UNACCENT(o.nom)) LIKE LOWER(UNACCENT(:recherche))')
+            ->setParameter('recherche', '%'.addcslashes($recherche, '%_\\').'%');
     }
 
     /**

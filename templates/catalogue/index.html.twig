@@ -7,20 +7,23 @@
 
     {% embed '_partials/entete_page.html.twig' with {titre: 'Catalogue'} %}
         {% block sous_titre %}
-            <p class="sous-titre-page">
+            {# Zone remplacée par la recherche à la volée ; son texte est annoncé (assets/recherche.js) #}
+            <p id="total-catalogue" class="sous-titre-page" data-recherche-zone data-recherche-annonce>
                 {% if criteres.aUnePeriode %}
                     {{ page.total }} objet{{ page.total > 1 ? 's' }} disponible{{ page.total > 1 ? 's' }}
                     du {{ criteres.debut|date('d/m/Y') }} au {{ criteres.fin|date('d/m/Y') }}
                 {% else %}
                     {{ page.total }} objet{{ page.total > 1 ? 's' }} à emprunter
                 {% endif %}
+                {% if criteres.recherche %}pour « {{ criteres.recherche }} »{% endif %}
             </p>
         {% endblock %}
     {% endembed %}
 
-    {# Filtres (US3) : envoyés en GET, conservés dans les liens de pagination #}
-    {{ form_start(filtres, {action: path('app_catalogue'), attr: {class: 'panneau mt-6 p-5', 'aria-label': 'Filtrer le catalogue', role: 'search'}}) }}
-        <div class="flex flex-wrap items-start gap-4">
+    {# Recherche (#109) et filtres (US3) : envoyés en GET, conservés dans les liens de pagination #}
+    {{ form_start(filtres, {action: path('app_catalogue'), attr: {class: 'panneau mt-6 p-5', 'aria-label': 'Rechercher dans le catalogue', role: 'search'}}) }}
+        {{ include('_partials/champ_recherche.html.twig', {champ: filtres.q}) }}
+        <div class="mt-4 flex flex-wrap items-start gap-4">
             <div class="w-full sm:w-64">
                 {{ form_label(filtres.categorie) }}
                 {{ form_widget(filtres.categorie) }}
@@ -43,9 +46,10 @@
         </div>
     {{ form_end(filtres, {render_rest: false}) }}
 
+    <div id="resultats-catalogue" data-recherche-zone>
     {% if page.elements is empty %}
         {{ include('_partials/etat_vide.html.twig', {
-            message: 'Aucun objet ne correspond à ces critères. Essayez une autre catégorie ou d\'autres dates.',
+            message: 'Aucun objet ne correspond à ces critères. Essayez un autre nom, une autre catégorie ou d\'autres dates.',
             lien: {url: path('app_catalogue'), texte: 'Voir tout le catalogue'},
         }) }}
     {% else %}
@@ -57,4 +61,5 @@
 
         {{ include('_partials/pagination.html.twig', {route: 'app_catalogue', parametres: app.request.query.all}) }}
     {% endif %}
+    </div>
 {% endblock %}
