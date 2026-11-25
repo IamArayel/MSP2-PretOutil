@@ -280,9 +280,11 @@
 
 /* ---------- Tableaux ---------- */
 
-/* Cadre d'un tableau : sur mobile, le tableau défile dans son cadre, pas la page. */
+/* Cadre d'un tableau : sur mobile, le tableau défile dans son cadre, pas la page.
+   relative : les libellés masqués (sr-only, en position absolue) des listes de choix
+   restent dans le cadre au lieu d'élargir la page. */
 @utility cadre-tableau {
-    @apply mt-4 overflow-x-auto rounded-xl border border-line bg-surface shadow-carte;
+    @apply relative mt-4 overflow-x-auto rounded-xl border border-line bg-surface shadow-carte;
 }
 
 /* Tableau : largeur minimale, en dessous de laquelle le cadre défile. Ligne survolée teintée. */
