@@ -1,0 +1,10 @@
+{# 405 : action appelée autrement que prévu (lien vers une action qui exige un formulaire). #}
+{% extends 'bundles/TwigBundle/Exception/_page_erreur.html.twig' %}
+
+{% block titre_page %}Action impossible{% endblock %}
+
+{% block titre %}Action impossible depuis un lien{% endblock %}
+
+{% block explication %}
+    <p>Cette action se fait uniquement depuis le bouton prévu sur la page. Rien n'a été modifié.</p>
+{% endblock %}

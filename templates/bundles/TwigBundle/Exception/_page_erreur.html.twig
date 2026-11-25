@@ -1,0 +1,28 @@
+{#
+    Mise en page commune des pages d'erreur (Style-C2, #101). Symfony les affiche quand le mode
+    débogage est désactivé (production) ; en développement, aperçu sur /_error/{code}.
+    Blocs : titre_page, titre, explication, illustration, actions.
+    Variables de Symfony : status_code, status_text.
+#}
+{% extends 'base.html.twig' %}
+
+{% block title %}{% block titre_page %}Erreur {{ status_code }}{% endblock %}{% endblock %}
+
+{% block body %}
+    <section class="panneau mx-auto mt-6 flex max-w-2xl flex-col items-center gap-5 rounded-2xl px-6 py-12 text-center sm:px-12">
+        <div class="w-40 animate-rebond" aria-hidden="true">
+            {% block illustration %}{{ include('bundles/TwigBundle/Exception/_illustration.html.twig', {motif: 'boite'}) }}{% endblock %}
+        </div>
+        <p class="badge badge-neutre">Erreur {{ status_code }}</p>
+        <h1 class="titre-page">{% block titre %}Une erreur est survenue{% endblock %}</h1>
+        <div class="max-w-md text-ink-muted">
+            {% block explication %}<p>La page n'a pas pu être affichée.</p>{% endblock %}
+        </div>
+        <div class="mt-2 flex flex-wrap justify-center gap-3">
+            {% block actions %}
+                <a href="{{ path('app_accueil') }}" class="bouton bouton-primaire">Retour à l'accueil</a>
+                <a href="{{ path('app_catalogue') }}" class="bouton bouton-secondaire">Voir le catalogue</a>
+            {% endblock %}
+        </div>
+    </section>
+{% endblock %}

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Gabarits lus explicitement : la détection automatique de Tailwind ignore les dossiers
+   nommés « bundles », où sont rangées les pages d'erreur (templates/bundles/TwigBundle/). */
+@source "../../templates";
+
 /*
  * Charte tirée du logo (assets/images/logo.svg), contrastes calculés par
  * docs/tests/contrastes_charte.py :
