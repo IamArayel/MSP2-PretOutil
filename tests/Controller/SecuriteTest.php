@@ -77,6 +77,7 @@ final class SecuriteTest extends WebTestCase
 
         $aReserver = $this->objet($categorie, 'Scie sauteuse à réserver');
         $libre = $this->objet($categorie, 'Ponceuse jamais réservée');
+        $retire = $this->objet($categorie, 'Tronçonneuse retirée')->setActif(false);
         $this->objet($autreCategorie, 'Tondeuse d\'une autre catégorie');
 
         // Réservation à venir (annulable), qui commence aujourd'hui (sortie), en cours (retour).
@@ -97,6 +98,7 @@ final class SecuriteTest extends WebTestCase
             '{autreCategorie}' => (string) $autreCategorie->getId(),
             '{objetAReserver}' => (string) $aReserver->getId(),
             '{objetLibre}' => (string) $libre->getId(),
+            '{objetRetire}' => (string) $retire->getId(),
             '{aAnnuler}' => (string) $aAnnuler->getId(),
             '{aSortir}' => (string) $aSortir->getId(),
             '{aRendre}' => (string) $aRendre->getId(),
@@ -134,6 +136,9 @@ final class SecuriteTest extends WebTestCase
             [], 'actif', 'inactif'],
         'supprimer un objet (E7)' => ['gestionnaire', '/gestion/catalogue', 'form[action="/gestion/catalogue/{objetLibre}/supprimer"]', '_token',
             [], '1', '0'],
+        // Recherche : la ligne d'un objet retiré est en fin de liste, peut-être sur une autre page.
+        'réactiver un objet (E7)' => ['gestionnaire', '/gestion/catalogue?q=tronconneuse', 'form[action="/gestion/catalogue/{objetRetire}/reactiver"]', '_token',
+            [], 'inactif', 'actif'],
         'créer un objet (E7)' => ['gestionnaire', '/gestion/catalogue/nouveau', 'form[name="objet"]', 'objet[_token]',
             ['objet' => ['categorie' => '{categorie}', 'nom' => 'Objet créé (test CSRF)', 'description' => 'Test CSRF', 'etat' => 'bon']], '0', '1'],
         'modifier un objet (E7)' => ['gestionnaire', '/gestion/catalogue/{objetLibre}/modifier', 'form[name="objet"]', 'objet[_token]',
@@ -500,6 +505,7 @@ final class SecuriteTest extends WebTestCase
             'enregistrer un retour (E6)' => (string) $this->connexion->fetchOne('SELECT statut FROM reservation WHERE id = ?', [$v['{aRendre}']]),
             'désactiver un objet (E7)' => $this->connexion->fetchOne('SELECT actif FROM objet WHERE id = ?', [$v['{objetLibre}']]) ? 'actif' : 'inactif',
             'supprimer un objet (E7)' => (string) $this->connexion->fetchOne('SELECT COUNT(*) FROM objet WHERE id = ?', [$v['{objetLibre}']]),
+            'réactiver un objet (E7)' => $this->connexion->fetchOne('SELECT actif FROM objet WHERE id = ?', [$v['{objetRetire}']]) ? 'actif' : 'inactif',
             'créer un objet (E7)' => (string) $this->connexion->fetchOne('SELECT COUNT(*) FROM objet WHERE nom = ?', ['Objet créé (test CSRF)']),
             'modifier un objet (E7)' => (string) $this->connexion->fetchOne('SELECT nom FROM objet WHERE id = ?', [$v['{objetLibre}']]),
             'inscription (E2)' => (string) $this->connexion->fetchOne('SELECT COUNT(*) FROM utilisateur WHERE email = ?', ['csrf.inscription@pretoutil.test']),

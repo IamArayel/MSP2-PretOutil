@@ -71,6 +71,7 @@ final class ControleAccesTest extends WebTestCase
         'app_gestion_catalogue_modifier' => ['GET', '/gestion/catalogue/{objet}/modifier', self::CONNEXION, 403, 200, 200],
         'app_gestion_catalogue_desactiver' => ['POST', '/gestion/catalogue/{objetLibre}/desactiver', self::CONNEXION, 403, 302, 302],
         'app_gestion_catalogue_supprimer' => ['POST', '/gestion/catalogue/{objetLibre}/supprimer', self::CONNEXION, 403, 302, 302],
+        'app_gestion_catalogue_reactiver' => ['POST', '/gestion/catalogue/{objetLibre}/reactiver', self::CONNEXION, 403, 302, 302],
         'app_sorties_retours' => ['GET', '/gestion/sorties-retours', self::CONNEXION, 403, 200, 200],
         'app_sorties_retours_sortie' => ['POST', '/gestion/sorties-retours/{reservation}/sortie', self::CONNEXION, 403, 303, 303],
         'app_sorties_retours_retour' => ['POST', '/gestion/sorties-retours/{reservation}/retour', self::CONNEXION, 403, 303, 303],
