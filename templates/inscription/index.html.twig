@@ -20,6 +20,22 @@
             {{ form_row(form.telephone) }}
             {{ form_row(form.motDePasse) }}
 
+            {# Acceptation des CGU (#106) : le libellé porte les liens, ouverts dans un nouvel onglet pour garder la saisie #}
+            {% set cgu = form.accepteCgu %}
+            {% set cgu_erreurs = cgu.vars.errors|length > 0 %}
+            <div class="mb-4">
+                <div class="flex items-start gap-3">
+                    {{ form_widget(cgu, {attr: {class: 'mt-0.5 size-5 shrink-0 accent-primary'}|merge(cgu_erreurs ? {'aria-invalid': 'true', 'aria-describedby': cgu.vars.id ~ '_erreurs'} : {})}) }}
+                    <label for="{{ cgu.vars.id }}" class="text-sm">
+                        J'accepte les
+                        <a href="{{ path('app_cgu') }}" class="lien" target="_blank">conditions générales d'utilisation<span class="sr-only"> (nouvel onglet)</span></a>
+                        et j'ai lu la
+                        <a href="{{ path('app_confidentialite') }}" class="lien" target="_blank">politique de confidentialité<span class="sr-only"> (nouvel onglet)</span></a>.
+                    </label>
+                </div>
+                {{ form_errors(cgu) }}
+            </div>
+
             <button type="submit" class="bouton bouton-primaire mt-2 w-full">
                 Créer mon compte
             </button>
