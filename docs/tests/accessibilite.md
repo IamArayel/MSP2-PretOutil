@@ -163,6 +163,7 @@ Vérifié le 2026-11-25. Les composants communs (README, section Styles) remplac
 | Badge neutre : `slate-600` sur `slate-50` | 7,23:1 | 4,5:1 | Conforme |
 | Erreur sous un champ : rouille sur blanc | 5,01:1 | 4,5:1 | Conforme |
 | Contour d'un champ en erreur : rouille | 5,01:1 | 3:1 | Conforme |
+| Chevron des listes de choix (#100) : encre sur blanc | 12,04:1 | 3:1 | Conforme |
 | Pagination désactivée (opacité 50 %) | - | - | Élément inactif, non soumis au contraste (WCAG 1.4.3) |
 
 | Critère | Mesure |
