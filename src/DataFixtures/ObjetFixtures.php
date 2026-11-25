@@ -7,9 +7,12 @@ namespace App\DataFixtures;
 use App\Entity\Categorie;
 use App\Entity\Objet;
 use App\Enum\EtatObjet;
+use App\Service\StockagePhotoObjet;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\File;
 
 /**
  * Objets du jeu d'essai : plus de 20 pour tester la pagination (US3), avec un objet
@@ -45,7 +48,10 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
         'paddle' => ['Sport', 'Paddle gonflable', 'Pagaie, pompe et leash fournis.', EtatObjet::Bon, true],
     ];
 
-    /** Clé de référence => photo de assets/images/objets/ ; les autres objets ont la vignette de remplacement. */
+    /**
+     * Clé de référence => photo source de fixtures/photos-objets/ ; les autres objets ont la vignette de remplacement.
+     * Chaque photo passe par StockagePhotoObjet, comme une photo envoyée depuis E7 (#106).
+     */
     private const array IMAGES = [
         'perceuse' => 'perceuse.webp', 'scie-sauteuse' => 'scie-sauteuse.webp', 'ponceuse' => 'ponceuse.webp', 'meuleuse' => 'meuleuse.webp',
         'taille-haie' => 'taille-haie.webp', 'brouette' => 'brouette.webp', 'tente' => 'tente.webp',
@@ -54,8 +60,18 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
         'videoprojecteur' => 'videoprojecteur.webp', 'enceinte' => 'enceinte.webp',
     ];
 
+    public function __construct(
+        private readonly StockagePhotoObjet $stockagePhoto,
+        #[Autowire('%kernel.project_dir%/fixtures/photos-objets')]
+        private readonly string $dossierSources,
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
+        // Les photos des chargements précédents ne correspondent plus à aucun objet
+        $this->stockagePhoto->vider();
+
         foreach (self::OBJETS as $cle => [$categorie, $nom, $description, $etat, $actif]) {
             $objet = (new Objet())
                 ->setCategorie($this->getReference(CategorieFixtures::reference($categorie), Categorie::class))
@@ -63,7 +79,7 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
                 ->setDescription($description)
                 ->setEtat($etat)
                 ->setActif($actif)
-                ->setImage(self::IMAGES[$cle] ?? null);
+                ->setImage(isset(self::IMAGES[$cle]) ? $this->stockagePhoto->enregistrer(new File($this->dossierSources.'/'.self::IMAGES[$cle])) : null);
             $manager->persist($objet);
             $this->addReference(self::reference($cle), $objet);
         }
