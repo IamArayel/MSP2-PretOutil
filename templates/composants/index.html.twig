@@ -1,0 +1,168 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Composants{% endblock %}
+
+{#
+    Page de référence des composants de style (#95), en développement seulement.
+    Chaque exemple utilise le composant tel que les écrans l'utilisent : aucune classe propre à cette page.
+#}
+{% block body %}
+    {% embed '_partials/entete_page.html.twig' with {
+        titre: 'Composants de l\'interface',
+        sous_titre: 'Charte tirée du logo : chaque composant est défini une seule fois (assets/styles/app.css, templates/_partials/).',
+    } %}
+        {% block actions %}<span class="badge badge-accent">Environnement de développement</span>{% endblock %}
+    {% endembed %}
+
+    {% set section = 'mt-10' %}
+    {% set titre_section = 'text-xl font-bold' %}
+    {% set legende = 'mt-1 text-sm text-ink-muted' %}
+
+    <section class="{{ section }}" aria-labelledby="couleurs">
+        <h2 id="couleurs" class="{{ titre_section }}">Couleurs</h2>
+        <p class="{{ legende }}">Contrastes calculés sur fond blanc par docs/tests/contrastes_charte.py.</p>
+        <ul class="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {% for couleur in [
+                {nom: 'primary', classe: 'bg-primary', role: 'Boutons, liens, focus', contraste: '5,70:1'},
+                {nom: 'ink', classe: 'bg-ink', role: 'Texte, titres', contraste: '12,04:1'},
+                {nom: 'accent', classe: 'bg-accent', role: 'Fond, texte ink posé dessus', contraste: '5,71:1 (ink)'},
+                {nom: 'secondaire', classe: 'bg-secondaire', role: 'Décor seulement', contraste: '3,68:1'},
+                {nom: 'danger', classe: 'bg-danger', role: 'Suppression, erreurs', contraste: '5,01:1'},
+                {nom: 'champ', classe: 'bg-champ', role: 'Contour des champs', contraste: '4,77:1'},
+            ] %}
+                <li class="panneau overflow-hidden">
+                    <div class="h-16 {{ couleur.classe }}" aria-hidden="true"></div>
+                    <div class="p-3 text-sm">
+                        <p class="font-bold">{{ couleur.nom }}</p>
+                        <p class="text-ink-muted">{{ couleur.role }}</p>
+                        <p class="mt-1 font-semibold">{{ couleur.contraste }}</p>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="boutons">
+        <h2 id="boutons" class="{{ titre_section }}">Boutons</h2>
+        <p class="{{ legende }}">Survol : léger relief ; clic : enfoncement ; focus clavier : contour bleu pétrole ; désactivé : atténué.</p>
+        <div class="panneau mt-4 space-y-4 p-6">
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="bouton bouton-primaire">Primaire</button>
+                <button type="button" class="bouton bouton-accent">Accent</button>
+                <button type="button" class="bouton bouton-secondaire">Secondaire</button>
+                <button type="button" class="bouton bouton-danger">Danger</button>
+                <button type="button" class="bouton bouton-primaire" disabled>Désactivé</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="bouton-ligne bouton-primaire">Valider la sortie</button>
+                <button type="button" class="bouton-ligne bouton-secondaire">Modifier</button>
+                <button type="button" class="bouton-ligne bouton-danger">Supprimer</button>
+                <a href="#boutons" class="lien">Lien de texte</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="badges">
+        <h2 id="badges" class="{{ titre_section }}">Badges de statut</h2>
+        <div class="panneau mt-4 flex flex-wrap items-center gap-3 p-6">
+            {% for statut in statuts %}
+                {{ include('catalogue/_badge_statut.html.twig', {statut: statut}) }}
+            {% endfor %}
+            <span class="badge badge-neutre">Annulée</span>
+            <span class="badge badge-accent">Gestionnaire</span>
+        </div>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="messages">
+        <h2 id="messages" class="{{ titre_section }}">Messages</h2>
+        <p class="{{ legende }}">Succès et information en role="status", erreur et avertissement en role="alert" ; apparition en glissant.</p>
+        <div class="mt-4 grid gap-3 lg:grid-cols-2">
+            {{ include('_partials/message.html.twig', {type: 'succes', texte: 'Réservation confirmée : Brouette du 24/11/2026 au 25/11/2026.'}) }}
+            {{ include('_partials/message.html.twig', {type: 'information', texte: 'La disponibilité est vérifiée dès la saisie des deux dates.'}) }}
+            {{ include('_partials/message.html.twig', {type: 'avertissement', texte: 'L\'objet « Brouette » est maintenant hors service : il n\'est plus réservable.'}) }}
+            {{ include('_partials/message.html.twig', {type: 'erreur', texte: 'Cette période est déjà réservée pour cet objet.'}) }}
+        </div>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="champs">
+        <h2 id="champs" class="{{ titre_section }}">Champs de formulaire</h2>
+        <div class="panneau mt-4 grid gap-6 p-6 md:grid-cols-3">
+            <div>
+                <label for="exemple-champ" class="block text-sm font-medium">Champ</label>
+                <input id="exemple-champ" type="text" class="champ" placeholder="Texte indicatif">
+            </div>
+            <div>
+                <label for="exemple-aide" class="block text-sm font-medium">Champ avec aide</label>
+                <input id="exemple-aide" type="password" class="champ" aria-describedby="exemple-aide_help">
+                <p id="exemple-aide_help" class="mt-1 text-xs text-ink-muted">12 caractères minimum.</p>
+            </div>
+            <div>
+                <label for="exemple-erreur" class="block text-sm font-medium">Champ en erreur</label>
+                <input id="exemple-erreur" type="email" value="pas-un-email" class="champ champ-erreur" aria-invalid="true" aria-describedby="exemple-erreur_erreurs">
+                <ul id="exemple-erreur_erreurs" class="mt-1 text-sm font-medium text-danger"><li>Cet email n'est pas valide.</li></ul>
+            </div>
+            <div>
+                <label for="exemple-liste" class="block text-sm font-medium">Liste de choix</label>
+                <select id="exemple-liste" class="liste-choix mt-1.5 block w-full py-2">
+                    <option>Bon</option><option>Abîmé</option><option>Hors service</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="cartes">
+        <h2 id="cartes" class="{{ titre_section }}">Cartes d'objet</h2>
+        <p class="{{ legende }}">Survol ou focus : la carte se soulève, la photo s'agrandit ; les cartes apparaissent l'une après l'autre.</p>
+        <ul class="grille-cartes mt-4">
+            {% for carte in cartes %}
+                {{ include('_partials/carte_objet.html.twig', carte) }}
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="tableau">
+        <h2 id="tableau" class="{{ titre_section }}">Tableau</h2>
+        <div class="cadre-tableau" role="region" aria-labelledby="tableau" tabindex="0">
+            <table class="tableau">
+                <caption class="sr-only">Exemple de tableau</caption>
+                <thead class="tableau-entete">
+                    <tr>
+                        <th scope="col" class="cellule-entete">Objet</th>
+                        <th scope="col" class="cellule-entete">Période</th>
+                        <th scope="col" class="cellule-entete">Statut</th>
+                        <th scope="col" class="cellule-entete">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-line">
+                    <tr>
+                        <th scope="row" class="cellule font-normal">Tente 4 places</th>
+                        <td class="cellule">01/12 au 03/12/2026</td>
+                        <td class="cellule"><span class="badge badge-reserve">Confirmée</span></td>
+                        <td class="cellule"><button type="button" class="bouton-ligne bouton-danger">Annuler</button></td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="cellule font-normal">Glacière électrique</th>
+                        <td class="cellule">19/11 au 23/11/2026</td>
+                        <td class="cellule"><span class="badge badge-hors-service">En retard</span></td>
+                        <td class="cellule"><button type="button" class="bouton-ligne bouton-primaire">Enregistrer le retour</button></td>
+                    </tr>
+                    <tr><td colspan="4" class="cellule-vide">Ligne d'un tableau vide : « Aucun retour attendu. »</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="etat-vide">
+        <h2 id="etat-vide" class="{{ titre_section }}">État vide</h2>
+        {{ include('_partials/etat_vide.html.twig', {message: 'Vous n\'avez encore aucune réservation.', lien: {url: path('app_catalogue'), texte: 'Voir le catalogue'}}) }}
+    </section>
+
+    <section class="{{ section }}" aria-labelledby="pagination-titre">
+        <h2 id="pagination-titre" class="{{ titre_section }}">Pagination</h2>
+        <nav class="mt-4 flex items-center justify-center gap-4 text-sm" aria-label="Exemple de pagination">
+            <span class="bouton bouton-secondaire" aria-disabled="true">Précédent</span>
+            <span class="text-ink-muted">Page 1 sur 2</span>
+            <a href="#pagination-titre" class="bouton bouton-secondaire">Suivant</a>
+        </nav>
+    </section>
+{% endblock %}
