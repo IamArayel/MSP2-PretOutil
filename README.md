@@ -146,7 +146,6 @@ Renvoyé à une version ultérieure :
 
 - Paiement, caution, adhésion en ligne
 - Notifications par email ou SMS
-- Photos des objets
 - Application mobile native
 - Gestion de plusieurs associations
 - Plusieurs exemplaires d'un même objet (dans le MVP : 1 objet = 1 article physique)
@@ -643,7 +642,8 @@ Tailwind CSS 4 est intégré via `symfonycasts/tailwind-bundle` et AssetMapper :
 | `var/tailwind/app.built.css` | CSS compilé, non versionné, servi à la place de `app.css`                                                                                     |
 | `templates/base.html.twig`   | Gabarit commun : favicons, barre de navigation (`templates/_partials/navbar.html.twig`) et pied de page (`templates/_partials/pied_de_page.html.twig`) |
 | `assets/images/`             | Logo complet (`logo.svg`), icône seule (`logo-icone.svg`), favicons PNG ; SVG sans feuille de styles interne, couleurs en attributs |
-| `assets/images/objets/`      | Photos des objets du jeu d'essai : WebP 960 × 720 (4:3), de 23 à 180 Ko ; nom enregistré dans `objet.image` |
+| `fixtures/photos-objets/`    | Photos sources du jeu d'essai, passées par `StockagePhotoObjet` au chargement des fixtures comme une photo envoyée depuis E7 |
+| `public/uploads/objets/`     | Photos des objets (#106), non versionnées : WebP 960 × 720 (4:3) à nom aléatoire, enregistré dans `objet.image` ; servies par le serveur web, volume `photos_objets` en production |
 | `assets/fonts/`              | Police Nunito variable (WOFF2, caractères latins, 39 Ko) et sa licence OFL ; aucun appel à un service de polices tiers |
 
 En développement, le service `tailwind` de `compose.override.yaml` lance `tailwind:build --watch` : le CSS est recompilé à chaque modification de `assets/` ou `templates/`. Le résultat est stocké dans le volume `tailwind_build`, partagé avec le conteneur `php` (son `var/` n'est pas lié à la machine hôte). Pour suivre la compilation :
@@ -910,4 +910,8 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | `@source "../../templates"` dans `app.css` | Tailwind ignorait `templates/bundles/` : les classes des pages d'erreur n'étaient pas générées |
 | 2026-11-25 | Pages légales ouvertes à tous (#106) : conditions générales d'utilisation, avec les mentions légales, et politique de confidentialité, avec une section sur les cookies ; liens dans le pied de page | Information obligatoire des utilisateurs (LCEN, RGPD article 13) ; la politique reprend le dictionnaire de données, sans nouvelle règle |
 | 2026-11-25 | Case « J'accepte les CGU » obligatoire à l'inscription, non enregistrée en base | Pas de compte sans acceptation ; garder la date d'acceptation demanderait une colonne et une migration, renvoyées à une version ultérieure |
+| 2026-11-25 | Envoi de la photo d'un objet depuis E7 (#106) : ajout, remplacement, retrait ; ancienne photo effacée après l'enregistrement, nouvelle effacée si l'enregistrement échoue, photo effacée avec l'objet | Un gestionnaire qui ajoute un objet doit pouvoir le montrer ; aucun objet ne pointe vers une photo absente, aucun fichier orphelin |
+| 2026-11-25 | Photo réencodée par GD en WebP 960 × 720, recadrée au centre en 4:3, redressée selon l'orientation EXIF ; extensions `gd` et `exif` ajoutées à l'image Docker | Aucun octet du fichier envoyé n'est gardé : contenu caché et métadonnées (position GPS) effacés ; mêmes dimensions que les photos du jeu d'essai |
+| 2026-11-25 | Photo validée sur son contenu (`Assert\Image` avec `symfony/mime`) : JPEG, PNG ou WebP, 8 Mo, 640 × 480 au moins, 40 millions de pixels au plus ; nom aléatoire de 32 caractères | Le type est lu dans le fichier, pas dans son extension ; plafond de pixels contre une image piégée qui saturerait la mémoire ; aucun nom fourni par l'utilisateur sur le disque, `ck_objet_image` inchangée |
+| 2026-11-25 | Toutes les photos dans `public/uploads/objets/`, y compris celles du jeu d'essai, copiées par les fixtures depuis `fixtures/photos-objets/` | AssetMapper compile `assets/` : on ne peut pas y écrire ; un seul dossier et une seule règle d'affichage |
 | 2026-11-25 | Bandeau d'information sur les cookies, sans demande de consentement ; le choix « Compris » est gardé dans le navigateur (`localStorage`), sans cookie | Le seul cookie est celui de session, strictement nécessaire, donc dispensé de consentement (CNIL) ; un bouton « Refuser » sans effet induirait en erreur. Un test vérifie qu'aucun cookie n'est déposé pour consulter le site |

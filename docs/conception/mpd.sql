@@ -61,7 +61,7 @@ CREATE TABLE objet (
     CONSTRAINT fk_objet_categorie FOREIGN KEY (categorie_id)
         REFERENCES categorie (id) ON DELETE RESTRICT,
     CONSTRAINT ck_objet_etat CHECK (etat IN ('bon', 'abime', 'hors_service')),
-    -- Nom simple d'une photo de assets/images/objets/ : aucun chemin ne peut être enregistré
+    -- Nom simple d'une photo de public/uploads/objets/ : aucun chemin ne peut être enregistré
     CONSTRAINT ck_objet_image CHECK (image ~ '^[a-z0-9-]+\.webp$')
 );
 

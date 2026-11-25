@@ -37,7 +37,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 
 ## 4. Inventaire au 2026-11-25
 
-402 tests, 1 857 assertions, tous verts, en 35 secondes environ, avec les pages légales (#106) : 19 tests de plus, dont 5 dans `PagesLegalesTest.php` et les deux nouvelles pages dans la matrice d'accès et les contrôles d'accessibilité. Sur le tag `v1.1.0` : 383 tests, 1 701 assertions. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
+415 tests, 1 918 assertions, tous verts, en 35 secondes environ, avec #106 : pages légales (19 tests, dont 5 dans `PagesLegalesTest.php` et les deux nouvelles pages dans la matrice d'accès et les contrôles d'accessibilité) et photos depuis E7 (13 tests). Sur le tag `v1.1.0` : 383 tests, 1 701 assertions. Le style a ajouté 20 tests : alternative textuelle de chaque image, logo et favicon, photos des objets et contrainte `ck_objet_image` (#94) ; couleurs Tailwind brutes interdites dans les gabarits et page de référence des composants absente hors développement (#95) ; pages d'erreur et redirection vers la connexion (#101, 11 tests). La vérification du soir (#96), avant #101, comptait 372 tests et 1 576 assertions. Au gel de J8 (`v1.0.0`) : 363 tests, 1 466 assertions, identiques sur trois lancements de suite après un environnement relancé depuis zéro.
 
 | Fichier | Niveau | Tests | Détail |
 |---|---|---|---|
@@ -45,6 +45,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Security/Voter/ReservationVoterTest.php` | Unitaire | 16 | RG6, accès aux réservations |
 | `tests/Security/Voter/ObjetVoterTest.php` | Unitaire | 15 | Gestion et suppression des objets |
 | `tests/Service/AuditLoggerTest.php` | Unitaire | 3 | RG8 sans bloquer l'action métier |
+| `tests/Service/PhotoObjetTest.php` | Unitaire | 6 | Photo réencodée en WebP 960 × 720, PNG transparent, EXIF et script ajouté effacés, orientation EXIF, fichier illisible, nom hors du dossier ignoré (#106) |
 | `tests/Service/CompteServiceTest.php` | Unitaire | 8 | Écran E8 : rôle, désactivation, réactivation, refus sur son propre compte |
 | `tests/Integration/ReservationServiceIntegrationTest.php` | Intégration | 6 | `EXCLUDE`, quota sur données réelles |
 | `tests/Integration/AuditLogIntegrationTest.php` | Intégration | 9 | Validateur MongoDB, écriture seule |
@@ -56,6 +57,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Controller/SecuriteTest.php` | Fonctionnel | 56 | Section 6 ci-dessous |
 | `tests/Controller/EntetesSecuriteTest.php` | Fonctionnel | 12 | En-têtes de sécurité HTTP et CSP ([veille-owasp.md](../securite/veille-owasp.md), section 6) |
 | `tests/Controller/PagesErreurTest.php` | Fonctionnel | 11 | Pages d'erreur sans le mode débogage, API en JSON, redirection vers la connexion puis retour à la page (#101) |
+| `tests/Controller/GestionCataloguePhotoTest.php` | Fonctionnel | 7 | Photo depuis E7 : ajout, remplacement et retrait avec effacement du fichier, fichier texte et photo trop petite refusés, photo effacée avec l'objet (#106) |
 | `tests/Controller/PagesLegalesTest.php` | Fonctionnel | 5 | Liens vers les pages légales, inscription refusée sans les CGU, bandeau d'information, aucun cookie pour consulter le site (#106) |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 96 cas.

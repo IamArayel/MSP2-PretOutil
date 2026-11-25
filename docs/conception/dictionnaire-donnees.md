@@ -43,7 +43,7 @@ Article physique prêté par l'association.
 | `nom` | VARCHAR(120) | Oui | | | Nom affiché | US3, US6 | |
 | `description` | TEXT | Oui | | | Description courte | US3, US6 | |
 | `caracteristiques` | TEXT | Non | | | Caractéristiques détaillées (écran Détail) | US4 | |
-| `image` | VARCHAR(100) | Non | | nom simple en `.webp` (`^[a-z0-9-]+\.webp$`) | Photo de l'objet dans `assets/images/objets/` ; absente : vignette de remplacement | US3, US4 | |
+| `image` | VARCHAR(100) | Non | | nom simple en `.webp` (`^[a-z0-9-]+\.webp$`) | Photo de l'objet dans `public/uploads/objets/`, nom aléatoire donné à l'envoi depuis E7 ; absente : vignette de remplacement | US3, US4 | |
 | `etat` | VARCHAR(20) | Oui | `bon` | `bon`, `abime`, `hors_service` | État physique ; `hors_service` rend l'objet non réservable | RG5, RG7 | |
 | `actif` | BOOLEAN | Oui | `true` | | Faux : retiré du catalogue (suppression logique) | RG5, US6 | |
 | `cree_le` | TIMESTAMP(0) | Oui | maintenant | | Date d'ajout au catalogue (UTC) | | |
