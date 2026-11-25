@@ -27,6 +27,18 @@
                 {{ form_row(form.description) }}
                 {{ form_row(form.caracteristiques) }}
 
+                {# Photo (#106) : aperçu de la photo actuelle, envoi d'une nouvelle, case pour la retirer #}
+                {% if objet and objet.image %}
+                    <figure class="mb-4">
+                        {{ include('catalogue/_photo.html.twig', {objet: objet, classes: 'max-w-60 rounded-lg', chargement: 'eager'}) }}
+                        <figcaption class="mt-1 text-xs text-ink-muted">Photo actuelle</figcaption>
+                    </figure>
+                {% endif %}
+                {{ form_row(form.photo) }}
+                {% if form.supprimerPhoto is defined %}
+                    {{ form_row(form.supprimerPhoto) }}
+                {% endif %}
+
                 <div class="mt-2 flex gap-3">
                     <button type="submit" class="bouton bouton-primaire">
                         {{ objet ? 'Enregistrer les modifications' : 'Ajouter au catalogue' }}

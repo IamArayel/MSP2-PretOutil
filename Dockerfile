@@ -25,6 +25,8 @@ RUN <<-EOF
 	install-php-extensions \
 		@composer \
 		apcu \
+		exif \
+		gd \
 		intl \
 		opcache \
 		zip
@@ -111,7 +113,7 @@ RUN composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scri
 COPY --link --exclude=frankenphp/ . ./
 
 RUN <<-EOF
-	mkdir -p var/cache var/log var/share
+	mkdir -p var/cache var/log var/share public/uploads/objets
 	composer dump-autoload --classmap-authoritative --no-dev
 	composer dump-env prod
 	composer run-script --no-dev post-install-cmd
@@ -119,7 +121,7 @@ RUN <<-EOF
 		php bin/console asset-map:compile
 	fi
 	chmod +x bin/console
-	chmod -R g=u var
+	chmod -R g=u var public/uploads
 	sync
 EOF
 

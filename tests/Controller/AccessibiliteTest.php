@@ -279,11 +279,11 @@ final class AccessibiliteTest extends WebTestCase
         $this->entityManager->flush();
 
         $fiche = $this->client->request('GET', \sprintf('/catalogue/%d', $this->objet->getId()));
-        $photo = $fiche->filter('main article img[src*="/images/objets/perceuse"]');
+        $photo = $fiche->filter('main article img[src*="/uploads/objets/perceuse"]');
         self::assertSame(['', 'eager', 'high'], [$photo->attr('alt'), $photo->attr('loading'), $photo->attr('fetchpriority')]);
 
         $catalogue = $this->client->request('GET', '/catalogue?categorie='.$this->objet->getCategorie()->getId());
-        self::assertSame('lazy', $catalogue->filter('main li img[src*="/images/objets/perceuse"]')->attr('loading'));
+        self::assertSame('lazy', $catalogue->filter('main li img[src*="/uploads/objets/perceuse"]')->attr('loading'));
         self::assertGreaterThan(0, $catalogue->filter('main li div[aria-hidden="true"] img[src*="logo-icone"]')->count(), 'Vignette des objets sans photo');
     }
 

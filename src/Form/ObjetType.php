@@ -10,7 +10,9 @@ use App\Enum\EtatObjet;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -52,15 +54,32 @@ final class ObjetType extends AbstractType
                 'choice_label' => static fn (EtatObjet $etat): string => $etat->libelle(),
                 'help' => 'Un objet hors service n\'est plus réservable (RG5).',
             ])
+            ->add('photo', FileType::class, [
+                'label' => $options['avec_photo'] ? 'Remplacer la photo (facultatif)' : 'Photo (facultatif)',
+                'required' => false,
+                'help' => 'JPEG, PNG ou WebP, 8 Mo au plus. Recadrée en 4:3 ; ses données de localisation sont effacées.',
+                'attr' => ['accept' => 'image/jpeg,image/png,image/webp'],
+            ])
         ;
+
+        // Case proposée seulement quand l'objet modifié a déjà une photo
+        if ($options['avec_photo']) {
+            $builder->add('supprimerPhoto', CheckboxType::class, [
+                'label' => 'Retirer la photo actuelle',
+                'required' => false,
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => ObjetDto::class,
+            // Vrai en modification d'un objet qui a une photo : libellé « Remplacer » et case « Retirer »
+            'avec_photo' => false,
             'csrf_token_id' => 'objet',
             'csrf_message' => 'La page a expiré. Merci de renvoyer le formulaire.',
         ]);
+        $resolver->setAllowedTypes('avec_photo', 'bool');
     }
 }

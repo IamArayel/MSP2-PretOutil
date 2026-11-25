@@ -36,4 +36,4 @@ Chacun relit le ticket de l'autre : remarques notées ici, avec la suite donnée
 | Suite | Où |
 |---|---|
 | Tag `v1.1.0` sur `main` après la fusion, puis code de nouveau gelé | README, journal des décisions |
-| Envoi de photos depuis E7 (taille, type, stockage) | Évolution, hors du MVP (README, journal du 2026-11-25) |
+| Envoi de photos depuis E7 (taille, type, stockage) | Fait dans #106 (README, journal du 2026-11-25) |

@@ -9,6 +9,8 @@
 parameters:
     # Durée HSTS en secondes (1 an) : le navigateur n'utilise plus que HTTPS pour ce site.
     app.hsts_max_age: 31536000
+    # Photos des objets (#106) : dossier servi par le serveur web, sous l'adresse /uploads/objets/
+    app.dossier_photos_objets: '%kernel.project_dir%/public/uploads/objets'
 
 services:
     # default configuration for services in *this* file
@@ -28,3 +30,8 @@ when@dev:
     parameters:
         # Pas de HSTS sur localhost : il s'imposerait aux autres projets servis en local.
         app.hsts_max_age: 0
+
+when@test:
+    parameters:
+        # Les tests n'écrivent pas dans le dossier servi en développement
+        app.dossier_photos_objets: '%kernel.project_dir%/var/test/uploads/objets'

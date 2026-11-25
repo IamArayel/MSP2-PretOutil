@@ -8,12 +8,15 @@ use App\Dto\ObjetDto;
 use App\Entity\Objet;
 use App\Entity\Utilisateur;
 use App\Exception\ObjetDejaReserveException;
+use App\Exception\PhotoIllisibleException;
 use App\Form\ObjetType;
 use App\Repository\ObjetRepository;
 use App\Repository\ReservationRepository;
 use App\Security\Voter\ObjetVoter;
 use App\Service\ObjetService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -58,10 +61,14 @@ final class GestionCatalogueController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $objet = $this->objetService->creer($dto, $gestionnaire);
-            $this->addFlash('succes', \sprintf('« %s » a été ajouté au catalogue.', $objet->getNom()));
+            try {
+                $objet = $this->objetService->creer($dto, $gestionnaire);
+                $this->addFlash('succes', \sprintf('« %s » a été ajouté au catalogue.', $objet->getNom()));
 
-            return $this->redirectToRoute('app_gestion_catalogue');
+                return $this->redirectToRoute('app_gestion_catalogue');
+            } catch (PhotoIllisibleException $e) {
+                $this->erreurPhoto($form, $e);
+            }
         }
 
         return $this->render('gestion_catalogue/formulaire.html.twig', [
@@ -75,14 +82,18 @@ final class GestionCatalogueController extends AbstractController
     public function modifier(Objet $objet, Request $request, #[CurrentUser] Utilisateur $gestionnaire): Response
     {
         $dto = ObjetDto::depuisObjet($objet);
-        $form = $this->createForm(ObjetType::class, $dto);
+        $form = $this->createForm(ObjetType::class, $dto, ['avec_photo' => null !== $objet->getImage()]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->objetService->modifier($objet, $dto, $gestionnaire);
-            $this->addFlash('succes', \sprintf('« %s » a été modifié.', $objet->getNom()));
+            try {
+                $this->objetService->modifier($objet, $dto, $gestionnaire);
+                $this->addFlash('succes', \sprintf('« %s » a été modifié.', $objet->getNom()));
 
-            return $this->redirectToRoute('app_gestion_catalogue');
+                return $this->redirectToRoute('app_gestion_catalogue');
+            } catch (PhotoIllisibleException $e) {
+                $this->erreurPhoto($form, $e);
+            }
         }
 
         return $this->render('gestion_catalogue/formulaire.html.twig', [
@@ -138,6 +149,12 @@ final class GestionCatalogueController extends AbstractController
         $this->addFlash('erreur', 'La page a expiré. Merci de réessayer.');
 
         return false;
+    }
+
+    /** Photo valide en apparence mais impossible à décoder : erreur affichée sous le champ. */
+    private function erreurPhoto(FormInterface $form, PhotoIllisibleException $e): void
+    {
+        $form->get('photo')->addError(new FormError($e->getMessage()));
     }
 
     /** 422 quand le formulaire envoyé contient des erreurs, comme pour l'inscription. */

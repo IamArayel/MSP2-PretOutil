@@ -2,6 +2,9 @@
 .DS_Store
 Thumbs.db
 
+# Photos des objets envoyées depuis E7 ou copiées par les fixtures (#106)
+/public/uploads/
+
 # IDE
 .idea/
 .vscode/*

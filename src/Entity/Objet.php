@@ -34,7 +34,8 @@ class Objet
     private ?string $caracteristiques = null;
 
     /**
-     * Photo de l'objet : nom d'un fichier de assets/images/objets/ (null : vignette de remplacement).
+     * Photo de l'objet : nom d'un fichier de public/uploads/objets/ (#106), donné par StockagePhotoObjet
+     * (null : vignette de remplacement).
      * La contrainte CHECK de la base n'accepte qu'un nom simple en .webp, sans chemin.
      */
     #[ORM\Column(length: 100, nullable: true)]
