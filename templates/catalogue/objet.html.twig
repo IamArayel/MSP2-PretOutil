@@ -49,7 +49,7 @@
         </article>
 
         {# Réservation (US4), d'après la maquette E4 #}
-        <aside class="panneau self-start p-6 lg:sticky lg:top-28" aria-labelledby="reserver-titre">
+        <aside class="panneau self-start p-6 lg:sticky lg:top-36" aria-labelledby="reserver-titre">
             <h2 id="reserver-titre" class="text-xl font-semibold">Réserver cet objet</h2>
 
             {% set regles %}
@@ -59,7 +59,7 @@
             {% endset %}
 
             {% if not fiche.estReservable %}
-                {{ include('_partials/message.html.twig', {type: 'erreur', texte: 'Cet objet est hors service : il ne peut pas être réservé pour le moment.', classes: 'mt-4'}) }}
+                {{ include('_partials/message.html.twig', {type: 'erreur', texte: 'Cet objet est hors service : il ne peut pas être réservé pour le moment.', classes: 'mt-4', role: false}) }}
                 {{ regles }}
             {% elseif not is_granted('ROLE_USER') %}
                 <p class="mt-4 text-sm text-ink-muted">Connectez-vous pour réserver cet objet.</p>

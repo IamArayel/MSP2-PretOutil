@@ -64,6 +64,11 @@
 }
 
 @layer base {
+    /* Réserve la hauteur de l'en-tête fixe : un élément qui prend le focus n'est pas masqué (WCAG 2.4.11). */
+    html {
+        @apply lg:scroll-pt-36;
+    }
+
     body {
         @apply bg-page text-ink font-sans antialiased;
     }
@@ -133,6 +138,7 @@
 @utility bouton-ligne {
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold whitespace-nowrap;
     @apply transition duration-150 ease-out hover:-translate-y-px hover:shadow-carte active:translate-y-0 active:shadow-none;
+    @apply disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50;
 }
 
 /* Bleu pétrole, texte blanc : 5,70:1 (8,90:1 au survol). */

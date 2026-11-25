@@ -2,7 +2,8 @@
     Barre de navigation, d'après les maquettes Figma (E1 pour le visiteur, E3 pour l'adhérent).
     Les liens affichés dépendent des rôles (role_hierarchy : un admin voit tout).
 #}
-<header class="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
+{# Fixe seulement sur grand écran : en dessous, la barre passe sur plusieurs lignes et masquerait le contenu. #}
+<header class="z-20 lg:sticky lg:top-0 border-b border-line bg-surface/90 backdrop-blur">
     <div class="bandeau-logo" aria-hidden="true"></div>
     <nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
         {# Icône décorative (alt vide) : le nom est écrit à côté, il n'est pas lu deux fois.
