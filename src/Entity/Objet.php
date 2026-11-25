@@ -33,6 +33,13 @@ class Objet
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $caracteristiques = null;
 
+    /**
+     * Photo de l'objet : nom d'un fichier de assets/images/objets/ (null : vignette de remplacement).
+     * La contrainte CHECK de la base n'accepte qu'un nom simple en .webp, sans chemin.
+     */
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $image = null;
+
     /** Hors service : l'objet n'est plus réservable (RG5, RG7). */
     #[ORM\Column(length: 20, enumType: EtatObjet::class, options: ['default' => 'bon'])]
     private EtatObjet $etat = EtatObjet::Bon;
@@ -98,6 +105,18 @@ class Objet
     public function setCaracteristiques(?string $caracteristiques): static
     {
         $this->caracteristiques = $caracteristiques;
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
 
         return $this;
     }

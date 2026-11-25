@@ -1,0 +1,15 @@
+{#
+    Photo d'un objet au format 4:3, ou vignette de remplacement (icône du logo) s'il n'en a pas.
+    Alternative vide : le nom de l'objet est écrit juste à côté, il n'est pas lu deux fois (RGAA 1.2).
+    Paramètres : objet, classes (cadre), chargement ('lazy' dans une liste, 'eager' en tête de page).
+#}
+{% set chargement = chargement ?? 'lazy' %}
+{% if objet.image %}
+    <img src="{{ asset('images/objets/' ~ objet.image) }}" alt="" width="960" height="720"
+         loading="{{ chargement }}" decoding="async"{% if chargement == 'eager' %} fetchpriority="high"{% endif %}
+         class="aspect-4/3 w-full object-cover {{ classes ?? '' }}">
+{% else %}
+    <div class="flex aspect-4/3 w-full items-center justify-center bg-primary-soft {{ classes ?? '' }}" aria-hidden="true">
+        <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="96" height="96" class="size-24 opacity-60">
+    </div>
+{% endif %}

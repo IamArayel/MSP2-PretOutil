@@ -18,6 +18,7 @@
 
     <div class="mt-6 grid gap-8 lg:grid-cols-3">
         <article class="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
+            {{ include('catalogue/_photo.html.twig', {objet: objet, chargement: 'eager', classes: 'mb-6 rounded-md sm:max-w-md'}) }}
             <div class="flex items-center gap-3">
                 <span class="text-sm text-ink-muted">{{ objet.categorie.libelle }}</span>
                 {{ include('catalogue/_badge_statut.html.twig', {statut: fiche.statut}) }}
