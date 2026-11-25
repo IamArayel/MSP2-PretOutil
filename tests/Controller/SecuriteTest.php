@@ -139,7 +139,7 @@ final class SecuriteTest extends WebTestCase
         'modifier un objet (E7)' => ['gestionnaire', '/gestion/catalogue/{objetLibre}/modifier', 'form[name="objet"]', 'objet[_token]',
             ['objet' => ['nom' => 'Nom modifié (test CSRF)']], 'Ponceuse jamais réservée', 'Nom modifié (test CSRF)'],
         'inscription (E2)' => [null, '/inscription', 'form[name="inscription"]', 'inscription[_token]',
-            ['inscription' => ['prenom' => 'Camille', 'nom' => 'Csrf', 'email' => 'csrf.inscription@pretoutil.test', 'motDePasse' => 'MotDePasse-Csrf-2026']], '0', '1'],
+            ['inscription' => ['prenom' => 'Camille', 'nom' => 'Csrf', 'email' => 'csrf.inscription@pretoutil.test', 'motDePasse' => 'MotDePasse-Csrf-2026', 'accepteCgu' => '1']], '0', '1'],
         'connexion (E1)' => [null, '/connexion', 'form[action="/connexion"]', '_csrf_token',
             ['email' => self::EMAIL_ADHERENT, 'mot_de_passe' => self::MOT_DE_PASSE], 'anonyme', 'connecté'],
     ];
@@ -293,6 +293,7 @@ final class SecuriteTest extends WebTestCase
             'inscription[nom]' => $nom,
             'inscription[email]' => 'sql.inscription@pretoutil.test',
             'inscription[motDePasse]' => 'MotDePasse-Sql-2026',
+            'inscription[accepteCgu]' => true,
         ]);
 
         self::assertResponseRedirects('/connexion');
@@ -443,6 +444,7 @@ final class SecuriteTest extends WebTestCase
             'inscription[nom]' => 'Empreinte',
             'inscription[email]' => 'empreinte@pretoutil.test',
             'inscription[motDePasse]' => $motDePasse,
+            'inscription[accepteCgu]' => true,
         ]);
         self::assertResponseRedirects('/connexion');
 
