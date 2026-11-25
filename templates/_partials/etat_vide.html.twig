@@ -1,0 +1,22 @@
+{#
+    État vide d'une liste : illustration simple (boîte à outils aux couleurs du logo), message
+    et lien facultatif pour en sortir.
+    Paramètres : message, lien ({url, texte}, facultatif).
+    L'illustration est décorative (aria-hidden) ; le message est annoncé (role="status").
+#}
+<div class="panneau mt-6 flex flex-col items-center gap-4 px-6 py-10 text-center" role="status">
+    <svg class="w-32 animate-rebond" viewBox="0 0 128 96" aria-hidden="true" focusable="false">
+        <ellipse cx="64" cy="88" rx="44" ry="5" class="fill-line"/>
+        <path d="M44 30v-8a6 6 0 0 1 6-6h28a6 6 0 0 1 6 6v8" fill="none" stroke-width="6" stroke-linecap="round" class="stroke-ink"/>
+        <rect x="14" y="30" width="100" height="52" rx="10" class="fill-primary"/>
+        <rect x="14" y="30" width="100" height="16" rx="8" class="fill-primary-hover"/>
+        <rect x="54" y="40" width="20" height="12" rx="3" class="fill-accent"/>
+        <circle cx="38" cy="66" r="4" class="fill-primary-soft"/>
+        <circle cx="64" cy="66" r="4" class="fill-primary-soft"/>
+        <circle cx="90" cy="66" r="4" class="fill-primary-soft"/>
+    </svg>
+    <p class="max-w-sm text-ink-muted">{{ message }}</p>
+    {% if lien is defined and lien %}
+        <a href="{{ lien.url }}" class="bouton bouton-primaire">{{ lien.texte }}</a>
+    {% endif %}
+</div>

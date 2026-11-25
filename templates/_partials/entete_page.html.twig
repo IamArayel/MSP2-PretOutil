@@ -1,0 +1,17 @@
+{#
+    En-tête d'un écran : titre (le seul h1 de la page), sous-titre, actions à droite.
+    S'utilise avec embed :
+        {% embed '_partials/entete_page.html.twig' with {titre: '…', sous_titre: '…'} %}
+            {% block actions %}<a class="bouton bouton-primaire" …>…</a>{% endblock %}
+        {% endembed %}
+    Le sous-titre peut aussi être un bloc (texte avec des variables) : block sous_titre.
+#}
+<header class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="titre-page">{{ titre }}</h1>
+        {% block sous_titre %}
+            {% if sous_titre is defined and sous_titre %}<p class="sous-titre-page">{{ sous_titre }}</p>{% endif %}
+        {% endblock %}
+    </div>
+    {% block actions %}{% endblock %}
+</header>
