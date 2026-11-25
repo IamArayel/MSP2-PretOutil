@@ -19,6 +19,7 @@ enum ActionAudit: string
     case ObjetCree = 'OBJET_CREE';
     case ObjetModifie = 'OBJET_MODIFIE';
     case ObjetDesactive = 'OBJET_DESACTIVE';
+    case ObjetReactive = 'OBJET_REACTIVE';
     case ObjetSupprime = 'OBJET_SUPPRIME';
     case ReservationCreee = 'RESERVATION_CREEE';
     case ReservationAnnulee = 'RESERVATION_ANNULEE';
@@ -37,6 +38,7 @@ enum ActionAudit: string
             self::ObjetCree => 'Objet créé',
             self::ObjetModifie => 'Objet modifié',
             self::ObjetDesactive => 'Objet désactivé',
+            self::ObjetReactive => 'Objet réactivé',
             self::ObjetSupprime => 'Objet supprimé',
             self::ReservationCreee => 'Réservation créée',
             self::ReservationAnnulee => 'Réservation annulée',
