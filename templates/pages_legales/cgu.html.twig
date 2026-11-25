@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conditions générales d'utilisation{% endblock %}
+{% block description %}Règles d'utilisation du service de prêt de matériel Prêt'Outil et mentions légales.{% endblock %}
+
+{# Contenu éditorial (#106) : les règles citées sont celles du cahier des charges (RG1 à RG9). #}
+{% block body %}
+    <article class="panneau mx-auto max-w-3xl p-6 sm:p-10">
+        {{ include('_partials/entete_page.html.twig', {titre: 'Conditions générales d\'utilisation', sous_titre: 'En vigueur au 25 novembre 2026'}) }}
+
+        <div class="texte-legal">
+            <h2>1. Mentions légales</h2>
+            <ul>
+                <li>Éditeur : association Prêt'Outil, association loi 1901, dont le siège est à l'adresse indiquée dans ses statuts.</li>
+                <li>Directeur de la publication : le président ou la présidente de l'association.</li>
+                <li>Contact : <a href="mailto:contact@pretoutil.test" class="lien">contact@pretoutil.test</a>.</li>
+                <li>Hébergement : serveur de l'association ; l'hébergeur est précisé ici lors de la mise en ligne.</li>
+            </ul>
+
+            <h2>2. Objet</h2>
+            <p>
+                Prêt'Outil permet aux adhérents de l'association d'emprunter du matériel partagé : outillage, matériel
+                de camping, audiovisuel. Ces conditions fixent les règles d'utilisation du site et du prêt.
+                Créer un compte vaut acceptation de ces conditions.
+            </p>
+
+            <h2>3. Accès au service</h2>
+            <ul>
+                <li>Le catalogue et les disponibilités sont consultables par tous, sans compte.</li>
+                <li>La réservation est réservée aux adhérents disposant d'un compte.</li>
+                <li>Les gestionnaires enregistrent les sorties et les retours du matériel ; l'administrateur gère les comptes.</li>
+            </ul>
+
+            <h2>4. Compte</h2>
+            <ul>
+                <li>Les informations saisies à l'inscription doivent être exactes.</li>
+                <li>Le compte est personnel. Le mot de passe, de 12 caractères au moins, ne doit pas être communiqué.</li>
+                <li>Après plusieurs essais de mot de passe erronés, la connexion est bloquée quelques minutes.</li>
+            </ul>
+
+            <h2>5. Réservations</h2>
+            <ul>
+                <li>Une réservation porte sur des jours entiers, commence au plus tôt aujourd'hui et dure 14 jours au plus.</li>
+                <li>Un objet ne peut pas être réservé deux fois sur la même période.</li>
+                <li>Un adhérent a au plus 3 réservations en cours.</li>
+                <li>Un objet hors service ou retiré du catalogue ne peut pas être réservé.</li>
+                <li>Un adhérent qui n'a pas rendu un objet à la date prévue ne peut plus réserver avant de l'avoir rendu.</li>
+                <li>Une réservation peut être annulée jusqu'à la veille de son premier jour, depuis « Mes réservations ».</li>
+            </ul>
+
+            <h2>6. Prêt et retour du matériel</h2>
+            <ul>
+                <li>Le matériel est remis et rendu auprès d'un gestionnaire, qui enregistre la sortie puis le retour.</li>
+                <li>L'adhérent utilise le matériel avec soin et le rend propre, complet, à la date prévue.</li>
+                <li>Une casse ou un défaut est signalé au retour ; l'objet peut alors être mis hors service.</li>
+            </ul>
+
+            <h2>7. Désactivation d'un compte</h2>
+            <p>
+                En cas de manquement à ces conditions, l'administrateur peut désactiver un compte. Un compte désactivé
+                ne peut plus se connecter ; il peut être réactivé.
+            </p>
+
+            <h2>8. Données personnelles</h2>
+            <p>
+                Les données collectées et vos droits sont décrits dans la
+                <a href="{{ path('app_confidentialite') }}" class="lien">politique de confidentialité</a>.
+            </p>
+
+            <h2>9. Modification des conditions</h2>
+            <p>
+                L'association peut modifier ces conditions. La date d'entrée en vigueur figure en haut de la page.
+            </p>
+        </div>
+    </article>
+{% endblock %}

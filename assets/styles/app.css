@@ -358,3 +358,24 @@
 @utility logo-anime {
     @apply transition-transform duration-300 ease-out group-hover:-rotate-12 group-hover:scale-110;
 }
+
+/* ---------- Pages légales (#106) ---------- */
+
+/* Texte long des CGU et de la politique de confidentialité : intertitres, paragraphes, listes. */
+@utility texte-legal {
+    & h2 {
+        @apply mt-8 text-xl font-bold text-ink;
+    }
+    & p,
+    & ul {
+        @apply mt-3 leading-relaxed;
+    }
+    & ul {
+        @apply list-disc space-y-1 pl-6;
+    }
+}
+
+/* Bandeau d'information sur les cookies, en bas de l'écran ; affiché par assets/bandeau-cookies.js. */
+@utility bandeau-cookies {
+    @apply fixed inset-x-4 bottom-4 z-20 mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface p-4 text-sm shadow-carte-survol;
+}
