@@ -149,3 +149,28 @@ Même méthode que la section 5, dans le navigateur intégré de l'éditeur (Chr
 | Créer puis désactiver un objet (E7) | Formulaire du thème (étiquettes, erreurs reliées) ; « Désactiver » atteint dans la ligne de l'objet | Conforme : formulaire vide refusé (422, trois erreurs sous les champs), objet créé, puis désactivé au clavier |
 | Filtrer le journal (E9) | Liste, puis « Filtrer » ; « Réinitialiser » apparaît ensuite | Conforme : Tab de la liste à « Filtrer », Entrée, seules les entrées « SORTIE_VALIDEE » restent |
 | Mobile (375 px) : E6 à E9 | Tableaux défilants dans leur cadre, page sans défilement horizontal | Conforme : sur E6, E7, E8 et E9, chaque tableau défile dans son cadre et la page ne déborde pas (vérifié aussi sur E3 et E5) |
+
+## 9. Composants de style et animations (#95)
+
+Vérifié le 2026-11-25. Les composants communs (README, section Styles) remplacent les classes écrites écran par écran ; la structure HTML est inchangée, les tests de structure restent valables.
+
+| Couple de couleurs ajouté | Rapport | Seuil | Résultat |
+|---|---|---|---|
+| Bouton danger : rouille sur blanc, puis blanc sur rouille au survol | 5,01:1 | 4,5:1 | Conforme |
+| Bouton accent : encre sur orange (survol : orange foncé) | 5,71:1 (4,72:1) | 4,5:1 | Conforme |
+| Message d'information : bleu pétrole sur `primary-soft` | 5,04:1 | 4,5:1 | Conforme |
+| Badge accent (rôle gestionnaire) : encre sur `accent-soft` | 10,93:1 | 4,5:1 | Conforme |
+| Badge neutre : `slate-600` sur `slate-50` | 7,23:1 | 4,5:1 | Conforme |
+| Erreur sous un champ : rouille sur blanc | 5,01:1 | 4,5:1 | Conforme |
+| Contour d'un champ en erreur : rouille | 5,01:1 | 3:1 | Conforme |
+| Pagination désactivée (opacité 50 %) | — | — | Élément inactif, non soumis au contraste (WCAG 1.4.3) |
+
+| Critère | Mesure |
+|---|---|
+| WCAG 2.2.2 Mettre en pause, arrêter, masquer | Aucune animation en boucle : chaque animation dure moins d'une demi-seconde et ne se rejoue pas |
+| WCAG 2.3.3 Animations déclenchées par une interaction | `prefers-reduced-motion: reduce` rend animations et transitions instantanées ; vérifié avec Chrome (`--force-prefers-reduced-motion`) : les pages s'affichent directement dans leur état final |
+| RGAA 1.2 Images décoratives | Icônes des messages, illustration de l'état vide et flèche « Voir le détail » en `aria-hidden` ; le texte porte l'information |
+| RGAA 7.5 Messages de statut | Composant message : `role="status"` (succès, information), `role="alert"` (erreur, avertissement) |
+| RGAA 3.3 Contour des listes de choix | `AccessibiliteTest` accepte désormais les composants `champ` et `liste-choix` (même couleur `champ`, 4,77:1) au lieu des classes écrites à la main |
+| Couleurs hors charte | `AccessibiliteTest::testAucuneCouleurTailwindBruteDansLesGabarits` : aucun `teal-700`, `red-200`, `text-white`… dans `templates/` ; échoue sur l'ancien `base.html.twig` |
+
