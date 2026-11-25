@@ -219,7 +219,10 @@ final class AccessibiliteTest extends WebTestCase
         $this->addToAssertionCount(1);
     }
 
-    /** Contour de chaque liste de choix contrasté à 3:1 au moins (RGAA 3.3) : couleur champ, ou rouge d'erreur (red-700). */
+    /**
+     * Contour de chaque liste de choix contrasté à 3:1 au moins (RGAA 3.3) : composants champ
+     * ou liste-choix (couleur champ, 4,77:1), champ-erreur (rouille, 5,01:1) en erreur.
+     */
     #[DataProvider('ecrans')]
     /** @param array<string, mixed> $donnees */
     public function testListesDeChoixContrastees(string $methode, string $chemin, ?string $profil, array $donnees): void
@@ -227,7 +230,7 @@ final class AccessibiliteTest extends WebTestCase
         $page = $this->ouvrir($methode, $chemin, $profil, $donnees);
 
         $page->filter('select')->each(static function (Crawler $liste): void {
-            self::assertMatchesRegularExpression('/\b(liste-choix|border-champ|border-statut-hors-service)\b/', (string) $liste->attr('class'), \sprintf('Contour de la liste %s', $liste->attr('id')));
+            self::assertMatchesRegularExpression('/(^|\s)(liste-choix|champ)(\s|$)/', (string) $liste->attr('class'), \sprintf('Contour de la liste %s', $liste->attr('id')));
         });
         $this->addToAssertionCount(1);
     }
@@ -280,6 +283,24 @@ final class AccessibiliteTest extends WebTestCase
         $catalogue = $this->client->request('GET', '/catalogue?categorie='.$this->objet->getCategorie()->getId());
         self::assertSame('lazy', $catalogue->filter('main li img[src*="/images/objets/perceuse"]')->attr('loading'));
         self::assertGreaterThan(0, $catalogue->filter('main li div[aria-hidden="true"] img[src*="logo-icone"]')->count(), 'Vignette des objets sans photo');
+    }
+
+    /**
+     * Charte (#95) : les gabarits et les scripts de assets/ n'emploient que les couleurs nommées de la charte (primary, ink,
+     * danger, statut-*…), dont les contrastes sont calculés ; aucune couleur Tailwind brute
+     * (teal-700, red-200, text-white…) qui échapperait à ce calcul.
+     */
+    public function testAucuneCouleurTailwindBruteDansLesGabarits(): void
+    {
+        $palette = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
+        $motif = '/\b(?:bg|text|border|ring|outline|fill|stroke|from|via|to|divide|decoration|shadow|accent|caret)-(?:(?:'.$palette.')-\d{2,3}|white|black)\b/';
+        $racine = \dirname(__DIR__, 2);
+        $gabarits = (new \Symfony\Component\Finder\Finder())->files()->in([$racine.'/templates', $racine.'/assets'])->name(['*.twig', '*.js']);
+
+        foreach ($gabarits as $gabarit) {
+            preg_match_all($motif, $gabarit->getContents(), $trouvees);
+            self::assertSame([], $trouvees[0], $gabarit->getRelativePathname());
+        }
     }
 
     /** @param array<string, mixed> $donnees */

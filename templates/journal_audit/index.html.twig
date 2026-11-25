@@ -4,11 +4,10 @@
 
 {# Écran E9, d'après la maquette e9-journal-audit.png #}
 {% block body %}
-    <h1 class="text-3xl font-bold">Journal d'audit</h1>
-    <p class="mt-1 text-ink-muted">Actions sensibles enregistrées dans MongoDB, en lecture seule</p>
+    {{ include('_partials/entete_page.html.twig', {titre: 'Journal d\'audit', sous_titre: 'Actions sensibles enregistrées dans MongoDB, en lecture seule'}) }}
 
     <form method="get" action="{{ path('app_journal_audit') }}" role="search" aria-label="Filtrer le journal"
-          class="mt-6 flex flex-wrap items-end gap-4 rounded-lg border border-line bg-surface p-5">
+          class="panneau mt-6 flex flex-wrap items-end gap-4 p-5">
         <div class="w-full sm:w-72">
             <label for="action" class="block text-sm font-medium">Type d'action</label>
             <select id="action" name="action" class="liste-choix mt-1.5 block w-full py-2">
@@ -18,30 +17,30 @@
                 {% endfor %}
             </select>
         </div>
-        <button type="submit" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">Filtrer</button>
+        <button type="submit" class="bouton bouton-primaire">Filtrer</button>
         {% if filtre %}
-            <a href="{{ path('app_journal_audit') }}" class="rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-page">Réinitialiser</a>
+            <a href="{{ path('app_journal_audit') }}" class="bouton bouton-secondaire">Réinitialiser</a>
         {% endif %}
     </form>
 
     {% if filtre_inconnu %}
-        <p class="mt-4 text-sm text-statut-hors-service" role="alert">Type d'action inconnu : toutes les actions sont affichées.</p>
+        {{ include('_partials/message.html.twig', {type: 'avertissement', texte: 'Type d\'action inconnu : toutes les actions sont affichées.', classes: 'mt-4'}) }}
     {% endif %}
 
     {# Couleur du badge selon la famille d'action #}
     {% set couleurs = {
-        RETOUR_ENREGISTRE: 'bg-statut-sorti-bg text-statut-sorti',
-        SORTIE_VALIDEE: 'bg-statut-sorti-bg text-statut-sorti',
-        RESERVATION_CREEE: 'bg-statut-reserve-bg text-statut-reserve',
-        RESERVATION_ANNULEE: 'bg-statut-reserve-bg text-statut-reserve',
-        CONNEXION_ECHOUEE: 'bg-statut-hors-service-bg text-statut-hors-service',
-        OBJET_SUPPRIME: 'bg-statut-hors-service-bg text-statut-hors-service',
-        OBJET_CREE: 'bg-statut-disponible-bg text-statut-disponible',
-        OBJET_MODIFIE: 'bg-statut-disponible-bg text-statut-disponible',
-        OBJET_DESACTIVE: 'bg-statut-disponible-bg text-statut-disponible',
-        COMPTE_DESACTIVE: 'bg-statut-hors-service-bg text-statut-hors-service',
-        COMPTE_REACTIVE: 'bg-statut-disponible-bg text-statut-disponible',
-        ROLE_MODIFIE: 'bg-statut-reserve-bg text-statut-reserve',
+        RETOUR_ENREGISTRE: 'badge-sorti',
+        SORTIE_VALIDEE: 'badge-sorti',
+        RESERVATION_CREEE: 'badge-reserve',
+        RESERVATION_ANNULEE: 'badge-reserve',
+        CONNEXION_ECHOUEE: 'badge-hors-service',
+        OBJET_SUPPRIME: 'badge-hors-service',
+        OBJET_CREE: 'badge-disponible',
+        OBJET_MODIFIE: 'badge-disponible',
+        OBJET_DESACTIVE: 'badge-disponible',
+        COMPTE_DESACTIVE: 'badge-hors-service',
+        COMPTE_REACTIVE: 'badge-disponible',
+        ROLE_MODIFIE: 'badge-reserve',
     } %}
 
     <div class="cadre-tableau mt-6" role="region" aria-label="Entrées du journal" tabindex="0">
@@ -62,7 +61,7 @@
                         <td class="cellule whitespace-nowrap">{{ ligne.entree.horodatage|date('d/m/Y H:i') }}</td>
                         <td class="cellule">{{ ligne.utilisateur }}</td>
                         <td class="cellule">
-                            <span class="badge {{ couleurs[ligne.entree.action.value] ?? 'bg-page text-ink-muted' }}">{{ ligne.entree.action.value }}</span>
+                            <span class="badge {{ couleurs[ligne.entree.action.value] ?? 'badge-neutre' }}">{{ ligne.entree.action.value }}</span>
                         </td>
                         <td class="cellule">{{ ligne.detail }}</td>
                     </tr>

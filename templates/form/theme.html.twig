@@ -1,5 +1,5 @@
 {#
-    Thème des formulaires Symfony aux couleurs de la maquette (champ de l'écran E1).
+    Thème des formulaires Symfony : composants champ et champ-erreur de la charte (assets/styles/app.css).
     Déclaré dans config/packages/twig.yaml : tous les formulaires l'utilisent.
 #}
 {% use 'form_div_layout.html.twig' %}
@@ -22,8 +22,7 @@
     {% if type|default('text') == 'hidden' %}
         {{ parent() }}
     {% else %}
-    {% set classe_erreur = errors|length > 0 ? ' border-statut-hors-service' : ' border-champ' %}
-    {% set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1.5 block w-full rounded-md border px-3 py-2 text-sm placeholder:text-slate-500' ~ classe_erreur)|trim}) %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' champ' ~ (errors|length > 0 ? ' champ-erreur' : ''))|trim}) %}
     {# Aide et erreurs reliées au champ, lues avec l'étiquette (RGAA 11.10) ; Symfony le fait dans son form_row, que ce thème remplace #}
     {% set decrit_par = (help is not empty ? [id ~ '_help'] : [])|merge(errors|length > 0 ? [id ~ '_erreurs'] : []) %}
     {% if decrit_par is not empty %}
@@ -38,7 +37,7 @@
 
 {# Classes communes aux listes déroulantes et zones de texte (E7) #}
 {% block textarea_widget %}
-    {% set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1.5 block w-full rounded-md border px-3 py-2 text-sm' ~ (errors|length > 0 ? ' border-statut-hors-service' : ' border-champ'))|trim}) %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' champ' ~ (errors|length > 0 ? ' champ-erreur' : ''))|trim}) %}
     {# Aide et erreurs reliées au champ, lues avec l'étiquette (RGAA 11.10) ; Symfony le fait dans son form_row, que ce thème remplace #}
     {% set decrit_par = (help is not empty ? [id ~ '_help'] : [])|merge(errors|length > 0 ? [id ~ '_erreurs'] : []) %}
     {% if decrit_par is not empty %}
@@ -51,7 +50,7 @@
 {% endblock %}
 
 {% block choice_widget_collapsed %}
-    {% set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1.5 block w-full rounded-md border bg-surface px-3 py-2 text-sm' ~ (errors|length > 0 ? ' border-statut-hors-service' : ' border-champ'))|trim}) %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' champ' ~ (errors|length > 0 ? ' champ-erreur' : ''))|trim}) %}
     {# Aide et erreurs reliées au champ, lues avec l'étiquette (RGAA 11.10) ; Symfony le fait dans son form_row, que ce thème remplace #}
     {% set decrit_par = (help is not empty ? [id ~ '_help'] : [])|merge(errors|length > 0 ? [id ~ '_erreurs'] : []) %}
     {% if decrit_par is not empty %}
@@ -71,7 +70,7 @@
 
 {% block form_errors %}
     {% if errors|length > 0 %}
-        <ul id="{{ id }}_erreurs" class="mt-1 text-sm text-statut-hors-service">
+        <ul id="{{ id }}_erreurs" class="mt-1 text-sm font-medium text-danger">
             {% for error in errors %}
                 <li>{{ error.message }}</li>
             {% endfor %}

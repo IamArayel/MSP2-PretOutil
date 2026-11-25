@@ -3,15 +3,13 @@
 {% block title %}Connexion{% endblock %}
 
 {% block body %}
-    <div class="mx-auto mt-6 max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
-        <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="56" height="56" class="size-14">
-        <h1 class="mt-4 text-3xl font-extrabold">Connexion</h1>
+    <div class="panneau mx-auto mt-6 max-w-md rounded-2xl p-6 sm:p-8">
+        <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="56" height="56" class="size-14 animate-rebond">
+        <h1 class="titre-page mt-4">Connexion</h1>
         <p class="mt-1 text-sm text-ink-muted">Accédez à votre espace pour réserver du matériel.</p>
 
         {% if erreur %}
-            <div class="mt-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
-                {{ erreur }}
-            </div>
+            {{ include('_partials/message.html.twig', {type: 'erreur', texte: erreur, classes: 'mt-4'}) }}
         {% endif %}
 
         <form method="post" action="{{ path('app_connexion') }}" class="mt-4 space-y-4">
@@ -20,25 +18,25 @@
                 <input type="email" id="email" name="email" value="{{ dernier_email }}"
                        autocomplete="email" required autofocus
                        placeholder="camille.martin@exemple.fr"
-                       class="mt-1.5 block w-full rounded-md border border-champ px-3 py-2 text-sm placeholder:text-slate-500">
+                       class="champ">
             </div>
 
             <div>
                 <label for="mot_de_passe" class="block text-sm font-medium">Mot de passe</label>
                 <input type="password" id="mot_de_passe" name="mot_de_passe"
                        autocomplete="current-password" required
-                       class="mt-1.5 block w-full rounded-md border border-champ px-3 py-2 text-sm">
+                       class="champ">
             </div>
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-            <button type="submit" class="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+            <button type="submit" class="bouton bouton-primaire w-full">
                 Se connecter
             </button>
         </form>
 
         <p class="mt-4 text-sm text-ink-muted">
-            Pas encore de compte ? <a href="{{ path('app_inscription') }}" class="font-semibold text-primary hover:underline">Créer un compte</a>
+            Pas encore de compte ? <a href="{{ path('app_inscription') }}" class="lien">Créer un compte</a>
         </p>
     </div>
 {% endblock %}

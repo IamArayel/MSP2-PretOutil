@@ -1,21 +1,21 @@
 {#
-    Pagination des écrans de gestion (E7, E8, E9).
+    Pagination des listes (E3, E7, E8, E9).
     Variables : page (App\Pagination\Page), route, parametres (filtres à conserver, facultatif).
 #}
 {% set parametres = parametres ?? {} %}
 {% if page.nombreDePages > 1 %}
     <nav class="mt-8 flex items-center justify-center gap-4 text-sm" aria-label="Pagination">
         {% if page.aUnePagePrecedente %}
-            <a href="{{ path(route, parametres|merge({page: page.numero - 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="prev">Précédent</a>
+            <a href="{{ path(route, parametres|merge({page: page.numero - 1})) }}" class="bouton bouton-secondaire" rel="prev">Précédent</a>
         {% else %}
             {# Élément inactif : non soumis au contraste (WCAG 1.4.3) #}
-            <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Précédent</span>
+            <span class="bouton bouton-secondaire" aria-disabled="true">Précédent</span>
         {% endif %}
         <span class="text-ink-muted" aria-current="page">Page {{ page.numero }} sur {{ page.nombreDePages }}</span>
         {% if page.aUnePageSuivante %}
-            <a href="{{ path(route, parametres|merge({page: page.numero + 1})) }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page" rel="next">Suivant</a>
+            <a href="{{ path(route, parametres|merge({page: page.numero + 1})) }}" class="bouton bouton-secondaire" rel="next">Suivant</a>
         {% else %}
-            <span class="rounded-md border border-line px-4 py-2 font-semibold text-slate-400" aria-disabled="true">Suivant</span>
+            <span class="bouton bouton-secondaire" aria-disabled="true">Suivant</span>
         {% endif %}
     </nav>
 {% endif %}

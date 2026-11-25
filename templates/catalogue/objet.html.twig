@@ -8,22 +8,22 @@
 {% block body %}
     <nav aria-label="Fil d'Ariane" class="text-sm text-ink-muted">
         <ol class="flex flex-wrap gap-2">
-            <li><a href="{{ path('app_catalogue') }}" class="hover:text-primary">Catalogue</a></li>
+            <li><a href="{{ path('app_catalogue') }}" class="transition-colors hover:text-primary">Catalogue</a></li>
             <li aria-hidden="true">/</li>
-            <li><a href="{{ path('app_catalogue', {categorie: objet.categorie.id}) }}" class="hover:text-primary">{{ objet.categorie.libelle }}</a></li>
+            <li><a href="{{ path('app_catalogue', {categorie: objet.categorie.id}) }}" class="transition-colors hover:text-primary">{{ objet.categorie.libelle }}</a></li>
             <li aria-hidden="true">/</li>
-            <li aria-current="page" class="text-ink">{{ objet.nom }}</li>
+            <li aria-current="page" class="font-semibold text-ink">{{ objet.nom }}</li>
         </ol>
     </nav>
 
     <div class="mt-6 grid gap-8 lg:grid-cols-3">
-        <article class="rounded-lg border border-line bg-surface p-6 lg:col-span-2">
-            {{ include('catalogue/_photo.html.twig', {objet: objet, chargement: 'eager', classes: 'mb-6 rounded-md sm:max-w-md'}) }}
+        <article class="panneau p-6 lg:col-span-2">
+            {{ include('catalogue/_photo.html.twig', {objet: objet, chargement: 'eager', classes: 'mb-6 rounded-lg sm:max-w-md'}) }}
             <div class="flex items-center gap-3">
                 <span class="text-sm text-ink-muted">{{ objet.categorie.libelle }}</span>
                 {{ include('catalogue/_badge_statut.html.twig', {statut: fiche.statut}) }}
             </div>
-            <h1 class="mt-3 text-3xl font-bold">{{ objet.nom }}</h1>
+            <h1 class="titre-page mt-3">{{ objet.nom }}</h1>
             <p class="mt-4 text-ink-muted">{{ objet.description }}</p>
 
             {% if objet.caracteristiques %}
@@ -49,7 +49,7 @@
         </article>
 
         {# Réservation (US4), d'après la maquette E4 #}
-        <aside class="self-start rounded-lg border border-line bg-surface p-6" aria-labelledby="reserver-titre">
+        <aside class="panneau self-start p-6 lg:sticky lg:top-36" aria-labelledby="reserver-titre">
             <h2 id="reserver-titre" class="text-xl font-semibold">Réserver cet objet</h2>
 
             {% set regles %}
@@ -59,15 +59,13 @@
             {% endset %}
 
             {% if not fiche.estReservable %}
-                <p class="mt-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service">
-                    Cet objet est hors service : il ne peut pas être réservé pour le moment.
-                </p>
+                {{ include('_partials/message.html.twig', {type: 'erreur', texte: 'Cet objet est hors service : il ne peut pas être réservé pour le moment.', classes: 'mt-4', role: false}) }}
                 {{ regles }}
             {% elseif not is_granted('ROLE_USER') %}
                 <p class="mt-4 text-sm text-ink-muted">Connectez-vous pour réserver cet objet.</p>
                 <div class="mt-4 flex flex-col gap-3">
-                    <a href="{{ path('app_connexion') }}" class="rounded-md bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-primary-hover">Se connecter</a>
-                    <a href="{{ path('app_inscription') }}" class="rounded-md border border-line bg-surface px-4 py-2.5 text-center text-sm font-semibold text-ink hover:bg-page">Créer un compte</a>
+                    <a href="{{ path('app_connexion') }}" class="bouton bouton-primaire">Se connecter</a>
+                    <a href="{{ path('app_inscription') }}" class="bouton bouton-secondaire">Créer un compte</a>
                 </div>
                 {{ regles }}
             {% else %}
@@ -81,14 +79,12 @@
 
                     {# Refus d'une règle de gestion (ReservationService), affiché tel quel #}
                     {% for erreur in reservation.vars.errors %}
-                        <p class="mb-4 rounded-md border border-red-200 bg-statut-hors-service-bg px-4 py-3 text-sm text-statut-hors-service" role="alert">
-                            {{ erreur.message }}
-                        </p>
+                        {{ include('_partials/message.html.twig', {type: 'erreur', texte: erreur.message, classes: 'mb-4'}) }}
                     {% endfor %}
 
                     {{ regles }}
 
-                    <button type="submit" class="mt-4 w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover">
+                    <button type="submit" class="bouton bouton-primaire mt-4 w-full">
                         Confirmer la réservation
                     </button>
                 {{ form_end(reservation) }}

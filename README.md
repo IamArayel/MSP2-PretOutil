@@ -636,6 +636,28 @@ docker compose logs -f tailwind
 
 Les couleurs de la charte sont disponibles comme utilitaires : `bg-primary`, `text-primary`, `bg-accent`, `text-danger`, `border-line`, `text-ink-muted`, `bg-statut-disponible-bg`, etc. L'orange (`accent`) et le vert d'eau (`secondaire`) du logo n'ont pas le contraste d'un texte : ils servent de fond, avec un texte `ink`, ou de décor. Contrastes : [docs/tests/accessibilite.md](docs/tests/accessibilite.md), section 3.
 
+Composants communs à tous les écrans (#95), définis une seule fois. Les gabarits n'utilisent que ces composants et les couleurs nommées de la charte, jamais une couleur Tailwind brute (`AccessibiliteTest` le vérifie).
+
+| Composant | Où | Usage |
+|---|---|---|
+| Boutons : `bouton`, `bouton-ligne` (tableaux) + `bouton-primaire`, `bouton-accent`, `bouton-secondaire`, `bouton-danger` ; `lien` | `app.css` | Relief au survol, enfoncement au clic, état désactivé (`disabled`, `aria-disabled`) |
+| `badge` + `badge-disponible`, `-reserve`, `-sorti`, `-hors-service`, `-neutre`, `-accent` | `app.css` | Statuts, rôles, objet retiré |
+| `champ`, `champ-erreur`, `liste-choix` | `app.css`, thème `templates/form/theme.html.twig` | Champs de formulaire : contour 4,77:1, halo au focus |
+| `cadre-tableau`, `tableau`, `tableau-entete`, `cellule-entete`, `cellule`, `cellule-vide` | `app.css` | Tableaux défilants sur mobile, ligne survolée teintée |
+| `panneau`, `carte`, `grille-cartes` | `app.css` | Blocs de contenu ; cartes qui se soulèvent et apparaissent l'une après l'autre |
+| `lien-navigation`, `logo-anime` | `app.css` | Soulignement orange de la page en cours, icône du logo animée au survol |
+| Message (flash, refus, information) | `templates/_partials/message.html.twig` | Icône, couleur, `role="status"` ou `role="alert"`, apparition en glissant |
+| En-tête de page | `templates/_partials/entete_page.html.twig` | Titre `h1`, sous-titre, actions |
+| État vide | `templates/_partials/etat_vide.html.twig` | Illustration, message, lien pour continuer |
+| Carte d'objet | `templates/_partials/carte_objet.html.twig` | Catalogue (E3) |
+| Pagination | `templates/_partials/pagination.html.twig` | E3, E7, E8, E9 |
+
+Page de référence, en développement seulement : <https://localhost/dev/composants> (route `env: 'dev'`, absente en test et en production).
+
+Animations courtes et jouées une seule fois (apparition des pages et des cartes, messages, survol des boutons et des cartes). Avec le réglage système « Réduire les animations », elles deviennent instantanées (`prefers-reduced-motion`, WCAG 2.3.3).
+
+Les classes doivent être écrites en entier dans les gabarits : Tailwind ne génère que les classes qu'il y lit. Pour choisir une variante selon une valeur, passer par une table (`{disponible: 'badge-disponible', …}`), jamais par un nom construit (`'badge-' ~ statut`).
+
 ### Variables d'environnement
 
 | Fichier      | Versionné | Contenu                                                                                                                                                                                                       |
@@ -857,3 +879,6 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | Contrainte `ck_objet_image` : nom simple en `.webp` seulement | Le nom est concaténé au chemin du dossier des photos : la base refuse tout chemin (`../`), même si une future saisie oubliait de le contrôler |
 | 2026-11-25 | Photos recadrées en 4:3 et converties en WebP de 960 px (14 photos, moins de 1 Mo en tout, contre 75 Mo de sources) ; chargées à l'approche dans le catalogue, en priorité sur la fiche | Éco-conception et temps d'affichage |
 | 2026-11-25 | Maquette Figma alignée sur la charte du logo : variables de couleur mises à jour (`primary`, `ink`) et ajoutées (`accent`, `accent-hover`, `accent-soft`, `secondaire`, `danger`), police Nunito, composant `Logo` dans la barre de navigation, zone photo 4:3 dans `CarteObjet`, photos sur E3 et E4 | Le dossier montre la même charte en maquette et dans l'application ; les noms des variables reprennent ceux du bloc `@theme` |
+| 2026-11-25 | Composants de style définis une seule fois (utilitaires `@utility` de Tailwind et inclusions Twig), page de référence en développement seulement | Tous les écrans ont la même présentation ; la page sert de figure au dossier sans être exposée en production |
+| 2026-11-25 | Animations courtes, jouées une seule fois, désactivées par `prefers-reduced-motion` | Interface plus vivante sans gêner : aucun mouvement en boucle (WCAG 2.2.2), mouvements supprimés à la demande (WCAG 2.3.3) |
+| 2026-11-25 | Couleurs Tailwind brutes interdites dans les gabarits, vérifié par un test | Chaque couleur affichée vient de la charte, dont les contrastes sont calculés |

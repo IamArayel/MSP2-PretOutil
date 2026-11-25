@@ -2,44 +2,45 @@
     Barre de navigation, d'après les maquettes Figma (E1 pour le visiteur, E3 pour l'adhérent).
     Les liens affichés dépendent des rôles (role_hierarchy : un admin voit tout).
 #}
-<header class="border-b border-line bg-surface">
+{# Fixe seulement sur grand écran : en dessous, la barre passe sur plusieurs lignes et masquerait le contenu. #}
+<header class="z-20 lg:sticky lg:top-0 border-b border-line bg-surface/90 backdrop-blur">
     <div class="bandeau-logo" aria-hidden="true"></div>
     <nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
         {# Icône décorative (alt vide) : le nom est écrit à côté, il n'est pas lu deux fois.
            « Prêt' » et « Outil » aux couleurs du logo, toutes deux à plus de 4,5:1. #}
-        <a href="{{ path('app_accueil') }}" class="flex items-center gap-2 text-xl font-extrabold">
-            <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="40" height="40" class="size-10">
+        <a href="{{ path('app_accueil') }}" class="group flex items-center gap-2 text-xl font-extrabold">
+            <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="40" height="40" class="logo-anime size-10">
             <span><span class="text-primary">Prêt'</span><span class="text-danger">Outil</span></span>
         </a>
 
-        <ul class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-ink-muted">
+        <ul class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             {% set sur_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_catalogue' %}
-            <li><a href="{{ path('app_catalogue') }}" class="hover:text-primary{{ sur_catalogue ? ' font-semibold text-primary' }}"{% if sur_catalogue %} aria-current="page"{% endif %}>Catalogue</a></li>
+            <li><a href="{{ path('app_catalogue') }}" class="lien-navigation"{% if sur_catalogue %} aria-current="page"{% endif %}>Catalogue</a></li>
             {% if is_granted('ROLE_USER') %}
                 {% set sur_mes_reservations = (app.request.attributes.get('_route') ?? '') starts with 'app_mes_reservations' %}
-                <li><a href="{{ path('app_mes_reservations') }}" class="hover:text-primary{{ sur_mes_reservations ? ' font-semibold text-primary' }}"{% if sur_mes_reservations %} aria-current="page"{% endif %}>Mes réservations</a></li>
+                <li><a href="{{ path('app_mes_reservations') }}" class="lien-navigation"{% if sur_mes_reservations %} aria-current="page"{% endif %}>Mes réservations</a></li>
             {% endif %}
             {% if is_granted('ROLE_MANAGER') %}
                 {% set sur_sorties_retours = (app.request.attributes.get('_route') ?? '') starts with 'app_sorties_retours' %}
-                <li><a href="{{ path('app_sorties_retours') }}" class="hover:text-primary{{ sur_sorties_retours ? ' font-semibold text-primary' }}"{% if sur_sorties_retours %} aria-current="page"{% endif %}>Sorties et retours</a></li>
+                <li><a href="{{ path('app_sorties_retours') }}" class="lien-navigation"{% if sur_sorties_retours %} aria-current="page"{% endif %}>Sorties et retours</a></li>
                 {% set sur_gestion_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_gestion_catalogue' %}
-                <li><a href="{{ path('app_gestion_catalogue') }}" class="hover:text-primary{{ sur_gestion_catalogue ? ' font-semibold text-primary' }}"{% if sur_gestion_catalogue %} aria-current="page"{% endif %}>Gestion du catalogue</a></li>
+                <li><a href="{{ path('app_gestion_catalogue') }}" class="lien-navigation"{% if sur_gestion_catalogue %} aria-current="page"{% endif %}>Gestion du catalogue</a></li>
             {% endif %}
             {% if is_granted('ROLE_ADMIN') %}
                 {% set sur_comptes = (app.request.attributes.get('_route') ?? '') starts with 'app_gestion_comptes' %}
-                <li><a href="{{ path('app_gestion_comptes') }}" class="hover:text-primary{{ sur_comptes ? ' font-semibold text-primary' }}"{% if sur_comptes %} aria-current="page"{% endif %}>Gestion des comptes</a></li>
+                <li><a href="{{ path('app_gestion_comptes') }}" class="lien-navigation"{% if sur_comptes %} aria-current="page"{% endif %}>Gestion des comptes</a></li>
                 {% set sur_journal = (app.request.attributes.get('_route') ?? '') == 'app_journal_audit' %}
-                <li><a href="{{ path('app_journal_audit') }}" class="hover:text-primary{{ sur_journal ? ' font-semibold text-primary' }}"{% if sur_journal %} aria-current="page"{% endif %}>Journal d'audit</a></li>
+                <li><a href="{{ path('app_journal_audit') }}" class="lien-navigation"{% if sur_journal %} aria-current="page"{% endif %}>Journal d'audit</a></li>
             {% endif %}
         </ul>
 
         <div class="ml-auto flex items-center gap-3 text-sm">
             {% if app.user %}
                 <span class="text-ink-muted">{{ app.user.prenom }} {{ app.user.nom }}</span>
-                <a href="{{ logout_path() }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Déconnexion</a>
+                <a href="{{ logout_path() }}" class="bouton-ligne bouton-secondaire">Déconnexion</a>
             {% else %}
-                <a href="{{ path('app_inscription') }}" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page">Créer un compte</a>
-                <a href="{{ path('app_connexion') }}" class="rounded-md bg-primary px-4 py-2 font-semibold text-white hover:bg-primary-hover">Se connecter</a>
+                <a href="{{ path('app_inscription') }}" class="bouton-ligne bouton-secondaire">Créer un compte</a>
+                <a href="{{ path('app_connexion') }}" class="bouton-ligne bouton-primaire">Se connecter</a>
             {% endif %}
         </div>
     </nav>

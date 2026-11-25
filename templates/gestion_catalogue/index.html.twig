@@ -4,20 +4,19 @@
 
 {# E7 non maquetté : composants communs à E6-E9 (assets/styles/app.css) #}
 {% block body %}
-    <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold">Gestion du catalogue</h1>
-            <p class="mt-1 text-ink-muted">{{ page.total }} objet{{ page.total > 1 ? 's' }}, actifs et retirés du catalogue</p>
-        </div>
-        <a href="{{ path('app_gestion_catalogue_nouveau') }}" class="rounded-md bg-primary px-4 py-2 text-sm font-semibold whitespace-nowrap text-white hover:bg-primary-hover">
-            Ajouter un objet
-        </a>
-    </div>
+    {% embed '_partials/entete_page.html.twig' with {
+        titre: 'Gestion du catalogue',
+        sous_titre: page.total ~ ' objet' ~ (page.total > 1 ? 's') ~ ', actifs et retirés du catalogue',
+    } %}
+        {% block actions %}
+            <a href="{{ path('app_gestion_catalogue_nouveau') }}" class="bouton bouton-primaire">Ajouter un objet</a>
+        {% endblock %}
+    {% endembed %}
 
     {% set badges_etat = {
-        bon: 'bg-statut-disponible-bg text-statut-disponible',
-        abime: 'bg-statut-sorti-bg text-statut-sorti',
-        hors_service: 'bg-statut-hors-service-bg text-statut-hors-service',
+        bon: 'badge-disponible',
+        abime: 'badge-sorti',
+        hors_service: 'badge-hors-service',
     } %}
 
     <div class="cadre-tableau mt-6" role="region" aria-label="Objets du catalogue" tabindex="0">
@@ -40,7 +39,7 @@
                         <td class="cellule">
                             <span class="badge {{ badges_etat[objet.etat.value] }}">{{ objet.etat.libelle }}</span>
                         </td>
-                        <td class="cellule">{{ objet.actif ? 'Actif' : 'Retiré' }}</td>
+                        <td class="cellule">{% if objet.actif %}Actif{% else %}<span class="badge badge-neutre">Retiré</span>{% endif %}</td>
                         <td class="cellule">
                             <div class="flex flex-wrap justify-end gap-2">
                                 <a href="{{ path('app_gestion_catalogue_modifier', {id: objet.id}) }}"

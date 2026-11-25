@@ -6,9 +6,10 @@
  * fonctionne comme avant et ReservationService vérifie tout à l'envoi.
  * Un appel par saisie de dates, jamais à intervalle régulier (pas de polling).
  */
+// Composant message de la charte (assets/styles/app.css), comme les messages des gabarits.
 const CLASSES = {
-    disponible: ['border-green-200', 'bg-statut-disponible-bg', 'text-statut-disponible'],
-    indisponible: ['border-red-200', 'bg-statut-hors-service-bg', 'text-statut-hors-service'],
+    disponible: ['message-succes'],
+    indisponible: ['message-erreur'],
 };
 
 function initialiser(formulaire) {
@@ -30,7 +31,7 @@ function initialiser(formulaire) {
             return;
         }
         const message = document.createElement('p');
-        message.className = 'mb-4 rounded-md border px-4 py-3 text-sm';
+        message.className = 'message mb-4';
         message.classList.add(...CLASSES[etat]);
         message.textContent = texte;
         resultat.append(message);

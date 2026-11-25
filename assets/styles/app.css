@@ -41,6 +41,8 @@
     --color-champ: var(--color-slate-500);
     --color-ink: #0f3b4a; /* encre du logo : 12,04:1 sur blanc */
     --color-ink-muted: var(--color-slate-600);
+    /* Texte indicatif (placeholder) des champs : slate-500, 4,77:1 sur blanc. */
+    --color-indice: var(--color-slate-500);
 
     --color-statut-disponible: var(--color-green-700);
     --color-statut-disponible-bg: var(--color-green-50);
@@ -50,9 +52,23 @@
     --color-statut-sorti-bg: var(--color-amber-50);
     --color-statut-hors-service: var(--color-red-700);
     --color-statut-hors-service-bg: var(--color-red-50);
+
+    /* Ombres teintées de l'encre du logo, plus douces que le noir. */
+    --shadow-carte: 0 1px 2px rgb(15 59 74 / 0.06), 0 1px 3px rgb(15 59 74 / 0.08);
+    --shadow-carte-survol: 0 10px 24px -6px rgb(15 59 74 / 0.18), 0 4px 8px -4px rgb(15 59 74 / 0.10);
+
+    /* Animations de l'interface (keyframes plus bas) : courtes, jouées une seule fois. */
+    --animate-apparition: apparition 0.35s ease-out both;
+    --animate-glissement: glissement 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --animate-rebond: rebond 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @layer base {
+    /* Réserve la hauteur de l'en-tête fixe : un élément qui prend le focus n'est pas masqué (WCAG 2.4.11). */
+    html {
+        @apply lg:scroll-pt-36;
+    }
+
     body {
         @apply bg-page text-ink font-sans antialiased;
     }
@@ -61,6 +77,40 @@
     :focus-visible {
         @apply outline-2 outline-offset-2 outline-primary;
     }
+
+    /* Contenu de chaque page : apparition douce au chargement. */
+    main {
+        animation: var(--animate-apparition);
+    }
+
+    /* Mouvements réduits à la demande de l'utilisateur (réglage du système, WCAG 2.3.3) :
+       les animations et transitions deviennent instantanées, l'interface reste identique. */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        ::before,
+        ::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            animation-delay: 0ms !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+@keyframes apparition {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes glissement {
+    from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes rebond {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: none; }
 }
 
 /* Bandeau aux couleurs des flèches du logo, en haut de l'en-tête et en bas du pied de page. */
@@ -70,18 +120,177 @@
 }
 
 /*
- * Composants des écrans de gestion (E6 à E9), d'après les maquettes E6 et E9 : une seule
- * définition pour que les quatre écrans aient la même présentation.
+ * Composants communs à tous les écrans (ticket #95). Chaque composant est défini une seule
+ * fois, ici ou dans une inclusion de templates/_partials/ ; aucun gabarit n'utilise de
+ * couleur Tailwind brute. Page de référence, en développement : /dev/composants.
  */
+
+/* ---------- Boutons ---------- */
+
+/* Base d'un bouton : taille normale. Survol : léger relief ; clic : enfoncement. */
+@utility bouton {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold whitespace-nowrap;
+    @apply transition duration-150 ease-out hover:-translate-y-px hover:shadow-carte active:translate-y-0 active:shadow-none;
+    @apply disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50;
+}
+
+/* Bouton d'une ligne de tableau : même composant, plus compact. */
+@utility bouton-ligne {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold whitespace-nowrap;
+    @apply transition duration-150 ease-out hover:-translate-y-px hover:shadow-carte active:translate-y-0 active:shadow-none;
+    @apply disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50;
+}
+
+/* Bleu pétrole, texte blanc : 5,70:1 (8,90:1 au survol). */
+@utility bouton-primaire {
+    @apply border-primary bg-primary text-surface hover:border-primary-hover hover:bg-primary-hover;
+}
+
+/* Orange du logo en fond, texte encre : 5,71:1 (4,72:1 au survol). Jamais de texte orange. */
+@utility bouton-accent {
+    @apply border-accent bg-accent text-ink hover:border-accent-hover hover:bg-accent-hover;
+}
+
+@utility bouton-secondaire {
+    @apply border-line bg-surface text-ink hover:border-champ hover:bg-page;
+}
+
+/* Rouille du logo : texte sur blanc 5,01:1, puis fond plein et texte blanc au survol. */
+@utility bouton-danger {
+    @apply border-danger bg-surface text-danger hover:bg-danger hover:text-surface;
+}
+
+/* Lien de texte (navigation secondaire, « Se connecter » dans une phrase). */
+@utility lien {
+    @apply font-semibold text-primary underline-offset-4 hover:underline;
+}
+
+/* ---------- En-tête de page et états vides ---------- */
+
+@utility titre-page {
+    @apply text-3xl font-extrabold tracking-tight;
+}
+
+@utility sous-titre-page {
+    @apply mt-1 text-ink-muted;
+}
+
+/* ---------- Badges de statut ---------- */
+
+@utility badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap;
+}
+
+@utility badge-disponible {
+    @apply bg-statut-disponible-bg text-statut-disponible;
+}
+
+@utility badge-reserve {
+    @apply bg-statut-reserve-bg text-statut-reserve;
+}
+
+@utility badge-sorti {
+    @apply bg-statut-sorti-bg text-statut-sorti;
+}
+
+@utility badge-hors-service {
+    @apply bg-statut-hors-service-bg text-statut-hors-service;
+}
+
+@utility badge-neutre {
+    @apply bg-page text-ink-muted ring-1 ring-line ring-inset;
+}
+
+@utility badge-accent {
+    @apply bg-accent-soft text-ink;
+}
+
+/* ---------- Messages (flash, refus, information) ---------- */
+
+/* Icône à gauche, texte à droite ; apparaît en glissant depuis le haut. */
+@utility message {
+    @apply flex items-start gap-3 rounded-xl border px-4 py-3 text-sm;
+    animation: var(--animate-glissement);
+}
+
+@utility message-succes {
+    @apply border-statut-disponible/30 bg-statut-disponible-bg text-statut-disponible;
+}
+
+@utility message-erreur {
+    @apply border-danger/30 bg-statut-hors-service-bg text-statut-hors-service;
+}
+
+@utility message-avertissement {
+    @apply border-statut-sorti/30 bg-statut-sorti-bg text-statut-sorti;
+}
+
+@utility message-information {
+    @apply border-primary/25 bg-primary-soft text-primary;
+}
+
+/* ---------- Cartes ---------- */
+
+/* Bloc de contenu (formulaire, fiche, filtres). */
+@utility panneau {
+    @apply rounded-xl border border-line bg-surface shadow-carte;
+}
+
+/* Carte d'objet du catalogue (E3) : se soulève au survol, la photo s'agrandit légèrement.
+   Le parent porte la classe group (voir templates/_partials/carte_objet.html.twig). */
+@utility carte {
+    @apply flex flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-carte;
+    @apply transition duration-200 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-carte-survol;
+    @apply focus-within:-translate-y-1 focus-within:shadow-carte-survol;
+}
+
+/* Grille de cartes : chaque carte apparaît à son tour (décalage par position). */
+@utility grille-cartes {
+    @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-4;
+    & > * {
+        animation: var(--animate-apparition);
+    }
+    & > :nth-child(2) { animation-delay: 40ms; }
+    & > :nth-child(3) { animation-delay: 80ms; }
+    & > :nth-child(4) { animation-delay: 120ms; }
+    & > :nth-child(5) { animation-delay: 160ms; }
+    & > :nth-child(6) { animation-delay: 200ms; }
+    & > :nth-child(7) { animation-delay: 240ms; }
+    & > :nth-child(n + 8) { animation-delay: 280ms; }
+}
+
+/* ---------- Champs de formulaire ---------- */
+
+/* Contour à 4,77:1 (RGAA 3.3) ; au focus, contour bleu pétrole et halo clair. */
+@utility champ {
+    @apply mt-1.5 block w-full rounded-lg border border-champ bg-surface px-3 py-2 text-sm placeholder:text-indice;
+    @apply transition duration-150 focus:border-primary focus:ring-4 focus:ring-primary-soft focus:outline-none;
+}
+
+/* Champ en erreur : rouille du logo, 5,01:1. */
+@utility champ-erreur {
+    @apply border-danger focus:border-danger focus:ring-statut-hors-service-bg;
+}
+
+/* Liste de choix dans une ligne ou un filtre : même contour que les champs. */
+@utility liste-choix {
+    @apply rounded-lg border border-champ bg-surface px-3 py-1.5 text-sm;
+    @apply transition duration-150 focus:border-primary focus:ring-4 focus:ring-primary-soft focus:outline-none;
+}
+
+/* ---------- Tableaux ---------- */
 
 /* Cadre d'un tableau : sur mobile, le tableau défile dans son cadre, pas la page. */
 @utility cadre-tableau {
-    @apply mt-4 overflow-x-auto rounded-lg border border-line bg-surface;
+    @apply mt-4 overflow-x-auto rounded-xl border border-line bg-surface shadow-carte;
 }
 
-/* Tableau : largeur minimale, en dessous de laquelle le cadre défile. */
+/* Tableau : largeur minimale, en dessous de laquelle le cadre défile. Ligne survolée teintée. */
 @utility tableau {
     @apply w-full min-w-3xl text-left text-sm;
+    & tbody tr {
+        @apply transition-colors duration-150 hover:bg-primary-soft/40;
+    }
 }
 
 @utility tableau-entete {
@@ -89,7 +298,7 @@
 }
 
 @utility cellule-entete {
-    @apply px-4 py-3 font-medium tracking-wide uppercase;
+    @apply px-4 py-3 font-semibold tracking-wide uppercase;
 }
 
 @utility cellule {
@@ -98,31 +307,27 @@
 
 /* Ligne « aucun élément » d'un tableau vide. */
 @utility cellule-vide {
-    @apply px-4 py-6 text-center text-ink-muted;
+    @apply px-4 py-8 text-center text-ink-muted;
 }
 
-@utility badge {
-    @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap;
+/* ---------- Navigation ---------- */
+
+/* Lien de la barre de navigation : soulignement qui s'étire au survol et sur la page en cours. */
+@utility lien-navigation {
+    @apply relative py-1 text-ink-muted transition-colors duration-150 hover:text-primary;
+    &::after {
+        @apply absolute inset-x-0 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-accent transition-transform duration-200 ease-out content-[''];
+    }
+    &:hover::after,
+    &[aria-current='page']::after {
+        @apply scale-x-100;
+    }
+    &[aria-current='page'] {
+        @apply font-bold text-primary;
+    }
 }
 
-/* Boutons d'action d'une ligne de tableau. */
-@utility bouton-ligne {
-    @apply inline-block rounded-md border px-3 py-1.5 text-sm font-semibold whitespace-nowrap;
-}
-
-@utility bouton-primaire {
-    @apply border-primary bg-primary text-white hover:border-primary-hover hover:bg-primary-hover;
-}
-
-@utility bouton-secondaire {
-    @apply border-line bg-surface text-ink hover:bg-page;
-}
-
-@utility bouton-danger {
-    @apply border-red-200 bg-statut-hors-service-bg text-statut-hors-service hover:border-statut-hors-service;
-}
-
-/* Liste de choix dans une ligne ou un filtre : contour à 4,77:1 (RGAA 3.3). */
-@utility liste-choix {
-    @apply rounded-md border border-champ bg-surface px-3 py-1.5 text-sm;
+/* Icône du logo : petit tour de clé au survol du lien d'accueil. */
+@utility logo-anime {
+    @apply transition-transform duration-300 ease-out group-hover:-rotate-12 group-hover:scale-110;
 }

@@ -7,34 +7,38 @@
     (confirmée = réservé, en cours = sorti, terminée = disponible, annulée = neutre).
 #}
 {% set classes_statut = {
-    confirmee: 'bg-statut-reserve-bg text-statut-reserve',
-    en_cours: 'bg-statut-sorti-bg text-statut-sorti',
-    terminee: 'bg-statut-disponible-bg text-statut-disponible',
-    annulee: 'bg-slate-100 text-ink-muted',
+    confirmee: 'badge-reserve',
+    en_cours: 'badge-sorti',
+    terminee: 'badge-disponible',
+    annulee: 'badge-neutre',
 } %}
 
 {% block body %}
-    <h1 class="text-3xl font-bold">Mes réservations</h1>
-    <p class="mt-1 text-ink-muted">
-        {{ actives }} réservation{{ actives > 1 ? 's' }} active{{ actives > 1 ? 's' }} sur {{ quota }} autorisées
-    </p>
+    {% embed '_partials/entete_page.html.twig' with {
+        titre: 'Mes réservations',
+        sous_titre: actives ~ ' réservation' ~ (actives > 1 ? 's') ~ ' active' ~ (actives > 1 ? 's') ~ ' sur ' ~ quota ~ ' autorisées',
+    } %}
+        {% block actions %}
+            <a href="{{ path('app_catalogue') }}" class="bouton bouton-accent">Réserver un objet</a>
+        {% endblock %}
+    {% endembed %}
 
     {% if reservations is empty %}
-        <div class="mt-6 rounded-lg border border-line bg-surface p-6 text-center">
-            <p class="text-ink-muted">Vous n'avez encore aucune réservation.</p>
-            <a href="{{ path('app_catalogue') }}" class="mt-4 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">Voir le catalogue</a>
-        </div>
+        {{ include('_partials/etat_vide.html.twig', {
+            message: 'Vous n\'avez encore aucune réservation. Choisissez un objet dans le catalogue pour commencer.',
+            lien: {url: path('app_catalogue'), texte: 'Voir le catalogue'},
+        }) }}
     {% else %}
-        <div class="mt-6 overflow-x-auto rounded-lg border border-line bg-surface">
-            <table class="w-full text-left text-sm">
+        <div class="cadre-tableau mt-6" role="region" aria-label="Mes réservations" tabindex="0">
+            <table class="tableau">
                 <caption class="sr-only">Mes réservations, des plus proches aux plus anciennes</caption>
-                <thead class="bg-slate-50 text-xs uppercase text-ink-muted">
+                <thead class="tableau-entete">
                     <tr>
-                        <th scope="col" class="px-4 py-3 font-semibold">Objet</th>
-                        <th scope="col" class="px-4 py-3 font-semibold">Du</th>
-                        <th scope="col" class="px-4 py-3 font-semibold">Au</th>
-                        <th scope="col" class="px-4 py-3 font-semibold">Statut</th>
-                        <th scope="col" class="px-4 py-3 font-semibold">Action</th>
+                        <th scope="col" class="cellule-entete">Objet</th>
+                        <th scope="col" class="cellule-entete">Du</th>
+                        <th scope="col" class="cellule-entete">Au</th>
+                        <th scope="col" class="cellule-entete">Statut</th>
+                        <th scope="col" class="cellule-entete">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-line">
@@ -42,24 +46,24 @@
                         {% set objet = reservation.objet %}
                         <tr>
                             {# En-tête de ligne : le lecteur d'écran annonce l'objet avec chaque cellule #}
-                            <th scope="row" class="px-4 py-3 font-normal">
+                            <th scope="row" class="cellule font-normal">
                                 {% if objet.actif %}
-                                    <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}" class="hover:text-primary hover:underline">{{ objet.nom }}</a>
+                                    <a href="{{ path('app_catalogue_objet', {id: objet.id}) }}" class="lien font-normal">{{ objet.nom }}</a>
                                 {% else %}
                                     {{ objet.nom }}
                                 {% endif %}
                             </th>
-                            <td class="px-4 py-3">{{ reservation.dateDebut|date('d/m/Y') }}</td>
-                            <td class="px-4 py-3">{{ reservation.dateFin|date('d/m/Y') }}</td>
-                            <td class="px-4 py-3">
-                                <span class="rounded-full px-2.5 py-0.5 text-xs font-medium {{ classes_statut[reservation.statut.value] }}">{{ reservation.statut.libelle }}</span>
+                            <td class="cellule">{{ reservation.dateDebut|date('d/m/Y') }}</td>
+                            <td class="cellule">{{ reservation.dateFin|date('d/m/Y') }}</td>
+                            <td class="cellule">
+                                <span class="badge {{ classes_statut[reservation.statut.value] }}">{{ reservation.statut.libelle }}</span>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="cellule">
                                 {% if is_granted('RESERVATION_ANNULER', reservation) %}
                                     <form method="post" action="{{ path('app_mes_reservations_annuler', {id: reservation.id}) }}"
                                           data-confirmation="Annuler la réservation de « {{ objet.nom }} » ?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('annuler-reservation-' ~ reservation.id) }}">
-                                        <button type="submit" class="rounded-md border border-line bg-surface px-4 py-2 font-semibold text-ink hover:bg-page"
+                                        <button type="submit" class="bouton-ligne bouton-danger"
                                                 aria-label="Annuler la réservation : {{ objet.nom }}, du {{ reservation.dateDebut|date('d/m/Y') }} au {{ reservation.dateFin|date('d/m/Y') }}">
                                             Annuler
                                         </button>
@@ -67,7 +71,7 @@
                                 {% elseif reservation.statut.value == 'confirmee' %}
                                     <span class="text-ink-muted">Annulation impossible à partir du premier jour</span>
                                 {% elseif reservation.estEnRetardLe(aujourdhui) %}
-                                    <span class="font-semibold text-statut-hors-service">Retour en retard : à rendre le {{ reservation.dateFin|date('d/m/Y') }} au plus tard</span>
+                                    <span class="font-semibold text-danger">Retour en retard : à rendre le {{ reservation.dateFin|date('d/m/Y') }} au plus tard</span>
                                 {% elseif reservation.statut.value == 'en_cours' %}
                                     Sortie validée le {{ reservation.sortieLe|date('d/m/Y') }}
                                 {% elseif reservation.statut.value == 'terminee' %}

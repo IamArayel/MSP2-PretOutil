@@ -148,6 +148,20 @@ final class ControleAccesTest extends WebTestCase
         self::assertSame($routes, $matrice, 'Chaque route doit avoir une ligne dans ControleAccesTest::ROUTES');
     }
 
+    /**
+     * Page de référence des composants (#95) : déclarée pour l'environnement de développement
+     * seulement (env: 'dev'). Hors développement, l'adresse n'existe pas, même pour un administrateur.
+     */
+    public function testPageDesComposantsAbsenteHorsDeveloppement(): void
+    {
+        self::assertNull(self::getContainer()->get(RouterInterface::class)->getRouteCollection()->get('app_composants'), 'Route absente hors développement');
+
+        $this->client->loginUser($this->utilisateurs['administrateur']);
+        $this->client->request('GET', '/dev/composants');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     /** @return iterable<string, array{string, string, string, int|string}> */
     public static function casDAcces(): iterable
     {

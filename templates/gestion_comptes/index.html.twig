@@ -4,13 +4,15 @@
 
 {# E8 non maquetté : composants communs à E6-E9 (assets/styles/app.css) #}
 {% block body %}
-    <h1 class="text-3xl font-bold">Gestion des comptes</h1>
-    <p class="mt-1 text-ink-muted">{{ page.total }} compte{{ page.total > 1 ? 's' }} · chaque changement est enregistré dans le journal d'audit</p>
+    {{ include('_partials/entete_page.html.twig', {
+        titre: 'Gestion des comptes',
+        sous_titre: page.total ~ ' compte' ~ (page.total > 1 ? 's') ~ ' · chaque changement est enregistré dans le journal d\'audit',
+    }) }}
 
     {% set badges_role = {
-        adherent: 'bg-page text-ink-muted',
-        gestionnaire: 'bg-statut-sorti-bg text-statut-sorti',
-        administrateur: 'bg-statut-reserve-bg text-statut-reserve',
+        adherent: 'badge-neutre',
+        gestionnaire: 'badge-accent',
+        administrateur: 'badge-reserve',
     } %}
 
     <div class="cadre-tableau mt-6" role="region" aria-label="Comptes de l'association" tabindex="0">
@@ -37,7 +39,7 @@
                         <td class="cellule">
                             <span class="badge {{ badges_role[role.value] }}">{{ role.libelle }}</span>
                         </td>
-                        <td class="cellule">{{ compte.actif ? 'Actif' : 'Désactivé' }}</td>
+                        <td class="cellule">{% if compte.actif %}Actif{% else %}<span class="badge badge-neutre">Désactivé</span>{% endif %}</td>
                         <td class="cellule whitespace-nowrap">{{ compte.derniereActiviteLe ? compte.derniereActiviteLe|date('d/m/Y') : 'Aucune' }}</td>
                         <td class="cellule">
                             {# Un administrateur n'agit pas sur son propre compte (CompteService) #}
