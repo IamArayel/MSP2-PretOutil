@@ -3,8 +3,14 @@
     Les liens affichés dépendent des rôles (role_hierarchy : un admin voit tout).
 #}
 <header class="border-b border-line bg-surface">
+    <div class="bandeau-logo" aria-hidden="true"></div>
     <nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-4 sm:px-8" aria-label="Navigation principale">
-        <a href="{{ path('app_accueil') }}" class="text-xl font-bold text-primary">Prêt'Outil</a>
+        {# Icône décorative (alt vide) : le nom est écrit à côté, il n'est pas lu deux fois.
+           « Prêt' » et « Outil » aux couleurs du logo, toutes deux à plus de 4,5:1. #}
+        <a href="{{ path('app_accueil') }}" class="flex items-center gap-2 text-xl font-extrabold">
+            <img src="{{ asset('images/logo-icone.svg') }}" alt="" width="40" height="40" class="size-10">
+            <span><span class="text-primary">Prêt'</span><span class="text-danger">Outil</span></span>
+        </a>
 
         <ul class="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-ink-muted">
             {% set sur_catalogue = (app.request.attributes.get('_route') ?? '') starts with 'app_catalogue' %}

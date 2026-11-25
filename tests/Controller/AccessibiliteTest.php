@@ -136,6 +136,10 @@ final class AccessibiliteTest extends WebTestCase
             }
         });
 
+        $page->filter('img')->each(static function (Crawler $image): void {
+            self::assertNotNull($image->attr('alt'), \sprintf('Alternative textuelle de %s, vide si décorative (RGAA 1.1, 1.2)', $image->attr('src')));
+        });
+
         $page->filter('table')->each(static function (Crawler $tableau): void {
             self::assertCount(1, $tableau->filter('caption'), 'Tableau avec un titre (RGAA 5.4)');
             self::assertSame(0, $tableau->filter('th:not([scope])')->count(), 'En-têtes avec scope (RGAA 5.7)');
@@ -243,6 +247,39 @@ final class AccessibiliteTest extends WebTestCase
         $this->ouvrir('GET', $chemin, $profil, []);
 
         self::assertSelectorTextSame('nav[aria-label="Navigation principale"] [aria-current="page"]', $lien);
+    }
+
+    /**
+     * Logo : l'icône de l'en-tête est décorative (le nom est écrit à côté, il n'est pas lu deux
+     * fois) ; le logo de l'accueil contient du texte, repris dans son alternative (RGAA 1.3).
+     */
+    public function testLogoEtFavicon(): void
+    {
+        $page = $this->client->request('GET', '/');
+
+        self::assertSame('', $page->filter('header a[href="/"] img')->attr('alt'));
+        self::assertSame("Prêt'Outil", $page->filter('header a[href="/"]')->text());
+        self::assertSame("Prêt'Outil, le prêt d'outils partagé", $page->filter('main img')->attr('alt'));
+        self::assertCount(1, $page->filter('link[rel="icon"][type="image/svg+xml"]'), 'Favicon du logo');
+        self::assertCount(1, $page->filter('footer'), 'Pied de page commun');
+    }
+
+    /**
+     * Photo de l'objet sur sa fiche (chargée en priorité) et sur sa carte du catalogue (chargée
+     * à l'approche) ; alternative vide, le nom est écrit à côté. Sans photo : vignette décorative.
+     */
+    public function testPhotoDeLObjet(): void
+    {
+        $this->objet->setImage('perceuse.webp');
+        $this->entityManager->flush();
+
+        $fiche = $this->client->request('GET', \sprintf('/catalogue/%d', $this->objet->getId()));
+        $photo = $fiche->filter('main article img[src*="/images/objets/perceuse"]');
+        self::assertSame(['', 'eager', 'high'], [$photo->attr('alt'), $photo->attr('loading'), $photo->attr('fetchpriority')]);
+
+        $catalogue = $this->client->request('GET', '/catalogue?categorie='.$this->objet->getCategorie()->getId());
+        self::assertSame('lazy', $catalogue->filter('main li img[src*="/images/objets/perceuse"]')->attr('loading'));
+        self::assertGreaterThan(0, $catalogue->filter('main li div[aria-hidden="true"] img[src*="logo-icone"]')->count(), 'Vignette des objets sans photo');
     }
 
     /** @param array<string, mixed> $donnees */

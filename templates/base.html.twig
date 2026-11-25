@@ -5,7 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Accueil{% endblock %} · Prêt'Outil</title>
         <meta name="description" content="{% block description %}Prêt de matériel entre adhérents de l'association.{% endblock %}">
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🔧</text></svg>">
+        <meta name="theme-color" content="#1b6e91">
+        <link rel="icon" href="{{ asset('images/logo-icone.svg') }}" type="image/svg+xml">
+        <link rel="icon" href="{{ asset('images/favicon-32.png') }}" type="image/png" sizes="32x32">
+        <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
+        {# Police de la charte chargée dès l'en-tête : pas de changement de police visible au chargement #}
+        <link rel="preload" href="{{ asset('fonts/nunito-variable.woff2') }}" as="font" type="font/woff2" crossorigin>
         {% block stylesheets %}
         {% endblock %}
 
@@ -20,14 +25,14 @@
         <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module" nonce="{{ csp_nonce() }}"></script>
         {% endif %}
     </head>
-    <body class="min-h-screen">
+    <body class="flex min-h-screen flex-col">
         <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-10 focus:rounded-md focus:bg-surface focus:px-4 focus:py-2">
             Aller au contenu
         </a>
 
         {{ include('_partials/navbar.html.twig') }}
 
-        <main id="contenu" class="mx-auto max-w-7xl px-4 py-10 sm:px-8">
+        <main id="contenu" class="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
             {% for message in app.flashes('succes') %}
                 <div class="mx-auto mb-6 max-w-md rounded-md border border-green-200 bg-statut-disponible-bg px-4 py-3 text-sm text-statut-disponible" role="status">
                     {{ message }}
@@ -46,5 +51,7 @@
 
             {% block body %}{% endblock %}
         </main>
+
+        {{ include('_partials/pied_de_page.html.twig') }}
     </body>
 </html>
