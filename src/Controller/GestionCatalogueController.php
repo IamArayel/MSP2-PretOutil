@@ -10,6 +10,7 @@ use App\Entity\Utilisateur;
 use App\Exception\ObjetDejaReserveException;
 use App\Exception\PhotoIllisibleException;
 use App\Form\ObjetType;
+use App\Form\RechercheObjetType;
 use App\Repository\ObjetRepository;
 use App\Repository\ReservationRepository;
 use App\Security\Voter\ObjetVoter;
@@ -40,14 +41,22 @@ final class GestionCatalogueController extends AbstractController
 
     #[Route('', name: 'app_gestion_catalogue', methods: ['GET'])]
     public function index(
+        Request $request,
         ObjetRepository $objetRepository,
         ReservationRepository $reservationRepository,
         #[MapQueryParameter] int $page = 1,
     ): Response {
-        $page = $objetRepository->listerPourGestion($page);
+        // Recherche par nom (#109) : une saisie invalide (trop longue) affiche toute la liste.
+        $recherche = $this->createForm(RechercheObjetType::class);
+        $recherche->handleRequest($request);
+        $texte = $recherche->isSubmitted() && $recherche->isValid() ? $recherche->get('q')->getData() : null;
+
+        $page = $objetRepository->listerPourGestion($page, $texte);
 
         return $this->render('gestion_catalogue/index.html.twig', [
             'page' => $page,
+            'recherche' => $recherche,
+            'texte_recherche' => $texte,
             // Une seule requête pour toute la page, au lieu d'un contrôle par ligne
             'deja_reserves' => $reservationRepository->objetsDejaReserves($page->elements),
         ]);

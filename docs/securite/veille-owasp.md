@@ -36,9 +36,10 @@ Consultées le 2026-11-24.
 ### SQL (PostgreSQL)
 
 - **Requêtes paramétrées.** Toutes les requêtes passent par Doctrine (QueryBuilder ou DQL) avec `setParameter()`. Aucune n'est construite par concaténation d'une saisie. Exemple : `ObjetRepository::catalogue()`, `->andWhere('o.categorie = :categorie')->setParameter('categorie', $criteres->categorie)`.
+- **Recherche par nom (#109).** Le texte saisi est un paramètre lié (`:recherche`) ; ses caractères `%`, `_` et `\` sont échappés avant d'entourer le motif de `%` : ils sont cherchés tels quels, sans servir de jokers. Longueur limitée à 100 caractères par le formulaire.
 - **Saisies typées avant la requête.** Le filtre catégorie de E3 est converti en entité par le formulaire (`EntityType`), les dates en objets date, les numéros de page et identifiants en entiers (`MapQueryParameter`, prérequis de route `\d+`). Une valeur qui ne se convertit pas est refusée avant d'atteindre la base.
 - **Défense en profondeur.** Le compte applicatif `pretoutil_app` n'a que `SELECT`, `INSERT` et `UPDATE` sur les quatre tables, plus `DELETE` sur `objet` seulement (migration `Version20261123140000`) : même injectée, une requête ne pourrait ni supprimer une table, ni modifier le schéma, ni effacer un utilisateur ou une réservation.
-- **Preuves.** `SecuriteTest` : `' OR 1=1 --`, `; DROP TABLE objet`, `%` et `_` dans les filtres, saisie `Robert'); DROP TABLE utilisateur; --` enregistrée telle quelle.
+- **Preuves.** `SecuriteTest` : `' OR 1=1 --`, `; DROP TABLE objet`, `%` et `_` dans les filtres, saisie `Robert'); DROP TABLE utilisateur; --` enregistrée telle quelle. `RechercheCatalogueTest` : `' OR 1=1 --` ne trouve rien, `%` ne trouve que les noms qui le contiennent, `<script>` affiché échappé.
 
 ### NoSQL (MongoDB)
 

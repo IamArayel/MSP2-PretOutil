@@ -86,6 +86,8 @@ final class AccessibiliteTest extends WebTestCase
         yield 'E2 Inscription, erreurs' => ['POST', '/inscription', null, self::INSCRIPTION_INVALIDE];
         yield 'E3 Catalogue' => ['GET', '/catalogue', null, []];
         yield 'E3 Catalogue, filtres invalides' => ['GET', '/catalogue?categorie=999999&debut=x', null, []];
+        yield 'E3 Catalogue, recherche' => ['GET', '/catalogue?q=perceuse', null, []];
+        yield 'E3 Catalogue, recherche sans résultat' => ['GET', '/catalogue?q=introuvable', null, []];
         yield 'E4 Fiche, visiteur' => ['GET', '/catalogue/{objet}', null, []];
         yield 'E4 Fiche, adhérent' => ['GET', '/catalogue/{objet}', 'adherent', []];
         yield 'E4 Réservation, erreurs' => ['POST', '/catalogue/{objet}/reserver', 'adherent', self::RESERVATION_VIDE];
@@ -100,6 +102,7 @@ final class AccessibiliteTest extends WebTestCase
     {
         yield 'E6 Sorties et retours' => ['GET', '/gestion/sorties-retours', 'gestionnaire', []];
         yield 'E7 Gestion du catalogue' => ['GET', '/gestion/catalogue', 'gestionnaire', []];
+        yield 'E7 Gestion du catalogue, recherche' => ['GET', '/gestion/catalogue?q=introuvable', 'gestionnaire', []];
         yield 'E7 Ajouter un objet' => ['GET', '/gestion/catalogue/nouveau', 'gestionnaire', []];
         yield 'E7 Ajouter un objet, erreurs' => ['POST', '/gestion/catalogue/nouveau', 'gestionnaire', self::OBJET_VIDE];
         yield 'E7 Modifier un objet' => ['GET', '/gestion/catalogue/{objet}/modifier', 'gestionnaire', []];

@@ -23,6 +23,8 @@ final class FiltreCatalogueType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            // Paramètre court dans l'URL (?q=perceuse), rangé dans CriteresCatalogue::$recherche (#109).
+            ->add('q', ChampRechercheType::class, ['property_path' => 'recherche'])
             ->add('categorie', EntityType::class, [
                 'class' => Categorie::class,
                 'label' => 'Catégorie',

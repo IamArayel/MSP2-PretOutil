@@ -4,10 +4,14 @@
 
 {# E7 non maquetté : composants communs à E6-E9 (assets/styles/app.css) #}
 {% block body %}
-    {% embed '_partials/entete_page.html.twig' with {
-        titre: 'Gestion du catalogue',
-        sous_titre: page.total ~ ' objet' ~ (page.total > 1 ? 's') ~ ', actifs et retirés du catalogue',
-    } %}
+    {% embed '_partials/entete_page.html.twig' with {titre: 'Gestion du catalogue'} %}
+        {% block sous_titre %}
+            {# Zone remplacée par la recherche à la volée ; son texte est annoncé (assets/recherche.js) #}
+            <p id="total-gestion-catalogue" class="sous-titre-page" data-recherche-zone data-recherche-annonce>
+                {{ page.total }} objet{{ page.total > 1 ? 's' }}
+                {%- if texte_recherche %} pour « {{ texte_recherche }} »{% endif %}, actifs et retirés du catalogue
+            </p>
+        {% endblock %}
         {% block actions %}
             <a href="{{ path('app_gestion_catalogue_nouveau') }}" class="bouton bouton-primaire">Ajouter un objet</a>
         {% endblock %}
@@ -19,6 +23,12 @@
         hors_service: 'badge-hors-service',
     } %}
 
+    {# Recherche par nom (#109), y compris parmi les objets retirés du catalogue #}
+    {{ form_start(recherche, {action: path('app_gestion_catalogue'), attr: {class: 'panneau mt-6 p-5', 'aria-label': 'Rechercher un objet du catalogue', role: 'search'}}) }}
+        {{ include('_partials/champ_recherche.html.twig', {champ: recherche.q}) }}
+    {{ form_end(recherche, {render_rest: false}) }}
+
+    <div id="resultats-gestion-catalogue" data-recherche-zone>
     <div class="cadre-tableau mt-6" role="region" aria-label="Objets du catalogue" tabindex="0">
         <table class="tableau">
             <caption class="sr-only">Objets du catalogue, page {{ page.numero }} sur {{ max(page.nombreDePages, 1) }}</caption>
@@ -68,11 +78,17 @@
                         </td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="5" class="cellule-vide">Aucun objet dans le catalogue.</td></tr>
+                    <tr><td colspan="5" class="cellule-vide">
+                        {% if texte_recherche %}Aucun objet ne correspond à « {{ texte_recherche }} ».{% else %}Aucun objet dans le catalogue.{% endif %}
+                    </td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    {{ include('_partials/pagination.html.twig', {route: 'app_gestion_catalogue'}) }}
+    {{ include('_partials/pagination.html.twig', {
+        route: 'app_gestion_catalogue',
+        parametres: texte_recherche ? {q: texte_recherche} : {},
+    }) }}
+    </div>
 {% endblock %}
