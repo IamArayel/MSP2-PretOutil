@@ -10,8 +10,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Contrainte ck_objet_image sur la vraie base de test : seule une photo de assets/images/objets/
- * peut être enregistrée, jamais un chemin (le nom est concaténé au chemin du dossier par asset()).
+ * Contrainte ck_objet_image sur la vraie base de test : seule une photo du dossier des photos
+ * peut être enregistrée, jamais un chemin (le nom est concaténé au chemin du dossier dans _photo.html.twig).
  * Chaque test s'exécute dans une transaction annulée à la fin.
  */
 final class ObjetImageIntegrationTest extends KernelTestCase
