@@ -612,7 +612,8 @@ Internet ──HTTPS──> Traefik (Dokploy, certificat Let's Encrypt)
 | HTTPS | Terminé par Traefik ; Caddy sert en HTTP interne (`SERVER_NAME=:80`) ; Symfony fait confiance aux réseaux privés (`TRUSTED_PROXIES=private_ranges`, `when@prod` dans `framework.yaml`) | Symfony sait que la requête d'origine était en HTTPS : cookies `secure`, HSTS, liens absolus |
 | Ports | Aucun port publié par le compose ; seul Traefik écoute sur 80 et 443 | Bases inaccessibles depuis Internet |
 | Migrations | Appliquées au démarrage du conteneur `php` par le compte propriétaire (`frankenphp/docker-entrypoint.sh`) | Schéma à jour à chaque déploiement, sans action manuelle |
-| Données | Volumes nommés (`database_data`, `mongodb_data`, `photos_objets`) | Conservés d'un déploiement à l'autre ; sauvegardables par Dokploy |
+| Données | Volumes nommés (`database_data`, `mongodb_data`, `uploads_objets`) | Conservés d'un déploiement à l'autre ; sauvegardables par Dokploy |
+| Utilisateur | L'image tourne en `www-data` (non root) ; `var/` et `public/uploads/` lui appartiennent dans l'image | Un volume neuf reprend ce propriétaire : l'envoi de photos depuis E7 fonctionne |
 
 **Mise en place dans Dokploy** (une seule fois) :
 
@@ -621,6 +622,14 @@ Internet ──HTTPS──> Traefik (Dokploy, certificat Let's Encrypt)
 3. Onglet *Environment* : les 6 variables listées en tête du compose, générées par `openssl rand -hex 16` (et `DOMAINE=pretoutil.thecorelab.cloud`).
 4. Onglet *Domains* : `pretoutil.thecorelab.cloud`, service `php`, port `80`, HTTPS activé, certificat Let's Encrypt.
 5. *Deploy*.
+
+**Données de démonstration** (une seule fois, sur une base vide) : ajouter `DEMO_MOT_DE_PASSE` dans l'onglet *Environment* (au moins 12 caractères, différent du mot de passe de développement), redéployer, puis lancer dans le terminal du conteneur `php` (onglet *Docker* ou *Terminal* de Dokploy) :
+
+```bash
+bin/console app:demo:initialiser
+```
+
+La commande charge le même jeu d'essai que les fixtures ([`src/Demo/JeuDEssai.php`](src/Demo/JeuDEssai.php)) : 6 catégories, 5 comptes, 24 objets dont 14 avec photo, 11 réservations. Les comptes (`admin@pretoutil.test`, `gestionnaire@pretoutil.test`, etc.) ont le mot de passe secret de `DEMO_MOT_DE_PASSE`, jamais celui du dépôt. Elle refuse d'écrire si un compte existe déjà : impossible de mélanger la démonstration à de vraies données. Les fixtures, elles, ne sont pas dans l'image de production (dépendance de développement) et videraient la base.
 
 **Mise à jour** : fusionner dans `main`, puis *Deploy* dans Dokploy (ou déploiement automatique sur push, onglet *General*). **Retour arrière** : redéployer un commit ou un tag précédent. Les volumes ne sont pas touchés.
 
@@ -975,3 +984,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-26 | Intégration continue par GitHub Actions qui démarre la même pile Docker qu'en local, avec des secrets générés à chaque exécution | Les tests tournent dans le même environnement que sur nos postes (PostgreSQL, MongoDB, comptes aux droits minimaux) ; aucun secret à stocker dans GitHub pour la CI |
 | 2026-11-26 | Déploiement par Dokploy derrière Traefik, compose de production dans `deploy/dokploy/` | Dokploy déjà installé sur le VPS (reverse proxy, HTTPS, déploiement depuis GitHub) ; sous-dossier pour que le `.env` écrit par Dokploy n'écrase pas celui de Symfony |
 | 2026-11-26 | Symfony fait confiance aux réseaux privés pour les en-têtes `X-Forwarded-*`, en production seulement | Traefik termine le HTTPS : sans cette confiance, Symfony croirait la requête en HTTP (pas de HSTS, liens en `http`) |
+| 2026-11-26 | Jeu d'essai rangé dans `src/Demo/` (données et chargement), utilisé par les fixtures et par la commande `app:demo:initialiser` | Une seule source pour le développement et la démonstration en ligne ; mot de passe secret en production ; refus d'écrire dans une base qui contient des comptes |
+| 2026-11-26 | Dossier des photos rendu à `www-data` dans l'image de production, volume `uploads_objets` | L'image tourne en non-root : sans ce propriétaire, l'envoi d'une photo échouait (Permission denied), découvert en testant la démonstration |
