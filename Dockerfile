@@ -118,6 +118,8 @@ RUN <<-EOF
 	composer dump-env prod
 	composer run-script --no-dev post-install-cmd
 	if [ -f importmap.php ]; then
+		# CSS Tailwind généré et minifié avant la compilation des assets, qui en a besoin
+		php bin/console tailwind:build --minify
 		php bin/console asset-map:compile
 	fi
 	chmod +x bin/console
