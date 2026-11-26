@@ -1,0 +1,107 @@
+# Intégration continue de Prêt'Outil (ticket DevOps-B1).
+#
+# À chaque pull request et à chaque push sur main : la pile Docker du développement est
+# démarrée sur la machine de GitHub (PHP, PostgreSQL, MongoDB), avec des secrets générés pour
+# l'occasion, puis les contrôles et la suite PHPUnit complète sont lancés, comme en local
+# (README, section Tests). Une PR dont un contrôle échoue est marquée en rouge.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Lecture seule : la CI ne publie rien et n'écrit pas dans le dépôt.
+permissions:
+  contents: read
+
+# Un nouveau push sur la même branche annule l'exécution précédente, devenue inutile.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Contrôles et tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # Secrets éphémères, propres à cette exécution : jamais de vrai mot de passe dans la CI.
+      # Valeurs hexadécimales : elles entrent dans des URL de connexion (README, Variables).
+      - name: Générer les secrets (.env.local)
+        run: |
+          {
+            echo "APP_SECRET=$(openssl rand -hex 16)"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "POSTGRES_APP_PASSWORD=$(openssl rand -hex 16)"
+            echo "MONGO_INITDB_ROOT_PASSWORD=$(openssl rand -hex 16)"
+            echo "MONGODB_APP_PASSWORD=$(openssl rand -hex 16)"
+          } > .env.local
+
+      - name: Préparer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Image de développement (compose.yaml + compose.override.yaml), couches mises en cache
+      # entre deux exécutions pour ne pas réinstaller les extensions PHP à chaque fois.
+      - name: Construire l'image PHP
+        uses: docker/bake-action@v6
+        with:
+          source: .
+          pull: true
+          load: true
+          files: |
+            compose.yaml
+            compose.override.yaml
+          set: |
+            *.cache-from=type=gha,scope=${{ github.ref }}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{ github.ref }},mode=max
+
+      # Dépendances installées avant le démarrage, comme après un git pull (README) : sinon
+      # le conteneur php les installe au démarrage, au risque de dépasser son délai de santé.
+      - name: Installer les dépendances
+        run: docker compose run --rm --no-deps php composer install --prefer-dist --no-progress --no-interaction
+
+      # Au démarrage, le conteneur php applique les migrations (frankenphp/docker-entrypoint.sh) ;
+      # les bases créent leurs comptes et le journal d'audit de test (docker/*/initdb).
+      # Le service tailwind (mode watch) n'est pas utile ici : les styles sont compilés plus bas.
+      - name: Démarrer PHP, PostgreSQL et MongoDB
+        run: docker compose up --detach --wait --wait-timeout 600 --no-build php database mongodb
+
+      - name: Préparer la base de test PostgreSQL
+        run: |
+          docker compose exec -T -e APP_ENV=test php bin/console doctrine:database:create --connection=proprietaire --if-not-exists
+          docker compose exec -T -e APP_ENV=test php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Vérifier composer.json et composer.lock
+        run: docker compose exec -T php composer validate --no-check-publish
+
+      - name: Auditer les dépendances (failles connues)
+        run: |
+          docker compose exec -T php composer audit
+          docker compose exec -T php bin/console importmap:audit
+
+      - name: Vérifier les gabarits, la configuration et le conteneur de services
+        run: |
+          docker compose exec -T php bin/console lint:twig templates
+          docker compose exec -T php bin/console lint:yaml config --parse-tags
+          docker compose exec -T php bin/console lint:container
+
+      # Mapping Doctrine cohérent avec les entités (la synchronisation n'est pas comparée :
+      # les contraintes CHECK et EXCLUDE sont écrites à la main dans les migrations).
+      - name: Valider le mapping Doctrine
+        run: docker compose exec -T php bin/console doctrine:schema:validate --skip-sync
+
+      - name: Compiler les styles (Tailwind)
+        run: docker compose exec -T php bin/console tailwind:build
+
+      - name: Lancer la suite PHPUnit
+        run: docker compose exec -T php bin/phpunit --colors=never
+
+      - name: Journaux des conteneurs (en cas d'échec)
+        if: failure()
+        run: docker compose logs --no-color --tail=200
