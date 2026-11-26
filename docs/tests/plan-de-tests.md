@@ -62,6 +62,7 @@ Un seul fichier : `docker compose exec php bin/phpunit tests/Controller/Controle
 | `tests/Controller/RechercheCatalogueTest.php` | Fonctionnel | 10 | Recherche par nom sur E3 et E7 : sans casse ni accents, combinée à la catégorie, `%` et `_` cherchés tels quels, injection SQL et XSS sans effet, objet retiré visible seulement sur E7, saisie trop longue signalée, bouton Rechercher sans JavaScript, recherche conservée dans la pagination (#109) |
 | `tests/Controller/ReactivationObjetTest.php` | Fonctionnel | 2 | Bouton « Réactiver » seulement sur un objet retiré ; objet réactivé de retour dans E3 et E4, entrée `OBJET_REACTIVE` dans le journal (#111) |
 | `tests/Controller/PagesLegalesTest.php` | Fonctionnel | 5 | Liens vers les pages légales, inscription refusée sans les CGU, bandeau d'information, aucun cookie pour consulter le site (#106) |
+| `tests/Command/DemoInitialiserCommandTest.php` | Intégration | 5 | Démonstration en production (#115) : jeu d'essai chargé avec le mot de passe secret, base non vide refusée, mot de passe absent, trop court ou public refusé |
 
 Un test qui utilise un fournisseur de données compte une fois par jeu de données : la matrice de contrôle d'accès, par exemple, donne 108 cas.
 

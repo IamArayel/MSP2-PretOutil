@@ -2,26 +2,39 @@
 
 declare(strict_types=1);
 
-namespace App\DataFixtures;
+namespace App\Demo;
 
-use App\Entity\Categorie;
-use App\Entity\Objet;
 use App\Enum\EtatObjet;
-use App\Service\StockagePhotoObjet;
-use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
-use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\HttpFoundation\File\File;
+use App\Enum\StatutReservation;
 
 /**
- * Objets du jeu d'essai : plus de 20 pour tester la pagination (US3), avec un objet
- * abîmé, un hors service et un désactivé pour tester RG5.
+ * Données du jeu d'essai, partagées par les fixtures (développement et test) et par la commande
+ * app:demo:initialiser (démonstration en production, ticket #115) : une seule source.
+ *
+ * Plus de 20 objets pour la pagination (US3), un objet abîmé, un hors service et un retiré (RG5),
+ * un compte par rôle et un compte désactivé (RG9), des réservations dans chaque statut.
  */
-final class ObjetFixtures extends Fixture implements DependentFixtureInterface
+final class JeuDEssai
 {
-    /** Clé de référence => [catégorie, nom, description, état, actif]. */
-    private const array OBJETS = [
+    /**
+     * Mot de passe des comptes en développement et en test (README, section Installation).
+     * Public : il est dans le dépôt. Refusé par app:demo:initialiser, qui demande un mot de passe secret.
+     */
+    public const string MOT_DE_PASSE_TEST = 'PretOutil-Test-2026';
+
+    public const array CATEGORIES = ['Outillage', 'Jardinage', 'Camping', 'Cuisine', 'Audiovisuel', 'Sport'];
+
+    /** Clé => [email, nom, prénom, rôles, actif]. */
+    public const array COMPTES = [
+        'adherent' => ['adherent@pretoutil.test', 'Martin', 'Camille', [], true],
+        'adherent-quota' => ['adherent.quota@pretoutil.test', 'Durand', 'Noah', [], true],
+        'gestionnaire' => ['gestionnaire@pretoutil.test', 'Bernard', 'Léa', ['ROLE_MANAGER'], true],
+        'administrateur' => ['admin@pretoutil.test', 'Petit', 'Sacha', ['ROLE_ADMIN'], true],
+        'desactive' => ['desactive@pretoutil.test', 'Moreau', 'Inès', [], false],
+    ];
+
+    /** Clé => [catégorie, nom, description, état, actif]. */
+    public const array OBJETS = [
         'perceuse' => ['Outillage', 'Perceuse-visseuse 18 V', 'Deux batteries et un chargeur.', EtatObjet::Bon, true],
         'scie-sauteuse' => ['Outillage', 'Scie sauteuse', 'Lames bois et métal fournies.', EtatObjet::Bon, true],
         'ponceuse' => ['Outillage', 'Ponceuse orbitale', 'Avec un lot de disques abrasifs.', EtatObjet::Abime, true],
@@ -49,10 +62,10 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
     ];
 
     /**
-     * Clé de référence => photo source de fixtures/photos-objets/ ; les autres objets ont la vignette de remplacement.
+     * Clé d'objet => photo source de fixtures/photos-objets/ ; les autres objets ont la vignette de remplacement.
      * Chaque photo passe par StockagePhotoObjet, comme une photo envoyée depuis E7 (#106).
      */
-    private const array IMAGES = [
+    public const array PHOTOS = [
         'perceuse' => 'perceuse.webp', 'scie-sauteuse' => 'scie-sauteuse.webp', 'ponceuse' => 'ponceuse.webp', 'meuleuse' => 'meuleuse.webp',
         'taille-haie' => 'taille-haie.webp', 'brouette' => 'brouette.webp', 'tente' => 'tente.webp',
         'rechaud' => 'rechaud.webp', 'glaciere' => 'glaciere.webp', 'lampe-frontale' => 'lampe-frontale.webp',
@@ -60,40 +73,25 @@ final class ObjetFixtures extends Fixture implements DependentFixtureInterface
         'videoprojecteur' => 'videoprojecteur.webp', 'enceinte' => 'enceinte.webp',
     ];
 
-    public function __construct(
-        private readonly StockagePhotoObjet $stockagePhoto,
-        #[Autowire('%kernel.project_dir%/fixtures/photos-objets')]
-        private readonly string $dossierSources,
-    ) {
-    }
-
-    public function load(ObjectManager $manager): void
-    {
-        // Les photos des chargements précédents ne correspondent plus à aucun objet
-        $this->stockagePhoto->vider();
-
-        foreach (self::OBJETS as $cle => [$categorie, $nom, $description, $etat, $actif]) {
-            $objet = (new Objet())
-                ->setCategorie($this->getReference(CategorieFixtures::reference($categorie), Categorie::class))
-                ->setNom($nom)
-                ->setDescription($description)
-                ->setEtat($etat)
-                ->setActif($actif)
-                ->setImage(isset(self::IMAGES[$cle]) ? $this->stockagePhoto->enregistrer(new File($this->dossierSources.'/'.self::IMAGES[$cle])) : null);
-            $manager->persist($objet);
-            $this->addReference(self::reference($cle), $objet);
-        }
-
-        $manager->flush();
-    }
-
-    public function getDependencies(): array
-    {
-        return [CategorieFixtures::class];
-    }
-
-    public static function reference(string $cle): string
-    {
-        return 'objet-'.$cle;
-    }
+    /**
+     * [compte, objet, début, fin, statut, état au retour] ; début et fin en jours par rapport au jour
+     * du chargement, pour que les écrans montrent toujours des réservations à venir, en cours et passées.
+     *
+     * - le compte « quota » a 3 réservations actives : une 4e doit être refusée (RG4) ;
+     * - une sortie est à valider aujourd'hui et un retour est en retard (écran E6) ;
+     * - les retours « abîmé » et « hors service » expliquent l'état des objets concernés (RG7).
+     */
+    public const array RESERVATIONS = [
+        ['adherent', 'tente', 7, 9, StatutReservation::Confirmee, null],
+        ['adherent', 'videoprojecteur', -2, 1, StatutReservation::EnCours, null],
+        ['adherent', 'tondeuse', 3, 4, StatutReservation::Annulee, null],
+        ['adherent', 'perceuse', -20, -18, StatutReservation::Terminee, EtatObjet::Bon],
+        ['adherent', 'ponceuse', -30, -28, StatutReservation::Terminee, EtatObjet::Abime],
+        ['adherent', 'meuleuse', -40, -38, StatutReservation::Terminee, EtatObjet::HorsService],
+        ['adherent-quota', 'scie-sauteuse', 2, 4, StatutReservation::Confirmee, null],
+        ['adherent-quota', 'taille-haie', 10, 12, StatutReservation::Confirmee, null],
+        ['adherent-quota', 'raquettes', -1, 2, StatutReservation::EnCours, null],
+        ['gestionnaire', 'enceinte', 0, 2, StatutReservation::Confirmee, null],
+        ['administrateur', 'glaciere', -5, -1, StatutReservation::EnCours, null],
+    ];
 }
