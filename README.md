@@ -593,6 +593,39 @@ Workflow GitHub Actions [`.github/workflows/ci.yml`](.github/workflows/ci.yml), 
 
 En cas d'échec, l'étape fautive est marquée en rouge dans la PR et les journaux des conteneurs sont affichés. Un nouveau push sur la même branche annule l'exécution précédente.
 
+### Déploiement (production)
+
+L'application est en ligne sur <https://pretoutil.thecorelab.cloud>, sur un VPS Hostinger avec Docker et [Dokploy](https://dokploy.com) (#115). Dokploy récupère le dépôt sur GitHub, construit l'image de production et démarre la pile décrite dans [`deploy/dokploy/compose.yaml`](deploy/dokploy/compose.yaml) ; son proxy Traefik reçoit le trafic sur les ports 80 et 443 et gère le certificat HTTPS (Let's Encrypt).
+
+```text
+Internet ──HTTPS──> Traefik (Dokploy, certificat Let's Encrypt)
+                       └─HTTP──> php : FrankenPHP, image frankenphp_prod, port 80 interne
+                                  ├─> database : PostgreSQL 16 (aucun port publié)
+                                  └─> mongodb  : MongoDB 8.0  (aucun port publié)
+```
+
+| Point | Choix | Raison |
+|---|---|---|
+| Emplacement du compose | `deploy/dokploy/` | Dokploy écrit ses variables dans un `.env` à côté du compose : à la racine, il écraserait le `.env` de Symfony |
+| Secrets | Onglet Environment de Dokploy ; dossier `deploy/` exclu de l'image (`.dockerignore`) et son `.env` ignoré par Git | Aucun mot de passe dans le dépôt ni dans l'image |
+| URL des bases | Passées complètes par le compose | L'image fige celles du `.env` à la construction (`composer dump-env prod`), sans mot de passe |
+| HTTPS | Terminé par Traefik ; Caddy sert en HTTP interne (`SERVER_NAME=:80`) ; Symfony fait confiance aux réseaux privés (`TRUSTED_PROXIES=private_ranges`, `when@prod` dans `framework.yaml`) | Symfony sait que la requête d'origine était en HTTPS : cookies `secure`, HSTS, liens absolus |
+| Ports | Aucun port publié par le compose ; seul Traefik écoute sur 80 et 443 | Bases inaccessibles depuis Internet |
+| Migrations | Appliquées au démarrage du conteneur `php` par le compte propriétaire (`frankenphp/docker-entrypoint.sh`) | Schéma à jour à chaque déploiement, sans action manuelle |
+| Données | Volumes nommés (`database_data`, `mongodb_data`, `photos_objets`) | Conservés d'un déploiement à l'autre ; sauvegardables par Dokploy |
+
+**Mise en place dans Dokploy** (une seule fois) :
+
+1. Projet, puis *Create Service* > *Compose*, type *Docker Compose*.
+2. *Provider* GitHub, dépôt `IamArayel/MSP2-PretOutil`, branche `main`, *Compose Path* `./deploy/dokploy/compose.yaml`.
+3. Onglet *Environment* : les 6 variables listées en tête du compose, générées par `openssl rand -hex 16` (et `DOMAINE=pretoutil.thecorelab.cloud`).
+4. Onglet *Domains* : `pretoutil.thecorelab.cloud`, service `php`, port `80`, HTTPS activé, certificat Let's Encrypt.
+5. *Deploy*.
+
+**Mise à jour** : fusionner dans `main`, puis *Deploy* dans Dokploy (ou déploiement automatique sur push, onglet *General*). **Retour arrière** : redéployer un commit ou un tag précédent. Les volumes ne sont pas touchés.
+
+**DNS** : enregistrement A `pretoutil` vers l'adresse IP du VPS, dans la zone DNS du domaine chez Hostinger.
+
 ### Tests
 
 PHPUnit est installé en dépendance de développement (`symfony/test-pack`). Les tests sont dans `tests/`, rangés comme le code de `src/`.
@@ -940,3 +973,5 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | Réactivation d'un objet retiré depuis E7 (#111) : bouton « Réactiver » à la place de « Désactiver », POST avec jeton CSRF propre à l'objet, action d'audit `OBJET_REACTIVE` ; lève la décision du 2026-11-24 qui la laissait hors MVP | Un objet retiré le temps d'une réparation devait être recréé, en perdant son historique ; la désactivation n'annule aucune réservation, la réactivation ne crée donc aucun conflit |
 | 2026-11-25 | Pas de confirmation avant de réactiver ; validateur MongoDB mis à jour (`audit_log.mongodb.js` rejoué sur les deux bases) | L'action s'annule en un clic avec « Désactiver » : la confirmation reste réservée à la suppression, irréversible. Sans la nouvelle action dans le validateur, MongoDB refuserait l'entrée du journal |
 | 2026-11-26 | Intégration continue par GitHub Actions qui démarre la même pile Docker qu'en local, avec des secrets générés à chaque exécution | Les tests tournent dans le même environnement que sur nos postes (PostgreSQL, MongoDB, comptes aux droits minimaux) ; aucun secret à stocker dans GitHub pour la CI |
+| 2026-11-26 | Déploiement par Dokploy derrière Traefik, compose de production dans `deploy/dokploy/` | Dokploy déjà installé sur le VPS (reverse proxy, HTTPS, déploiement depuis GitHub) ; sous-dossier pour que le `.env` écrit par Dokploy n'écrase pas celui de Symfony |
+| 2026-11-26 | Symfony fait confiance aux réseaux privés pour les en-têtes `X-Forwarded-*`, en production seulement | Traefik termine le HTTPS : sans cette confiance, Symfony croirait la requête en HTTP (pas de HSTS, liens en `http`) |
