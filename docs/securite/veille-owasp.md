@@ -67,6 +67,22 @@ Avis Symfony récents confrontés aux versions installées :
 
 Mise à jour : `composer update "symfony/*"` dans la contrainte `7.4.*`, puis la suite de tests. Les versions 8.x sont disponibles ; le projet reste sur la LTS 7.4, maintenue pour les correctifs de sécurité.
 
+### Avis du 2026-11-25, détectés par l'intégration continue
+
+Le lendemain de cette veille, Symfony a publié 13 avis touchant 7 paquets installés, tous corrigés en 7.4.24. L'étape « Auditer les dépendances » de la CI (#114) a fait échouer la PR #116 dès son ouverture, le 2026-11-26 : la faille n'est pas passée inaperçue en attendant la prochaine veille manuelle.
+
+| Paquet | Avis | Effet possible | Concerne Prêt'Outil ? |
+|---|---|---|---|
+| `security-core` | CVE-2026-133753 | Stratégie de vote « unanime » : une règle `access_control` accordée si un seul de ses rôles correspond | Peu : stratégie par défaut (« affirmative ») et un seul rôle par règle |
+| `security-http` | CVE-2026-134790 | Redirection après connexion vers un autre domaine quand le domaine du cookie de session est fixé | Peu : domaine du cookie non fixé ; corrigé par précaution |
+| `framework-bundle`, `routing` | CVE-2026-133745, -133746, -133754 | URL générées ou redirections vers un autre domaine (chemins commençant par `//`, paramètre d'hôte) | Oui : l'application génère des URL et redirige ; corrigé |
+| `http-kernel` | CVE-2026-133743 | En-têtes de proxy non fiables qui changent les URL de `asset()` et `absolute_url()` | Oui : l'application tourne derrière Traefik depuis #115 ; corrigé, et seuls les réseaux privés sont des proxies de confiance |
+| `framework-bundle`, `http-client` | CVE-2026-133762, -134792 | Mode worker sous la SAPI CLI : traces d'exception en production, proxy choisi par un en-tête | Non : FrankenPHP n'utilise pas la SAPI CLI pour servir les requêtes ; corrigé par la mise à jour |
+| `http-client` | CVE-2026-133747, -133750, -133757, -133758 | Identifiants ou réponses en cache envoyés à d'autres origines | Non : aucun client HTTP sortant dans l'application |
+| `doctrine-bridge` | CVE-2026-133759 | Jetons « se souvenir de moi » acceptés après déconnexion | Non : fonction « se souvenir de moi » non activée |
+
+Correction : `composer update "symfony/*" --with-all-dependencies` dans la contrainte `7.4.*` (33 paquets en 7.4.24, `doctrine/collections` en 3.1.1). `composer audit` : aucune faille ; suite complète au vert (452 tests).
+
 ## 5. Constats et mesures écartées
 
 ### Constats de la veille
