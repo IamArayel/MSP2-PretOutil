@@ -1,5 +1,7 @@
 # MSP2-PretOutil
 
+[![CI](https://github.com/IamArayel/MSP2-PretOutil/actions/workflows/ci.yml/badge.svg)](https://github.com/IamArayel/MSP2-PretOutil/actions/workflows/ci.yml)
+
 Prêt'Outil : prêt de matériel en association.
 
 Projet réalisé pour la mise en situation professionnelle du CCP 2 « Concevoir et développer une application sécurisée organisée en couches » du titre professionnel **Concepteur Développeur d'Applications** (CDA, niveau 6, référentiel d'évaluation TP-01281 V04 du 24/05/2023).
@@ -575,6 +577,22 @@ sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keyc
 curl -k "https://localhost/api/objets/1/disponibilites?debut=2026-12-02&fin=2026-12-04"
 ```
 
+### Intégration continue
+
+Workflow GitHub Actions [`.github/workflows/ci.yml`](.github/workflows/ci.yml), lancé à chaque pull request, à chaque push sur `main` et à la demande (onglet Actions). Il reproduit l'environnement local sur une machine de GitHub, puis lance les mêmes commandes que ce README :
+
+| Étape | Ce qu'elle vérifie |
+|---|---|
+| Secrets éphémères | `.env.local` généré pour l'exécution (valeurs aléatoires) : aucun vrai mot de passe dans la CI ni dans le dépôt |
+| Image et pile Docker | Image de développement construite (couches mises en cache), PHP, PostgreSQL et MongoDB démarrés ; comptes des bases et journal d'audit de test créés par les scripts d'initialisation, migrations appliquées |
+| `composer validate` | `composer.json` et `composer.lock` cohérents |
+| `composer audit`, `importmap:audit` | Aucune faille connue dans les dépendances PHP et JavaScript |
+| `lint:twig`, `lint:yaml`, `lint:container` | Gabarits, configuration et conteneur de services valides |
+| `doctrine:schema:validate --skip-sync` | Mapping des entités valide (la synchronisation n'est pas comparée : contraintes `CHECK` et `EXCLUDE` écrites dans les migrations) |
+| PHPUnit | Suite complète sur les bases de test, comme en local |
+
+En cas d'échec, l'étape fautive est marquée en rouge dans la PR et les journaux des conteneurs sont affichés. Un nouveau push sur la même branche annule l'exécution précédente.
+
 ### Tests
 
 PHPUnit est installé en dépendance de développement (`symfony/test-pack`). Les tests sont dans `tests/`, rangés comme le code de `src/`.
@@ -921,3 +939,4 @@ Aucun mot de passe n'est versionné. `compose.yaml` transmet `.env.local` aux tr
 | 2026-11-25 | Recherche à la volée dès 3 lettres, 300 ms après la dernière frappe (`assets/recherche.js`) : la page est redemandée et seules les zones de résultats sont remplacées ; bouton « Rechercher » conservé, nombre de résultats annoncé (`aria-live`) | Moins de 3 lettres donnerait trop de résultats ; sans JavaScript, au clavier ou avec un lecteur d'écran, le bouton suffit. Le serveur rend le même gabarit : aucune API ni règle d'affichage en double |
 | 2026-11-25 | Réactivation d'un objet retiré depuis E7 (#111) : bouton « Réactiver » à la place de « Désactiver », POST avec jeton CSRF propre à l'objet, action d'audit `OBJET_REACTIVE` ; lève la décision du 2026-11-24 qui la laissait hors MVP | Un objet retiré le temps d'une réparation devait être recréé, en perdant son historique ; la désactivation n'annule aucune réservation, la réactivation ne crée donc aucun conflit |
 | 2026-11-25 | Pas de confirmation avant de réactiver ; validateur MongoDB mis à jour (`audit_log.mongodb.js` rejoué sur les deux bases) | L'action s'annule en un clic avec « Désactiver » : la confirmation reste réservée à la suppression, irréversible. Sans la nouvelle action dans le validateur, MongoDB refuserait l'entrée du journal |
+| 2026-11-26 | Intégration continue par GitHub Actions qui démarre la même pile Docker qu'en local, avec des secrets générés à chaque exécution | Les tests tournent dans le même environnement que sur nos postes (PostgreSQL, MongoDB, comptes aux droits minimaux) ; aucun secret à stocker dans GitHub pour la CI |
