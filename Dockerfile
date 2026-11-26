@@ -118,6 +118,8 @@ RUN <<-EOF
 	composer dump-env prod
 	composer run-script --no-dev post-install-cmd
 	if [ -f importmap.php ]; then
+		# CSS Tailwind généré et minifié avant la compilation des assets, qui en a besoin
+		php bin/console tailwind:build --minify
 		php bin/console asset-map:compile
 	fi
 	chmod +x bin/console
@@ -180,7 +182,10 @@ EOF
 COPY --link --exclude=var --from=frankenphp_prod_builder /app /app
 # Group 0 + g=u for arbitrary-UID runtimes (e.g. OpenShift).
 COPY --chown=www-data:0 --from=frankenphp_prod_builder /app/var /app/var
-RUN chmod g=u /app/var
+# Photos des objets envoyées depuis E7 : écrites par www-data. Un volume neuf monté ici reprend
+# ce propriétaire ; sans lui, l'envoi d'une photo échoue (Permission denied).
+COPY --chown=www-data:0 --from=frankenphp_prod_builder /app/public/uploads /app/public/uploads
+RUN chmod g=u /app/var /app/public/uploads /app/public/uploads/objets
 
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 

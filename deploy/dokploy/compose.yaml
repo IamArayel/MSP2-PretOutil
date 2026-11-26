@@ -1,0 +1,110 @@
+# Production de Prêt'Outil sur le VPS, déployée par Dokploy (ticket #115).
+#
+# Fichier volontairement placé dans deploy/dokploy/ : Dokploy écrit les variables de son onglet
+# Environment dans un fichier .env à côté du compose. À la racine du dépôt, il écraserait le .env
+# de Symfony. Ce dossier est exclu de l'image (.dockerignore) : aucun secret dans l'image.
+#
+# Variables à définir dans Dokploy (onglet Environment), jamais dans le dépôt :
+#   DOMAINE                     pretoutil.thecorelab.cloud
+#   APP_SECRET                  32 caractères hexadécimaux
+#   POSTGRES_PASSWORD           propriétaire du schéma (migrations)
+#   POSTGRES_APP_PASSWORD       compte applicatif pretoutil_app (droits minimaux)
+#   MONGO_INITDB_ROOT_PASSWORD  administration de MongoDB
+#   MONGODB_APP_PASSWORD        compte applicatif MongoDB (rôle auditAppendOnly)
+#   DEMO_MOT_DE_PASSE           facultatif : mot de passe des comptes de démonstration, lu par
+#                               bin/console app:demo:initialiser (au moins 12 caractères)
+# Valeurs hexadécimales uniquement : elles entrent dans des URL de connexion.
+#
+# Le HTTPS est géré par Traefik (Dokploy, certificat Let's Encrypt) : le domaine est ajouté
+# dans l'onglet Domains de Dokploy, sur le service php, port 80. Aucun port n'est publié ici.
+
+services:
+  php:
+    build:
+      context: ../..
+      target: frankenphp_prod
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      # Caddy sert en HTTP sur le port 80 interne : Traefik termine le HTTPS devant lui.
+      SERVER_NAME: ":80"
+      DEFAULT_URI: https://${DOMAINE:?DOMAINE doit être défini dans Dokploy}
+      APP_SECRET: ${APP_SECRET:?APP_SECRET doit être défini dans Dokploy}
+      # Traefik est dans le réseau Docker : Symfony lit X-Forwarded-Proto pour savoir que la
+      # requête d'origine était en HTTPS (cookies secure, HSTS, liens absolus).
+      TRUSTED_PROXIES: private_ranges
+      # URL complètes : l'image fige celles du .env à la construction (composer dump-env prod),
+      # sans mot de passe. Les variables d'environnement passées ici les remplacent.
+      DATABASE_URL: postgresql://pretoutil_app:${POSTGRES_APP_PASSWORD:?}@database:5432/pretoutil?serverVersion=16&charset=utf8
+      DATABASE_OWNER_URL: postgresql://pretoutil:${POSTGRES_PASSWORD:?}@database:5432/pretoutil?serverVersion=16&charset=utf8
+      MONGODB_URI: mongodb://pretoutil_app:${MONGODB_APP_PASSWORD:?}@mongodb:27017/pretoutil?authSource=pretoutil
+      MONGODB_DB: pretoutil
+      # Facultatif : seulement pour charger la démonstration (app:demo:initialiser).
+      DEMO_MOT_DE_PASSE: ${DEMO_MOT_DE_PASSE:-}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      # Photos des objets envoyées depuis E7 : gardées d'un déploiement à l'autre. Volume créé
+      # avec le propriétaire www-data de l'image (le premier, photos_objets, l'avait été en root).
+      - uploads_objets:/app/public/uploads/objets
+    expose:
+      - "80"
+    # Dokploy ajoute dokploy-network au service qui porte le domaine ; le réseau par défaut est
+    # gardé pour joindre les bases.
+    networks:
+      - default
+      - dokploy-network
+
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pretoutil
+      POSTGRES_USER: pretoutil
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      # Lu par docker/postgres/initdb/01-role-applicatif.sh à la création du volume.
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?}
+      TZ: Indian/Reunion
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "pretoutil", "-U", "pretoutil"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database_data:/var/lib/postgresql/data
+      - ../../docker/postgres/initdb:/docker-entrypoint-initdb.d:ro
+
+  mongodb:
+    image: mongo:8.0
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: pretoutil
+      MONGO_INITDB_ROOT_USERNAME: pretoutil
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?}
+      # Lu par docker/mongodb/initdb/02-utilisateur-app.js à la création du volume.
+      MONGODB_APP_PASSWORD: ${MONGODB_APP_PASSWORD:?}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - mongodb_data:/data/db
+      # Collection audit_log, validateur et rôle, puis compte applicatif. Pas de base de test.
+      - ../../docs/conception/audit_log.mongodb.js:/docker-entrypoint-initdb.d/01-audit_log.js:ro
+      - ../../docker/mongodb/initdb/02-utilisateur-app.js:/docker-entrypoint-initdb.d/02-utilisateur-app.js:ro
+
+networks:
+  dokploy-network:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  uploads_objets:
+  database_data:
+  mongodb_data:

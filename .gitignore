@@ -39,3 +39,6 @@ Thumbs.db
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
+
+# Fichier .env écrit par Dokploy à côté du compose de production (secrets)
+/deploy/**/.env

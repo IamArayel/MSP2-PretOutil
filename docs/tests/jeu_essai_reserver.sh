@@ -15,7 +15,7 @@ B=https://localhost   # certificat local auto-signé : curl -k
 D=$(mktemp -d)        # sessions (cookies) et dernière réponse
 trap 'rm -rf "$D"' EXIT
 # Mot de passe des comptes de test, lu dans les fixtures (valeur de test, versionnée).
-MDP=$(grep -oE "MOT_DE_PASSE_TEST = '[^']+" src/DataFixtures/UtilisateurFixtures.php | sed "s/.*'//")
+MDP=$(grep -oE "MOT_DE_PASSE_TEST = '[^']+" src/Demo/JeuDEssai.php | sed "s/.*'//")
 NOUVEL_ADHERENT=jeanne.essai@pretoutil.test
 
 # --- Accès aux données, en lecture seule ---------------------------------------------

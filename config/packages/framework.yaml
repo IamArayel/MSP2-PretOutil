@@ -16,3 +16,12 @@ when@test:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+
+# Production derrière Traefik (Dokploy, ticket #115) : la requête arrive du proxy en HTTP.
+# Les en-têtes X-Forwarded-* ne sont crus que s'ils viennent d'une adresse de TRUSTED_PROXIES
+# (réseaux privés du serveur), jamais d'un client.
+when@prod:
+    framework:
+        trusted_proxies: '%env(TRUSTED_PROXIES)%'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-host']
+

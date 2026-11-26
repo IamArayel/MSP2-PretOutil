@@ -32,3 +32,5 @@ vendor/
 .env.local
 .env.local.php
 .env.test
+# Compose de production et fichier .env écrit par Dokploy (secrets) : jamais dans l'image
+deploy/
